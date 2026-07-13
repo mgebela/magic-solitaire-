@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "noEmit": true,
+    "moduleResolution": "bundler",
+    "paths": {
+      "@three-towers/shared": ["../../packages/shared/src"],
+      "@three-towers/game-engine": ["../../apps/game-engine/src"]
+    }
+  },
+  "include": ["src", "vite.config.ts"]
+}

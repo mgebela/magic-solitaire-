@@ -1,0 +1,125 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(uuid()) @db.Uuid
+  email         String   @unique
+  username      String   @unique
+  passwordHash  String   @map("password_hash")
+  country       String?
+  language      String?
+  avatarUrl     String?  @map("avatar_url")
+  emailVerified Boolean  @default(false) @map("email_verified")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  refreshTokens       RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
+  games               Game[]
+  moves               Move[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  token     String   @unique
+  userId    String   @map("user_id") @db.Uuid
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  token     String   @unique
+  userId    String   @map("user_id") @db.Uuid
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
+}
+
+enum GameStatus {
+  playing
+  won
+  lost
+  abandoned
+}
+
+enum GameMode {
+  timed
+  relaxed
+  challenge
+  daily
+  puzzle
+  practice
+  ranked
+  casual
+}
+
+model Game {
+  id            String     @id @default(uuid()) @db.Uuid
+  userId        String     @map("user_id") @db.Uuid
+  seed          Int
+  layoutVersion Int        @default(1) @map("layout_version")
+  mode          GameMode
+  status        GameStatus @default(playing)
+  score         Int        @default(0)
+  combo         Int        @default(0)
+  elapsedMs     Int        @default(0) @map("elapsed_ms")
+  challengeDate DateTime?  @map("challenge_date") @db.Date
+  startedAt     DateTime   @default(now()) @map("started_at")
+  finishedAt    DateTime?  @map("finished_at")
+  createdAt     DateTime   @default(now()) @map("created_at")
+  updatedAt     DateTime   @updatedAt @map("updated_at")
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  moves Move[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([mode])
+  @@index([challengeDate])
+  @@unique([userId, challengeDate])
+  @@map("games")
+}
+
+enum MoveType {
+  play
+  draw
+}
+
+model Move {
+  id        String   @id @default(uuid()) @db.Uuid
+  gameId    String   @map("game_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  type      MoveType
+  cardId    String?  @map("card_id")
+  timestamp DateTime
+  sequence  Int
+  createdAt DateTime @default(now()) @map("created_at")
+
+  game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([gameId, sequence])
+  @@index([gameId])
+  @@index([userId])
+  @@map("moves")
+}
