@@ -133,14 +133,14 @@ export function setStockCount(container: Container, count: number): void {
     text: String(count),
     style: {
       fontFamily: 'system-ui, sans-serif',
-      fontSize: 28,
+      fontSize: 32,
       fontWeight: '800',
-      fill: 0xffffff,
+      fill: 0x66ff33,
       dropShadow: {
         color: 0x000000,
-        blur: 2,
+        blur: 3,
         distance: 1,
-        alpha: 0.8,
+        alpha: 0.85,
       },
     },
   });

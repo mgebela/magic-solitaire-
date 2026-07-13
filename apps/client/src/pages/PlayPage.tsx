@@ -12,7 +12,6 @@ import { useGameStore } from '../stores/gameStore';
 export default function PlayPage() {
   const { tokens } = useAuthStore();
   const accessToken = tokens?.accessToken;
-  const [personalBest, setPersonalBest] = useState<number | null>(null);
   const [isPersonalBest, setIsPersonalBest] = useState(false);
 
   const {
@@ -41,16 +40,6 @@ export default function PlayPage() {
     const interval = window.setInterval(() => tickTimer(), 50);
     return () => window.clearInterval(interval);
   }, [state?.status, tickTimer]);
-
-  useEffect(() => {
-    if (!accessToken || !mode) {
-      setPersonalBest(null);
-      return;
-    }
-    getPersonalBest(accessToken, mode)
-      .then((result) => setPersonalBest(result.bestScore))
-      .catch(() => setPersonalBest(null));
-  }, [accessToken, mode]);
 
   useEffect(() => {
     if (!state || state.status !== 'won' || !accessToken || !mode) {
@@ -95,6 +84,8 @@ export default function PlayPage() {
       <GameCanvas
         state={state}
         immersive
+        roundCurrent={1}
+        roundTotal={10}
         onCardClick={(cardId) => {
           clearHint();
           playCard(cardId, accessToken);
@@ -109,10 +100,6 @@ export default function PlayPage() {
       />
 
       {isSyncing && <div className="magic-play-screen__saving">Saving…</div>}
-
-      {personalBest !== null && state && (
-        <div className="magic-play-screen__best">Best: {personalBest}</div>
-      )}
 
       {showResult && stats && (
         <GameResultModal

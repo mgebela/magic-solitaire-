@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import type { GameState } from '@three-towers/shared';
+import { BOARD_ASPECT } from '../../renderer/layout-positions';
 
 interface MagicGameHudProps {
   state: GameState;
@@ -9,6 +10,9 @@ interface MagicGameHudProps {
   onHint?: () => void;
   onUndo?: () => void;
   allowUndo?: boolean;
+  roundCurrent?: number;
+  roundTotal?: number;
+  roundLabel?: string;
 }
 
 export function MagicGameHud({
@@ -19,65 +23,73 @@ export function MagicGameHud({
   onHint,
   onUndo,
   allowUndo,
+  roundCurrent = 1,
+  roundTotal = 10,
+  roundLabel = 'Round',
 }: MagicGameHudProps) {
-  const cleared = state.foundation.length;
   const combo = state.combo || 0;
   const seconds = Math.max(0, Math.floor((state.elapsedMs ?? 0) / 1000));
-  const timerDisplay =
-    state.mode === 'relaxed' ? '∞' : String(seconds);
+  const timerDisplay = state.mode === 'relaxed' ? '∞' : String(seconds);
 
   return (
-    <div className="magic-hud" aria-hidden={false}>
-      <div className="magic-hud__scoreboard">
-        <div className="magic-hud__score">{state.score}</div>
-        <div className="magic-hud__level">
-          {cleared} / 28
-        </div>
-      </div>
+    <div className="stone-hud" style={{ aspectRatio: String(BOARD_ASPECT) }}>
+      <div className="stone-hud__vines stone-hud__vines--left" aria-hidden />
+      <div className="stone-hud__vines stone-hud__vines--right" aria-hidden />
 
-      <div className="magic-hud__panel-controls">
+      <div className="stone-hud__platform">
+        <div className="stone-hud__pit stone-hud__pit--score">
+          <span className="stone-hud__pit-label">Score</span>
+          <span className="stone-hud__pit-value">{state.score}</span>
+        </div>
+
         <button
           type="button"
-          className="magic-hud__draw-zone"
+          className="stone-hud__draw-hit"
           onClick={onDraw}
           disabled={drawDisabled}
           aria-label={`Draw card, ${state.stock.length} remaining`}
         />
 
-        <div className="magic-hud__combo">
-          <span className="magic-hud__combo-label">COMBOS</span>
-          <div className="magic-hud__combo-dial">
-            <span className="magic-hud__combo-value">×{Math.max(1, combo)}</span>
+        <div className="stone-hud__center">
+          <div className="stone-hud__combo-ring">
+            <span>{combo}x</span>
+          </div>
+          <div className="stone-hud__timer">
+            <span className="stone-hud__timer-icon" aria-hidden>
+              ⏱
+            </span>
+            <span className="stone-hud__timer-value">{timerDisplay}</span>
           </div>
         </div>
 
-        <div className="magic-hud__timer">
-          <span className="magic-hud__timer-icon" aria-hidden>
-            ⏱
+        <div className="stone-hud__pit stone-hud__pit--round">
+          <span className="stone-hud__pit-label">{roundLabel}</span>
+          <span className="stone-hud__pit-value">
+            {roundCurrent}/{roundTotal}
           </span>
-          <span className="magic-hud__timer-value">{timerDisplay}</span>
         </div>
 
-        <div className="magic-hud__actions">
+        <Link to="/" className="stone-hud__exit">
+          Exit
+        </Link>
+      </div>
+
+      {(onHint || (allowUndo && onUndo)) && (
+        <div className="stone-hud__extras">
           {onHint && (
-            <button type="button" className="magic-hud__action-btn" onClick={onHint}>
+            <button type="button" className="stone-hud__extra-btn" onClick={onHint}>
               Hint
             </button>
           )}
           {allowUndo && onUndo && (
-            <button type="button" className="magic-hud__action-btn" onClick={onUndo}>
+            <button type="button" className="stone-hud__extra-btn" onClick={onUndo}>
               Undo
             </button>
           )}
-          <Link to="/" className="magic-hud__exit">
-            EXIT
-          </Link>
         </div>
-      </div>
-
-      {hintDraw && (
-        <p className="magic-hud__hint">Draw from the stock pile</p>
       )}
+
+      {hintDraw && <p className="stone-hud__hint">Draw from the stock pile</p>}
     </div>
   );
 }

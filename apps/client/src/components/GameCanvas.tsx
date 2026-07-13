@@ -13,6 +13,9 @@ interface GameCanvasProps {
   onUndo?: () => void;
   allowUndo?: boolean;
   immersive?: boolean;
+  roundCurrent?: number;
+  roundTotal?: number;
+  roundLabel?: string;
   className?: string;
 }
 
@@ -26,17 +29,21 @@ export function GameCanvas({
   onUndo,
   allowUndo,
   immersive = false,
+  roundCurrent,
+  roundTotal,
+  roundLabel,
   className,
 }: GameCanvasProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const frameRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rendererRef = useRef<GameRenderer | null>(null);
   const prevStateRef = useRef<GameState | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    const container = containerRef.current;
-    if (!canvas || !container) return;
+    const frame = frameRef.current;
+    if (!canvas || !frame) return;
 
     const renderer = new GameRenderer();
     rendererRef.current = renderer;
@@ -44,7 +51,7 @@ export function GameCanvas({
     let observer: ResizeObserver | null = null;
 
     const resize = () => {
-      const rect = container.getBoundingClientRect();
+      const rect = frame.getBoundingClientRect();
       renderer.resize(rect.width, rect.height);
     };
 
@@ -52,7 +59,7 @@ export function GameCanvas({
       if (!mounted) return;
       resize();
       observer = new ResizeObserver(resize);
-      observer.observe(container);
+      observer.observe(frame);
     });
 
     return () => {
@@ -83,22 +90,24 @@ export function GameCanvas({
   }, [state]);
 
   return (
-    <div
-      ref={containerRef}
-      className={`${immersive ? 'magic-game-viewport' : ''} ${className ?? 'h-full w-full'}`.trim()}
-    >
-      <canvas ref={canvasRef} className="block h-full w-full" />
-      {immersive && state && onDraw && (
-        <MagicGameHud
-          state={state}
-          onDraw={onDraw}
-          drawDisabled={state.status !== 'playing' || state.stock.length === 0}
-          hintDraw={hintDraw}
-          onHint={onHint}
-          onUndo={onUndo}
-          allowUndo={allowUndo}
-        />
-      )}
+    <div ref={stageRef} className={`game-stage ${className ?? ''}`.trim()}>
+      <div ref={frameRef} className="game-stage__frame">
+        <canvas ref={canvasRef} className="game-stage__canvas" />
+        {immersive && state && onDraw && (
+          <MagicGameHud
+            state={state}
+            onDraw={onDraw}
+            drawDisabled={state.status !== 'playing' || state.stock.length === 0}
+            hintDraw={hintDraw}
+            onHint={onHint}
+            onUndo={onUndo}
+            allowUndo={allowUndo}
+            roundCurrent={roundCurrent}
+            roundTotal={roundTotal}
+            roundLabel={roundLabel}
+          />
+        )}
+      </div>
     </div>
   );
 }

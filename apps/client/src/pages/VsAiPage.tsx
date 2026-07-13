@@ -1,12 +1,10 @@
 import { useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import type { VsAiResult } from '@three-towers/shared';
 import { GameCanvas } from '../components/GameCanvas';
 import { AiDifficultySelect } from '../components/AiDifficultySelect';
-import { AiOpponentPanel } from '../components/AiOpponentPanel';
-import { GameTimer } from '../components/GameTimer';
 import { VsAiResultModal } from '../components/VsAiResultModal';
-import { GameShell } from '../components/layout/GameShell';
-import { GameButton } from '../components/ui/GameButton';
+import { AppBackground } from '../components/layout/AppBackground';
 import { useAiGameStore } from '../stores/aiGameStore';
 
 export default function VsAiPage() {
@@ -53,86 +51,48 @@ export default function VsAiPage() {
         }
       : null;
 
-  const toolbar =
-    playerState && difficulty ? (
-      <>
-        <span className="mode-badge">vs {difficulty} AI</span>
-        <GameTimer
-          elapsedMs={playerState.elapsedMs}
-          mode="timed"
-          running={playerState.status === 'playing'}
-        />
-        <span className="stat-pill">
-          Score <strong>{playerState.score}</strong>
-        </span>
-        <span className="stat-pill stat-pill--gold">
-          Combo <strong>×{playerState.combo || 1}</strong>
-        </span>
-      </>
-    ) : null;
-
-  const actions =
-    playerState ? (
-      <>
-        <GameButton
-          variant="secondary"
-          onClick={() => drawCard()}
-          disabled={playerState.status !== 'playing' || playerState.stock.length === 0}
-        >
-          Draw
-        </GameButton>
-        <GameButton variant="primary" onClick={() => difficulty && startGame(difficulty)}>
-          New Game
-        </GameButton>
-      </>
-    ) : null;
+  if (showSelect) {
+    return (
+      <AppBackground variant="lobby">
+        <div className="lobby">
+          <Link to="/" className="text-sm font-semibold text-[var(--color-gold)] hover:opacity-80">
+            ← Lobby
+          </Link>
+          <AiDifficultySelect onSelect={(d) => startGame(d)} />
+        </div>
+      </AppBackground>
+    );
+  }
 
   return (
-    <GameShell toolbar={toolbar} actions={actions}>
+    <div className="magic-play-screen">
       {error && (
-        <div className="mx-auto mb-4 flex max-w-5xl items-center justify-between rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm text-red-300">
+        <div className="magic-play-screen__error">
           <span>{error}</span>
-          <button type="button" onClick={clearError} className="text-red-200 hover:text-white">
+          <button type="button" onClick={clearError}>
             ✕
           </button>
         </div>
       )}
 
-      {showSelect ? (
-        <AiDifficultySelect onSelect={(d) => startGame(d)} />
-      ) : (
-        <div className="flex flex-1 gap-4">
-          <aside className="hidden w-56 shrink-0 lg:block">
-            {difficulty && <AiOpponentPanel difficulty={difficulty} state={aiState} />}
-          </aside>
+      <GameCanvas
+        state={playerState}
+        immersive
+        roundCurrent={1}
+        roundTotal={10}
+        roundLabel="Round"
+        onCardClick={playCard}
+        onDraw={() => drawCard()}
+        className="magic-play-screen__canvas"
+      />
 
-          <div className="flex flex-1 flex-col">
-            {difficulty && (
-              <div className="mb-4 lg:hidden">
-                <AiOpponentPanel difficulty={difficulty} state={aiState} />
-              </div>
-            )}
-
-            <div className="game-table-frame">
-              <GameCanvas state={playerState} onCardClick={playCard} className="h-full w-full" />
-            </div>
-
-            {playerState?.status === 'playing' && (
-              <p className="hint-banner mt-4">
-                Race the AI on the same deal — highest score wins.
-              </p>
-            )}
-          </div>
-
-          {result && (
-            <VsAiResultModal
-              result={result}
-              onPlayAgain={() => difficulty && startGame(difficulty)}
-              onChangeDifficulty={() => reset()}
-            />
-          )}
-        </div>
+      {result && (
+        <VsAiResultModal
+          result={result}
+          onPlayAgain={() => difficulty && startGame(difficulty)}
+          onChangeDifficulty={() => reset()}
+        />
       )}
-    </GameShell>
+    </div>
   );
 }
