@@ -24,7 +24,10 @@ export async function apiFetch<T>(
     },
   });
 
-  const body = await response.json().catch(() => null);
+  const contentType = response.headers.get('content-type') ?? '';
+  const isJson = contentType.includes('application/json');
+  const rawText = await response.text().catch(() => '');
+  const body = isJson && rawText ? (JSON.parse(rawText) as unknown) : null;
 
   if (!response.ok) {
     const message =
@@ -34,6 +37,14 @@ export async function apiFetch<T>(
       Array.isArray(message) ? message.join(', ') : message,
       response.status,
       body,
+    );
+  }
+
+  if (body === null) {
+    throw new ApiError(
+      'Invalid response from server (expected JSON).',
+      response.status,
+      { url, contentType, preview: rawText.slice(0, 200) },
     );
   }
 
