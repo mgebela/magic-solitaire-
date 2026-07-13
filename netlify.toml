@@ -1,0 +1,10 @@
+[build]
+  base = "."
+  command = "npm ci && npm run build --workspace=@three-towers/client"
+  publish = "apps/client/dist"
+
+# SPA routing for React Router
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

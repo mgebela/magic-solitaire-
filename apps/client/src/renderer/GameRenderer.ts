@@ -1,7 +1,6 @@
 import {
   Application,
   Container,
-  Graphics,
   Text,
   type FederatedPointerEvent,
 } from 'pixi.js';
@@ -10,6 +9,7 @@ import { getPlayableCards, cardPointsForCombo } from '@three-towers/game-engine'
 import { TweenManager, tween } from './animations';
 import { createCardGraphic, setCardHighlight } from './card-display';
 import { ScoreEffectManager } from './score-effects';
+import { drawTableBackground } from './table-background';
 import { CARD_HEIGHT, CARD_WIDTH } from './constants';
 import {
   BOARD_HEIGHT,
@@ -110,10 +110,7 @@ export class GameRenderer {
   }
 
   private drawFeltBackground(): void {
-    const felt = new Graphics();
-    felt.roundRect(0, 0, BOARD_WIDTH, BOARD_HEIGHT, 16);
-    felt.fill({ color: 0x145c38 });
-    felt.stroke({ color: 0x0d3d25, width: 3 });
+    const felt = drawTableBackground();
     this.root.addChildAt(felt, 0);
   }
 

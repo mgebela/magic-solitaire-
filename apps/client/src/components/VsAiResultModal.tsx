@@ -26,9 +26,9 @@ export function VsAiResultModal({
 
   return (
     <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[var(--color-felt-dark)] p-8 shadow-2xl">
+      <div className="lobby-panel w-full max-w-md p-8 shadow-2xl">
         <div className="mb-6 text-center">
-          <div className={`text-4xl font-bold ${headlineClass}`}>{headline}</div>
+          <div className={`font-[family-name:var(--font-display)] text-4xl ${headlineClass}`}>{headline}</div>
           <p className="mt-2 text-sm capitalize text-white/60">
             vs {result.difficulty} AI · same seed race
           </p>

@@ -11,8 +11,8 @@ interface PuzzleResultModalProps {
 export function PuzzleResultModal({ result, title, onRetry, onBack }: PuzzleResultModalProps) {
   return (
     <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[var(--color-felt-dark)] p-8 text-center shadow-2xl">
-        <div className={`text-3xl font-bold ${result.won ? 'text-[var(--color-gold)]' : 'text-red-400'}`}>
+      <div className="lobby-panel w-full max-w-md p-8 text-center shadow-2xl">
+        <div className={`font-[family-name:var(--font-display)] text-3xl ${result.won ? 'text-[var(--color-gold)]' : 'text-red-400'}`}>
           {result.won ? 'Puzzle Complete!' : 'Out of Moves'}
         </div>
         <p className="mt-2 text-sm text-white/60">{title}</p>

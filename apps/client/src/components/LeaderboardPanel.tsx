@@ -36,8 +36,10 @@ export function LeaderboardPanel({ mode = 'timed' }: LeaderboardPanelProps) {
   }, [mode]);
 
   return (
-    <div className="rounded-xl bg-white/5 p-4">
-      <h3 className="mb-4 text-lg font-semibold capitalize">{mode} Leaderboard</h3>
+    <div className="lobby-panel">
+      <h3 className="mb-4 font-[family-name:var(--font-display)] text-lg capitalize text-[var(--color-gold-light)]">
+        {mode} Leaderboard
+      </h3>
 
       {loading && <p className="text-sm text-white/50">Loading…</p>}
       {error && <p className="text-sm text-red-300">{error}</p>}

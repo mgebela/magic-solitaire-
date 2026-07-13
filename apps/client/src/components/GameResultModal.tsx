@@ -18,7 +18,7 @@ export function GameResultModal({
 
   return (
     <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-white/10 bg-[var(--color-felt-dark)] p-8 shadow-2xl">
+      <div className="max-h-[90vh] w-full max-w-md overflow-y-auto lobby-panel p-8 shadow-2xl">
         <div className="mb-6 text-center">
           <div
             className={`text-4xl font-bold ${won ? 'text-[var(--color-gold)]' : 'text-red-400'}`}

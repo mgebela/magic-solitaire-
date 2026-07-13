@@ -1,13 +1,45 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  TRIPEAKS_TABLEAU_CARD_COUNT,
-  TRIPEAKS_STOCK_CARD_COUNT,
-  TRIPEAKS_TOTAL_CARD_COUNT,
-} from '@three-towers/shared';
-import { ENGINE_VERSION } from '@three-towers/game-engine';
+import { MagicLogo } from '../components/graphics/MagicLogo';
+import { AppBackground } from '../components/layout/AppBackground';
 import { LeaderboardPanel } from '../components/LeaderboardPanel';
+import { GameButton, GameLink } from '../components/ui/GameButton';
+import { ModeTile } from '../components/ui/ModeTile';
 import { useAuthStore } from '../stores/authStore';
+
+const MODES = [
+  {
+    to: '/play',
+    title: 'Classic Play',
+    description: 'Timed or relaxed solo TriPeaks on the green felt.',
+    icon: '🃏',
+    featured: true,
+  },
+  {
+    to: '/daily',
+    title: 'Daily Challenge',
+    description: 'One shared board worldwide — compete on today’s leaderboard.',
+    icon: '☀️',
+  },
+  {
+    to: '/vs-ai',
+    title: 'Magic Duel',
+    description: 'Race the AI on the same deal. Four difficulty levels.',
+    icon: '🤖',
+  },
+  {
+    to: '/puzzles',
+    title: 'Puzzle Towers',
+    description: 'Curated layouts with move limits and star ratings.',
+    icon: '⭐',
+  },
+  {
+    to: '/multiplayer',
+    title: 'Multiplayer',
+    description: 'Join a room and race up to 4 players on identical seeds.',
+    icon: '👥',
+  },
+] as const;
 
 export default function HomePage() {
   const { user, tokens, logout, fetchProfile } = useAuthStore();
@@ -19,184 +51,77 @@ export default function HomePage() {
   }, [tokens, user, fetchProfile]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-8">
-      <header className="mb-12 text-center">
-        <h1 className="mb-2 text-5xl font-bold tracking-tight text-[var(--color-gold)]">
-          Three Towers Solitaire
-        </h1>
-        <p className="text-lg text-white/70">TriPeaks solitaire — Milestone 14</p>
-      </header>
+    <AppBackground variant="lobby">
+      <div className="lobby">
+        <header className="lobby-hero">
+          <MagicLogo className="mx-auto" />
+          <h1 className="lobby-hero__title">Magic Solitaire</h1>
+          <p className="lobby-hero__tagline">
+            Clear the three towers. Chain combos. Chase the high score.
+          </p>
+        </header>
 
-      <main className="w-full max-w-4xl rounded-2xl border border-white/10 bg-black/20 p-8 backdrop-blur-sm">
-        {user ? (
-          <div className="mb-8 space-y-4 rounded-xl bg-white/5 p-4">
-            <div className="flex items-center justify-between">
+        <div className="lobby-panel mb-6">
+          {user ? (
+            <div className="lobby-user">
               <div>
-                <p className="text-sm text-white/50">Signed in as</p>
+                <p className="text-xs uppercase tracking-wide text-white/45">Welcome back</p>
                 <Link
                   to="/profile"
-                  className="text-lg font-semibold text-white hover:text-[var(--color-gold)]"
+                  className="text-xl font-semibold text-white hover:text-[var(--color-gold-light)]"
                 >
                   {user.username}
                 </Link>
-                <p className="text-sm text-white/60">{user.email}</p>
               </div>
-              <button
-                onClick={() => logout()}
-                className="rounded-lg border border-white/10 px-4 py-2 text-sm text-white/70 transition hover:bg-white/5"
-              >
-                Sign out
-              </button>
+              <div className="flex flex-wrap gap-2">
+                <GameLink to="/profile" variant="accent">
+                  Profile
+                </GameLink>
+                <GameButton variant="ghost" onClick={() => logout()}>
+                  Sign out
+                </GameButton>
+              </div>
             </div>
-            <Link
-              to="/profile"
-              className="block rounded-lg border border-[var(--color-gold)]/30 py-3 text-center font-semibold text-[var(--color-gold)] hover:bg-[var(--color-gold)]/10"
-            >
-              My Profile
-            </Link>
-            <Link
-              to="/play"
-              className="block rounded-lg bg-[var(--color-gold)] py-3 text-center font-semibold text-black hover:brightness-110"
-            >
-              Play Solo
-            </Link>
-            <Link
-              to="/daily"
-              className="block rounded-lg border border-[var(--color-gold)]/50 bg-[var(--color-gold)]/10 py-3 text-center font-semibold text-[var(--color-gold)] hover:bg-[var(--color-gold)]/20"
-            >
-              Daily Challenge
-            </Link>
-            <Link
-              to="/vs-ai"
-              className="block rounded-lg border border-white/10 py-3 text-center font-semibold text-white/80 hover:bg-white/5"
-            >
-              Practice vs AI
-            </Link>
-            <Link
-              to="/puzzles"
-              className="block rounded-lg border border-white/10 py-3 text-center font-semibold text-white/80 hover:bg-white/5"
-            >
-              Puzzle Mode
-            </Link>
-            <Link
-              to="/multiplayer"
-              className="block rounded-lg border border-[var(--color-gold)]/30 py-3 text-center font-semibold text-[var(--color-gold)] hover:bg-[var(--color-gold)]/10"
-            >
-              Multiplayer
-            </Link>
-          </div>
-        ) : (
-          <div className="mb-8 flex flex-col gap-3">
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Link
-                to="/play"
-                className="flex-1 rounded-lg bg-[var(--color-gold)] py-3 text-center font-semibold text-black hover:brightness-110"
-              >
-                Play Solo
-              </Link>
-              <Link
-                to="/daily"
-                className="flex-1 rounded-lg border border-[var(--color-gold)]/50 bg-[var(--color-gold)]/10 py-3 text-center font-semibold text-[var(--color-gold)] hover:bg-[var(--color-gold)]/20"
-              >
-                Daily
-              </Link>
-              <Link
-                to="/vs-ai"
-                className="flex-1 rounded-lg border border-white/10 py-3 text-center font-semibold text-white/80 hover:bg-white/5"
-              >
-                vs AI
-              </Link>
-              <Link
-                to="/puzzles"
-                className="flex-1 rounded-lg border border-white/10 py-3 text-center font-semibold text-white/80 hover:bg-white/5"
-              >
-                Puzzles
-              </Link>
-              <Link
-                to="/multiplayer"
-                className="flex-1 rounded-lg border border-[var(--color-gold)]/30 py-3 text-center font-semibold text-[var(--color-gold)] hover:bg-[var(--color-gold)]/10"
-              >
-                Multiplayer
-              </Link>
-            </div>
-            <div className="flex gap-3">
-              <Link
-                to="/login"
-                className="flex-1 rounded-lg border border-white/10 py-2.5 text-center font-semibold text-white/80 hover:bg-white/5"
-              >
+          ) : (
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row">
+              <GameLink to="/play" variant="primary" className="flex-1 py-3">
+                Play as Guest
+              </GameLink>
+              <GameLink to="/login" variant="secondary" className="flex-1 py-3">
                 Sign in
-              </Link>
-              <Link
-                to="/register"
-                className="flex-1 rounded-lg border border-white/10 py-2.5 text-center font-semibold text-white/80 hover:bg-white/5"
-              >
+              </GameLink>
+              <GameLink to="/register" variant="ghost" className="flex-1 py-3">
                 Register
-              </Link>
+              </GameLink>
             </div>
+          )}
+
+          <div className="mode-grid">
+            {MODES.map((mode) => (
+              <ModeTile key={mode.to} {...mode} />
+            ))}
           </div>
-        )}
+        </div>
 
-        <h2 className="mb-6 text-xl font-semibold">Project Status</h2>
-
-        <ul className="space-y-3 text-white/80">
-          <StatusItem done label="Monorepo structure (Turborepo + npm workspaces)" />
-          <StatusItem done label="Shared types package (@three-towers/shared)" />
-          <StatusItem done label="Game engine package stub (@three-towers/game-engine)" />
-          <StatusItem done label="React 19 client (Vite + TailwindCSS)" />
-          <StatusItem done label="NestJS server" />
-          <StatusItem done label="Authentication (JWT, email login, OAuth stubs)" />
-          <StatusItem done label="Database / Prisma (PostgreSQL)" />
-          <StatusItem done label="Game engine (seeded shuffle, move validation)" />
-          <StatusItem done label="Card rendering with PixiJS" />
-          <StatusItem done label="Single player (timed / relaxed, persistence)" />
-          <StatusItem done label="Scoring system (bonuses, leaderboard)" />
-          <StatusItem done label="Multiplayer (Socket.io rooms, same-seed races)" />
-          <StatusItem done label="AI opponents (practice vs AI)" />
-          <StatusItem done label="Daily challenge (shared seed, leaderboard)" />
-          <StatusItem done label="Puzzle mode (curated layouts, stars)" />
-          <StatusItem done label="Undo & hints (solo play assistance)" />
-          <StatusItem done label="Player profile & statistics" />
-          <StatusItem done label="Docker deployment (Compose stack)" />
-        </ul>
-
-        <div className="mt-8 grid gap-6 lg:grid-cols-2">
-          <div className="grid grid-cols-2 gap-4 rounded-xl bg-white/5 p-4 text-sm">
-            <Stat label="Tableau cards" value={TRIPEAKS_TABLEAU_CARD_COUNT} />
-            <Stat label="Stock cards" value={TRIPEAKS_STOCK_CARD_COUNT} />
-            <Stat label="Total deck" value={TRIPEAKS_TOTAL_CARD_COUNT} />
-            <Stat label="Engine version" value={ENGINE_VERSION} />
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="lobby-panel">
+            <h2 className="mb-4 font-[family-name:var(--font-display)] text-lg text-[var(--color-gold-light)]">
+              How to Play
+            </h2>
+            <ul className="space-y-2 text-sm leading-relaxed text-white/65">
+              <li>• Play cards one rank higher or lower than the waste pile.</li>
+              <li>• Clear all 28 tableau cards before the stock runs out.</li>
+              <li>• Chain plays to build combos and boost your score.</li>
+              <li>• Ace and King connect — wrap around the deck!</li>
+            </ul>
           </div>
           <LeaderboardPanel mode="timed" />
         </div>
-      </main>
 
-      <footer className="mt-8 text-sm text-white/40">
-        Milestone 14 complete — project milestones finished
-      </footer>
-    </div>
-  );
-}
-
-function StatusItem({ done = false, label }: { done?: boolean; label: string }) {
-  return (
-    <li className="flex items-center gap-3">
-      <span
-        className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs ${
-          done ? 'bg-green-500/20 text-green-400' : 'bg-white/10 text-white/40'
-        }`}
-      >
-        {done ? '✓' : '·'}
-      </span>
-      {label}
-    </li>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string | number }) {
-  return (
-    <div>
-      <div className="text-white/50">{label}</div>
-      <div className="text-lg font-mono font-semibold">{value}</div>
-    </div>
+        <footer className="mt-10 text-center text-xs text-white/35">
+          Magic Solitaire — TriPeaks on the green felt
+        </footer>
+      </div>
+    </AppBackground>
   );
 }

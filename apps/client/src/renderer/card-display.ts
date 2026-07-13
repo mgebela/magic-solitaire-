@@ -13,9 +13,20 @@ export function createCardGraphic(card: Card | null, faceUp: boolean): Container
   const container = new Container();
   const gfx = new Graphics();
 
+  // Drop shadow
+  const shadow = new Graphics();
+  shadow.roundRect(3, 4, CARD_WIDTH, CARD_HEIGHT, CARD_RADIUS);
+  shadow.fill({ color: 0x000000, alpha: 0.25 });
+  container.addChild(shadow);
+
   gfx.roundRect(0, 0, CARD_WIDTH, CARD_HEIGHT, CARD_RADIUS);
-  gfx.fill({ color: faceUp ? 0xfffdf8 : 0x1a4d7a });
-  gfx.stroke({ color: faceUp ? 0xc8c0b0 : 0x0d2840, width: 2 });
+  if (faceUp) {
+    gfx.fill({ color: 0xfffdf8 });
+    gfx.stroke({ color: 0xc8c0b0, width: 1.5 });
+  } else {
+    gfx.fill({ color: 0x1a2a5e });
+    gfx.stroke({ color: 0xd4a843, width: 2 });
+  }
   container.addChild(gfx);
 
   if (faceUp && card) {
@@ -23,31 +34,73 @@ export function createCardGraphic(card: Card | null, faceUp: boolean): Container
     const symbol = SUIT_SYMBOLS[card.suit];
     const label = rankLabel(card.rank);
 
-    const topLeft = new Text({
-      text: `${label}\n${symbol}`,
-      style: { fontFamily: 'Georgia, serif', fontSize: 18, fill: color, lineHeight: 20 },
-    });
-    topLeft.x = 8;
-    topLeft.y = 6;
+    const cornerStyle = {
+      fontFamily: 'Georgia, serif',
+      fontSize: 16,
+      fontWeight: '700' as const,
+      fill: color,
+      lineHeight: 18,
+    };
+
+    const topLeft = new Text({ text: `${label}\n${symbol}`, style: cornerStyle });
+    topLeft.x = 7;
+    topLeft.y = 5;
+
+    const bottomRight = new Text({ text: `${label}\n${symbol}`, style: cornerStyle });
+    bottomRight.anchor.set(1);
+    bottomRight.rotation = Math.PI;
+    bottomRight.x = CARD_WIDTH - 7;
+    bottomRight.y = CARD_HEIGHT - 5;
 
     const center = new Text({
       text: symbol,
-      style: { fontFamily: 'Georgia, serif', fontSize: 36, fill: color },
+      style: { fontFamily: 'Georgia, serif', fontSize: 34, fill: color },
     });
     center.anchor.set(0.5);
     center.x = CARD_WIDTH / 2;
     center.y = CARD_HEIGHT / 2;
 
-    container.addChild(topLeft, center);
+    container.addChild(topLeft, bottomRight, center);
   } else {
-    const pattern = new Graphics();
-    pattern.roundRect(8, 8, CARD_WIDTH - 16, CARD_HEIGHT - 16, 4);
-    pattern.fill({ color: 0x2563a8 });
-    pattern.stroke({ color: 0x3d7cc9, width: 1 });
-    container.addChild(pattern);
+    drawCardBack(container);
   }
 
   return container;
+}
+
+function drawCardBack(container: Container): void {
+  const inset = new Graphics();
+  inset.roundRect(6, 6, CARD_WIDTH - 12, CARD_HEIGHT - 12, 5);
+  inset.fill({ color: 0x243878 });
+  inset.stroke({ color: 0xd4a843, width: 1, alpha: 0.6 });
+  container.addChild(inset);
+
+  const star = new Text({
+    text: '✦',
+    style: { fontFamily: 'Georgia, serif', fontSize: 28, fill: 0xd4a843 },
+  });
+  star.anchor.set(0.5);
+  star.x = CARD_WIDTH / 2;
+  star.y = CARD_HEIGHT / 2;
+  container.addChild(star);
+
+  // Corner diamonds
+  for (const [x, y] of [
+    [14, 14],
+    [CARD_WIDTH - 14, 14],
+    [14, CARD_HEIGHT - 14],
+    [CARD_WIDTH - 14, CARD_HEIGHT - 14],
+  ]) {
+    const gem = new Text({
+      text: '◆',
+      style: { fontFamily: 'Georgia, serif', fontSize: 10, fill: 0xd4a843 },
+    });
+    gem.alpha = 0.7;
+    gem.anchor.set(0.5);
+    gem.x = x;
+    gem.y = y;
+    container.addChild(gem);
+  }
 }
 
 export function setCardHighlight(
@@ -63,22 +116,17 @@ export function setCardHighlight(
 
   const glow = new Graphics();
   glow.label = 'highlight';
-  glow.roundRect(-3, -3, CARD_WIDTH + 6, CARD_HEIGHT + 6, CARD_RADIUS + 2);
-
-  let color = 0xffffff;
-  let width = 1;
-  let alpha = 0.4;
+  glow.roundRect(-4, -4, CARD_WIDTH + 8, CARD_HEIGHT + 8, CARD_RADIUS + 3);
 
   if (hint) {
-    color = 0x66e0ff;
-    width = 4;
-    alpha = 1;
+    glow.stroke({ color: 0x66e0ff, width: 4, alpha: 1 });
   } else if (playable) {
-    color = 0xd4a843;
-    width = 3;
-    alpha = 1;
+    glow.stroke({ color: 0xf0d080, width: 3, alpha: 1 });
+    glow.roundRect(-2, -2, CARD_WIDTH + 4, CARD_HEIGHT + 4, CARD_RADIUS + 2);
+    glow.stroke({ color: 0xd4a843, width: 1, alpha: 0.5 });
+  } else {
+    glow.stroke({ color: 0xffffff, width: 1, alpha: 0.35 });
   }
 
-  glow.stroke({ color, width, alpha });
   container.addChildAt(glow, 0);
 }

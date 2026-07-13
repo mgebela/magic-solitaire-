@@ -15,13 +15,10 @@ const DIFFICULTY_COLORS: Record<PuzzleDefinition['difficulty'], string> = {
 
 export function PuzzleCard({ puzzle, progress }: PuzzleCardProps) {
   return (
-    <Link
-      to={`/puzzles/${puzzle.id}`}
-      className="block rounded-xl border border-white/10 bg-white/5 p-5 transition hover:border-[var(--color-gold)]/40 hover:bg-white/10"
-    >
+    <Link to={`/puzzles/${puzzle.id}`} className="mode-tile block">
       <div className="mb-3 flex items-start justify-between gap-3">
         <div>
-          <h3 className="text-lg font-semibold text-white">{puzzle.title}</h3>
+          <h3 className="mode-tile__title">{puzzle.title}</h3>
           <p className={`mt-1 text-xs font-medium uppercase ${DIFFICULTY_COLORS[puzzle.difficulty]}`}>
             {puzzle.difficulty}
           </p>
