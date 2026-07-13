@@ -1,16 +1,16 @@
 import {
   Application,
   Container,
-  Text,
   type FederatedPointerEvent,
 } from 'pixi.js';
 import type { Card, CardId, GameState } from '@three-towers/shared';
 import { getPlayableCards, cardPointsForCombo } from '@three-towers/game-engine';
 import { TweenManager, tween } from './animations';
-import { createCardGraphic, setCardHighlight } from './card-display';
+import { createCardGraphic, setCardHighlight, setStockCount } from './card-display';
 import { ScoreEffectManager } from './score-effects';
-import { drawTableBackground } from './table-background';
-import { CARD_HEIGHT, CARD_WIDTH } from './constants';
+import { drawMagicTableBackground } from './table-background';
+import { drawTowerOrbs } from './tower-orbs';
+import { CARD_WIDTH } from './constants';
 import {
   BOARD_HEIGHT,
   BOARD_WIDTH,
@@ -21,12 +21,14 @@ import {
 } from './layout-positions';
 
 export type CardClickHandler = (cardId: CardId) => void;
+export type DrawClickHandler = () => void;
 
 interface CardSpriteEntry {
   container: Container;
   cardId: CardId;
   slot: 'tableau' | 'waste' | 'stock';
   tableauIndex?: number;
+  faceUp?: boolean;
 }
 
 /**
@@ -44,7 +46,7 @@ export class GameRenderer {
   private state: GameState | null = null;
   private hintCardId: CardId | null = null;
   private onCardClick: CardClickHandler | null = null;
-  private stockLabel: Text | null = null;
+  private onDrawClick: DrawClickHandler | null = null;
   private lastTime = performance.now();
 
   async init(canvas: HTMLCanvasElement): Promise<void> {
@@ -83,6 +85,10 @@ export class GameRenderer {
     this.onCardClick = handler;
   }
 
+  setOnDrawClick(handler: DrawClickHandler | null): void {
+    this.onDrawClick = handler;
+  }
+
   setHintCardId(cardId: CardId | null): void {
     this.hintCardId = cardId;
     if (this.state) {
@@ -110,8 +116,10 @@ export class GameRenderer {
   }
 
   private drawFeltBackground(): void {
-    const felt = drawTableBackground();
-    this.root.addChildAt(felt, 0);
+    const bg = drawMagicTableBackground();
+    const orbs = drawTowerOrbs();
+    this.root.addChildAt(bg, 0);
+    this.root.addChildAt(orbs, 1);
   }
 
   private syncTableau(state: GameState, prev: GameState | null, animate: boolean): void {
@@ -128,11 +136,12 @@ export class GameRenderer {
       const pos = TABLEAU_POSITIONS[index];
       const isPlayable = validPlays.has(card.id);
       const isUncovered = state.uncovered.includes(card.id);
+      const faceUp = isUncovered;
 
       let entry = this.sprites.get(key);
       if (!entry) {
-        const container = this.makeInteractiveCard(card, () => this.onCardClick?.(card.id));
-        entry = { container, cardId: card.id, slot: 'tableau', tableauIndex: index };
+        const container = this.makeInteractiveCard(card, faceUp, () => this.onCardClick?.(card.id));
+        entry = { container, cardId: card.id, slot: 'tableau', tableauIndex: index, faceUp };
         this.sprites.set(key, entry);
         this.tableauLayer.addChild(container);
         container.alpha = 0;
@@ -143,9 +152,10 @@ export class GameRenderer {
             container.y = pos.y - 20 + 20 * t;
           }),
         );
-      } else if (entry.cardId !== card.id) {
-        this.replaceCardGraphic(entry.container, card);
+      } else if (entry.cardId !== card.id || entry.faceUp !== faceUp) {
+        this.replaceCardGraphic(entry.container, card, faceUp);
         entry.cardId = card.id;
+        entry.faceUp = faceUp;
       }
 
       entry.container.zIndex = pos.layer;
@@ -224,7 +234,7 @@ export class GameRenderer {
       this.sprites.set(key, entry);
       this.pilesLayer.addChild(container);
     } else if (entry.cardId !== state.waste.id) {
-      this.replaceCardGraphic(entry.container, state.waste);
+      this.replaceCardGraphic(entry.container, state.waste, true);
       entry.cardId = state.waste.id;
 
       const lastMove = state.moves[state.moves.length - 1];
@@ -251,10 +261,6 @@ export class GameRenderer {
         entry.container.destroy({ children: true });
         this.sprites.delete(key);
       }
-      if (this.stockLabel) {
-        this.stockLabel.destroy();
-        this.stockLabel = null;
-      }
       return;
     }
 
@@ -263,7 +269,7 @@ export class GameRenderer {
       container.eventMode = 'static';
       container.cursor = 'pointer';
       container.on('pointertap', () => {
-        // Stock click handled by React HUD draw button for M5
+        this.onDrawClick?.();
       });
       entry = { container, cardId: 'stock', slot: 'stock' };
       this.sprites.set(key, entry);
@@ -271,20 +277,11 @@ export class GameRenderer {
     }
 
     entry.container.position.set(pos.x, pos.y);
-
-    if (!this.stockLabel) {
-      this.stockLabel = new Text({
-        text: '',
-        style: { fontFamily: 'system-ui, sans-serif', fontSize: 14, fill: 0xffffff },
-      });
-      this.pilesLayer.addChild(this.stockLabel);
-    }
-    this.stockLabel.text = String(state.stock.length);
-    this.stockLabel.position.set(pos.x + CARD_WIDTH / 2 - 6, pos.y + CARD_HEIGHT + 6);
+    setStockCount(entry.container, state.stock.length);
   }
 
-  private makeInteractiveCard(card: Card, onClick: () => void): Container {
-    const container = createCardGraphic(card, true);
+  private makeInteractiveCard(card: Card, faceUp: boolean, onClick: () => void): Container {
+    const container = createCardGraphic(card, faceUp);
     container.eventMode = 'static';
     container.cursor = 'pointer';
     container.on('pointertap', (e: FederatedPointerEvent) => {
@@ -294,9 +291,9 @@ export class GameRenderer {
     return container;
   }
 
-  private replaceCardGraphic(container: Container, card: Card): void {
+  private replaceCardGraphic(container: Container, card: Card, faceUp: boolean): void {
     container.removeChildren();
-    const fresh = createCardGraphic(card, true);
+    const fresh = createCardGraphic(card, faceUp);
     for (const child of [...fresh.children]) {
       container.addChild(child);
     }

@@ -6,10 +6,14 @@ export interface CardPosition {
   layer: number;
 }
 
+export const BOARD_WIDTH = 960;
+export const BOARD_HEIGHT = 640;
+export const STONE_PANEL_TOP = 500;
+
 const H_STEP = CARD_WIDTH * 0.44;
-const V_STEP = 34;
-const START_X = 100;
-const START_Y = 70;
+const V_STEP = 32;
+const START_X = 130;
+const START_Y = 72;
 
 /** Screen positions for each of the 28 tableau indices (LAYOUT_VERSION 1). */
 export function buildTableauPositions(): CardPosition[] {
@@ -58,9 +62,8 @@ function slot(cx: number, y: number, layer: number): CardPosition {
 
 export const TABLEAU_POSITIONS = buildTableauPositions();
 
-export const WASTE_POSITION: CardPosition = { x: 560, y: 360, layer: 10 };
-export const STOCK_POSITION: CardPosition = { x: 660, y: 360, layer: 10 };
-export const FOUNDATION_POSITION: CardPosition = { x: 460, y: 360, layer: 10 };
+const PANEL_CARD_Y = STONE_PANEL_TOP + 28;
 
-export const BOARD_WIDTH = 780;
-export const BOARD_HEIGHT = 520;
+export const STOCK_POSITION: CardPosition = { x: 72, y: PANEL_CARD_Y, layer: 10 };
+export const WASTE_POSITION: CardPosition = { x: 168, y: PANEL_CARD_Y, layer: 11 };
+export const FOUNDATION_POSITION: CardPosition = { x: 264, y: PANEL_CARD_Y, layer: 10 };
