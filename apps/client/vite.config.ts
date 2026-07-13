@@ -12,6 +12,15 @@ export default defineConfig({
       '@three-towers/game-engine': path.resolve(__dirname, '../../apps/game-engine/src'),
     },
   },
+  build: {
+    // Pixi dynamically imports WebGL/WebGPU renderer chunks; a single bundle
+    // avoids stale-index.html 404s on Netlify after deploys.
+    rollupOptions: {
+      output: {
+        inlineDynamicImports: true,
+      },
+    },
+  },
   server: {
     port: 5173,
     proxy: {

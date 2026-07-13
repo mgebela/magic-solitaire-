@@ -3,7 +3,24 @@
   command = "npm ci && npm run build --workspace=@three-towers/client"
   publish = "apps/client/dist"
 
-# SPA routing for React Router
+# Never cache HTML shell — prevents stale chunk references after deploys
+[[headers]]
+  for = "/"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+# Hashed assets are immutable
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# SPA routing — static files in dist are served before this rule
 [[redirects]]
   from = "/*"
   to = "/index.html"
