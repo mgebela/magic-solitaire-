@@ -9,8 +9,8 @@ export function AiDifficultySelect({ onSelect, isLoading }: AiDifficultySelectPr
   return (
     <div className="flex flex-col items-center justify-center gap-8 p-8">
       <div className="text-center">
-        <h2 className="text-3xl font-bold text-white">Practice vs AI</h2>
-        <p className="mt-2 text-white/60">Same seeded board — race the computer</p>
+        <h2 className="page-title">Tower Duel</h2>
+        <p className="page-subtitle">Same seeded board — race the computer</p>
       </div>
 
       <div className="grid w-full max-w-2xl gap-4 sm:grid-cols-2">
@@ -20,12 +20,12 @@ export function AiDifficultySelect({ onSelect, isLoading }: AiDifficultySelectPr
             type="button"
             disabled={isLoading}
             onClick={() => onSelect(opponent.difficulty)}
-            className="rounded-2xl border border-white/10 bg-white/5 p-6 text-left transition hover:border-[var(--color-gold)]/50 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+            className="mode-tile text-left disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <div className="mb-2 text-xl font-semibold text-[var(--color-gold)]">
-              {opponent.label}
+            <div>
+              <h3 className="mode-tile__title">{opponent.label}</h3>
+              <p className="mode-tile__desc">{opponent.description}</p>
             </div>
-            <p className="text-sm leading-relaxed text-white/70">{opponent.description}</p>
           </button>
         ))}
       </div>

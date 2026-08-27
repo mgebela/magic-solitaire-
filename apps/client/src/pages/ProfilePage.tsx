@@ -45,15 +45,13 @@ export default function ProfilePage() {
   return (
     <AppBackground variant="lobby">
       <div className="lobby mx-auto max-w-4xl">
-        <Link to="/" className="text-sm font-semibold text-[var(--color-gold)] hover:opacity-80">
+        <Link to="/" className="page-back">
           ← Lobby
         </Link>
 
         <header className="mt-4 mb-8">
-          <h1 className="font-[family-name:var(--font-display)] text-4xl text-[var(--color-gold-light)]">
-            {user.username}
-          </h1>
-          <p className="mt-1 text-white/60">{user.email}</p>
+          <h1 className="page-title">{user.username}</h1>
+          <p className="page-subtitle">{user.email}</p>
           <p className="mt-2 text-sm text-white/40">Member since {memberSince}</p>
         </header>
 

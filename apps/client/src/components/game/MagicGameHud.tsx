@@ -70,9 +70,6 @@ export function MagicGameHud({
         aria-label={`Draw card, ${state.stock.length} remaining`}
       />
 
-      <div className="stone-hud__vines stone-hud__vines--left" aria-hidden />
-      <div className="stone-hud__vines stone-hud__vines--right" aria-hidden />
-
       <div className="stone-hud__pit stone-hud__pit--score">
         <span className="stone-hud__pit-label">Score</span>
         <span className="stone-hud__pit-value">{state.score}</span>

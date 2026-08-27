@@ -208,14 +208,14 @@ export default function RoomPage() {
           {room.status === 'waiting' && (
             <div className="flex flex-1 items-center justify-center rounded-2xl border border-dashed border-white/10 text-white/40">
               Waiting for players… share code{' '}
-              <strong className="mx-2 text-[var(--color-gold)]">{room.code}</strong>
+              <strong className="mx-2 text-[var(--color-neon)]">{room.code}</strong>
             </div>
           )}
 
           {results && (
             <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
               <div className="lobby-panel w-full max-w-md p-8">
-                <h2 className="mb-6 text-center font-[family-name:var(--font-display)] text-3xl text-[var(--color-gold)]">
+                <h2 className="page-title mb-6 text-center !text-3xl">
                   Match Results
                 </h2>
                 <ol className="space-y-3">

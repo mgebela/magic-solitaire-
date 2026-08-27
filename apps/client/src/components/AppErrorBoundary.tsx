@@ -27,7 +27,7 @@ export class AppErrorBoundary extends React.Component<
         style={{
           minHeight: '100vh',
           padding: 24,
-          background: '#0a2e1c',
+          background: '#061208',
           color: 'rgba(255,255,255,0.85)',
           fontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
         }}
@@ -37,12 +37,12 @@ export class AppErrorBoundary extends React.Component<
             maxWidth: 880,
             margin: '0 auto',
             borderRadius: 16,
-            border: '1px solid rgba(212, 168, 67, 0.35)',
+            border: '1px solid rgba(109, 255, 69, 0.4)',
             background: 'rgba(0,0,0,0.35)',
             padding: 20,
           }}
         >
-          <div style={{ color: '#f0d080', fontWeight: 700, fontSize: 18 }}>
+          <div style={{ color: '#d6ef4a', fontWeight: 700, fontSize: 18 }}>
             Space Towers Solitaire crashed
           </div>
           <div style={{ marginTop: 8, opacity: 0.85 }}>

@@ -47,13 +47,13 @@ export default function LoginPage() {
 
       <div className="mt-6 space-y-2 text-center text-sm text-white/60">
         <p>
-          <Link to="/forgot-password" className="text-[var(--color-gold)] hover:underline">
+          <Link to="/forgot-password" className="text-[var(--color-neon)] hover:underline">
             Forgot password?
           </Link>
         </p>
         <p>
           No account?{' '}
-          <Link to="/register" className="text-[var(--color-gold)] hover:underline">
+          <Link to="/register" className="text-[var(--color-neon)] hover:underline">
             Create one
           </Link>
         </p>

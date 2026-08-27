@@ -87,7 +87,13 @@ export class GameRenderer {
       return;
     }
 
-    this.drawFeltBackground();
+    await this.loadBackground();
+    if (this.destroyed) {
+      this.app.destroy(false, { children: true });
+      this.app = null;
+      return;
+    }
+
     this.root.addChild(this.tableauLayer, this.pilesLayer, this.overlayLayer);
     this.app.stage.addChild(this.root);
 
@@ -160,8 +166,12 @@ export class GameRenderer {
     this.syncStock(state);
   }
 
-  private drawFeltBackground(): void {
-    const bg = drawMagicTableBackground();
+  private async loadBackground(): Promise<void> {
+    const bg = await drawMagicTableBackground();
+    if (this.destroyed) {
+      bg.destroy({ children: true });
+      return;
+    }
     const orbs = drawTowerOrbs();
     this.root.addChildAt(bg, 0);
     this.root.addChildAt(orbs, 1);

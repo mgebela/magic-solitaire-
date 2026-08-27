@@ -106,10 +106,8 @@ export default function DailyPage() {
           {!isLoading && !state && !hasFinishedAttempt && challenge?.canPlay && (
             <div className="flex flex-1 flex-col items-center justify-center gap-6 py-12">
               <div className="lobby-panel max-w-md text-center">
-                <h2 className="font-[family-name:var(--font-display)] text-3xl text-[var(--color-gold-light)]">
-                  Today&apos;s Challenge
-                </h2>
-                <p className="mt-3 text-white/60">
+                <h2 className="page-title !text-3xl">Today's Challenge</h2>
+                <p className="page-subtitle">
                   Everyone plays the same board. One shot — make it count.
                 </p>
                 <GameButton

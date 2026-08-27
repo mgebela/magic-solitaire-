@@ -9,7 +9,7 @@ interface DailyLeaderboardPanelProps {
 export function DailyLeaderboardPanel({ leaderboard, currentUserId }: DailyLeaderboardPanelProps) {
   if (!leaderboard) {
     return (
-      <div className="rounded-xl border border-white/10 bg-black/20 p-4">
+      <div className="lobby-panel">
         <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-white/50">
           Daily Leaderboard
         </h3>
@@ -19,7 +19,7 @@ export function DailyLeaderboardPanel({ leaderboard, currentUserId }: DailyLeade
   }
 
   return (
-    <div className="rounded-xl border border-white/10 bg-black/20 p-4">
+    <div className="lobby-panel">
       <h3 className="mb-1 text-sm font-semibold uppercase tracking-wide text-white/50">
         Daily Leaderboard
       </h3>

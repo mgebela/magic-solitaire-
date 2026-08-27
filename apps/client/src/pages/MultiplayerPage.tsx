@@ -44,14 +44,12 @@ export default function MultiplayerPage() {
     <AppBackground variant="lobby">
       <div className="flex min-h-screen flex-col items-center justify-center p-8">
         <div className="lobby-panel w-full max-w-lg">
-          <Link to="/" className="text-sm font-semibold text-[var(--color-gold)] hover:opacity-80">
+          <Link to="/" className="page-back">
             ← Lobby
           </Link>
 
-          <h1 className="mt-4 font-[family-name:var(--font-display)] text-3xl text-[var(--color-gold-light)]">
-            Multiplayer
-          </h1>
-          <p className="mt-2 text-white/60">
+          <h1 className="page-title mt-4">Multiplayer</h1>
+          <p className="page-subtitle">
             Race opponents on the same seeded board. Highest score wins.
           </p>
 
@@ -100,7 +98,7 @@ export default function MultiplayerPage() {
                 onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
                 placeholder="Room code"
                 maxLength={6}
-                className="flex-1 rounded-lg border border-white/10 bg-black/25 px-4 py-3 font-mono uppercase tracking-widest text-white placeholder:text-white/30 outline-none focus:border-[var(--color-gold)]/50"
+                className="stone-input flex-1 px-4 py-3 font-mono uppercase tracking-widest placeholder:text-white/30"
               />
               <GameButton
                 variant="primary"

@@ -38,7 +38,7 @@ export default function ResetPasswordPage() {
       <AuthLayout title="Reset password">
         <AuthError message="Invalid reset link. Request a new one from the forgot password page." />
         <p className="mt-4 text-center text-sm">
-          <Link to="/forgot-password" className="text-[var(--color-gold)] hover:underline">
+          <Link to="/forgot-password" className="text-[var(--color-neon)] hover:underline">
             Request reset link
           </Link>
         </p>
@@ -53,7 +53,7 @@ export default function ResetPasswordPage() {
           Your password has been reset successfully.
         </div>
         <p className="mt-4 text-center text-sm">
-          <Link to="/login" className="text-[var(--color-gold)] hover:underline">
+          <Link to="/login" className="text-[var(--color-neon)] hover:underline">
             Sign in with your new password
           </Link>
         </p>

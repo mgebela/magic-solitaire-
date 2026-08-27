@@ -28,12 +28,12 @@ export function MagicLogo({ className = '', size = 'lg' }: MagicLogoProps) {
         </filter>
       </defs>
       <ellipse cx="130" cy="88" rx="88" ry="52" fill="#1dff55" opacity="0.22" filter="url(#softGlow)" />
-      <rect x="52" y="118" width="50" height="32" rx="3" fill="#5a5a5a" stroke="#2a2a2a" />
-      <rect x="105" y="118" width="50" height="32" rx="3" fill="#646464" stroke="#2a2a2a" />
-      <rect x="158" y="118" width="50" height="32" rx="3" fill="#5a5a5a" stroke="#2a2a2a" />
-      <rect x="78" y="86" width="50" height="32" rx="3" fill="#6a6a6a" stroke="#2a2a2a" />
-      <rect x="132" y="86" width="50" height="32" rx="3" fill="#585858" stroke="#2a2a2a" />
-      <rect x="105" y="44" width="50" height="42" rx="5" fill="#3f3f3f" stroke="#1a1a1a" />
+      <rect x="52" y="118" width="50" height="32" rx="3" fill="#b8b49a" stroke="#5a5648" />
+      <rect x="105" y="118" width="50" height="32" rx="3" fill="#c4c0a8" stroke="#5a5648" />
+      <rect x="158" y="118" width="50" height="32" rx="3" fill="#b0ac94" stroke="#5a5648" />
+      <rect x="78" y="86" width="50" height="32" rx="3" fill="#c8c4ac" stroke="#5a5648" />
+      <rect x="132" y="86" width="50" height="32" rx="3" fill="#b4b09a" stroke="#5a5648" />
+      <rect x="105" y="44" width="50" height="42" rx="5" fill="#9a967e" stroke="#3a382c" />
       <rect x="116" y="54" width="28" height="22" rx="2" fill="#0a0a0a" />
       <circle cx="130" cy="65" r="9" fill="url(#orbGlow)" filter="url(#softGlow)" />
       <path d="M8 168 C48 120, 72 176, 108 150" fill="none" stroke="#2d9a32" strokeWidth="10" />

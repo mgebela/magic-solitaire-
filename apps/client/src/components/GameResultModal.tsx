@@ -53,14 +53,14 @@ export function GameResultModal({
           <button
             type="button"
             onClick={onPlayAgain}
-            className="flex-1 rounded-lg bg-[var(--color-gold)] py-3 font-semibold text-black transition hover:brightness-110"
+            className="game-btn game-btn--primary flex-1 py-3"
           >
             Play Again
           </button>
           <button
             type="button"
             onClick={onChangeMode}
-            className="flex-1 rounded-lg border border-white/10 py-3 font-semibold text-white/80 transition hover:bg-white/5"
+            className="game-btn game-btn--ghost flex-1 py-3"
           >
             Change Mode
           </button>

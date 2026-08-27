@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { MagicLogo } from '../components/graphics/MagicLogo';
 import { AppBackground } from '../components/layout/AppBackground';
 import { LeaderboardPanel } from '../components/LeaderboardPanel';
 import { GameButton, GameLink } from '../components/ui/GameButton';
@@ -54,7 +53,6 @@ export default function HomePage() {
     <AppBackground variant="lobby">
       <div className="lobby">
         <header className="lobby-hero">
-          <MagicLogo className="mx-auto" size="hero" />
           <h1 className="lobby-hero__title">
             SPACE
             <span>TOWERS</span>

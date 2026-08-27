@@ -12,7 +12,7 @@ export function GameTimer({ elapsedMs, mode, running }: GameTimerProps) {
   return (
     <div
       className={`font-mono text-sm tabular-nums ${
-        isTimed ? 'text-[var(--color-gold)]' : 'text-white/70'
+        isTimed ? 'text-[var(--color-neon)]' : 'text-white/70'
       }`}
     >
       <span className="text-white/50">{isTimed ? 'Time' : 'Elapsed'}: </span>

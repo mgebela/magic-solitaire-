@@ -14,15 +14,13 @@ export default function PuzzlesPage() {
   return (
     <AppBackground variant="lobby">
       <div className="lobby mx-auto max-w-3xl">
-        <Link to="/" className="text-sm font-semibold text-[var(--color-gold)] hover:opacity-80">
+        <Link to="/" className="page-back">
           ← Lobby
         </Link>
 
         <header className="mt-4 mb-8">
-          <h1 className="font-[family-name:var(--font-display)] text-4xl text-[var(--color-gold-light)]">
-            Puzzle Towers
-          </h1>
-          <p className="mt-2 text-white/60">
+          <h1 className="page-title">Puzzle Towers</h1>
+          <p className="page-subtitle">
             Curated layouts with move limits. Earn up to 3 stars per puzzle.
           </p>
           <p className="mt-3 text-sm text-white/40">

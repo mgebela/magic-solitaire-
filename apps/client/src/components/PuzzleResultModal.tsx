@@ -44,14 +44,14 @@ export function PuzzleResultModal({ result, title, onRetry, onBack }: PuzzleResu
           <button
             type="button"
             onClick={onRetry}
-            className="flex-1 rounded-lg bg-[var(--color-gold)] py-3 font-semibold text-black hover:brightness-110"
+            className="game-btn game-btn--primary flex-1 py-3"
           >
             Retry
           </button>
           <button
             type="button"
             onClick={onBack}
-            className="flex-1 rounded-lg border border-white/10 py-3 font-semibold text-white/80 hover:bg-white/5"
+            className="game-btn game-btn--ghost flex-1 py-3"
           >
             Puzzle List
           </button>

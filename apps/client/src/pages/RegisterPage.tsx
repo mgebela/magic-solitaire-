@@ -60,7 +60,7 @@ export default function RegisterPage() {
 
       <p className="mt-6 text-center text-sm text-white/60">
         Already have an account?{' '}
-        <Link to="/login" className="text-[var(--color-gold)] hover:underline">
+        <Link to="/login" className="text-[var(--color-neon)] hover:underline">
           Sign in
         </Link>
       </p>

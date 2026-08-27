@@ -55,7 +55,7 @@ export default function VsAiPage() {
     return (
       <AppBackground variant="lobby">
         <div className="lobby">
-          <Link to="/" className="text-sm font-semibold text-[var(--color-gold)] hover:opacity-80">
+          <Link to="/" className="page-back">
             ← Lobby
           </Link>
           <AiDifficultySelect onSelect={(d) => startGame(d)} />

@@ -19,7 +19,7 @@ export function AiOpponentPanel({ difficulty, state }: AiOpponentPanelProps) {
   const isThinking = status === 'playing';
 
   return (
-    <div className="rounded-xl border border-white/10 bg-black/20 p-4">
+    <div className="lobby-panel">
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-white/50">
           Opponent
