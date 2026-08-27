@@ -52,11 +52,11 @@ describe('computeUncovered', () => {
 
     const uncovered = computeUncovered(tableau);
 
-    // Bottom row indices 24–27 are always uncovered
-    expect(uncovered).toContain('c24');
-    expect(uncovered).toContain('c25');
-    expect(uncovered).toContain('c26');
-    expect(uncovered).toContain('c27');
+    // Bottom row indices 18–27 are always uncovered
+    expect(uncovered).toHaveLength(10);
+    for (let i = 18; i <= 27; i++) {
+      expect(uncovered).toContain(`c${i}`);
+    }
 
     // Top row cards are blocked
     expect(uncovered).not.toContain('c0');

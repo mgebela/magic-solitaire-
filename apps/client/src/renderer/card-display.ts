@@ -98,27 +98,23 @@ function drawStoneBack(container: Container): void {
 
 export function setCardHighlight(
   container: Container,
-  highlighted: boolean,
+  _highlighted: boolean,
   playable: boolean,
   hint = false,
 ): void {
   const existing = container.children.find((c) => c.label === 'highlight');
   if (existing) existing.destroy();
 
-  if (!highlighted && !playable && !hint) return;
+  if (!playable && !hint) return;
 
   const glow = new Graphics();
   glow.label = 'highlight';
-  glow.roundRect(-4, -4, CARD_WIDTH + 8, CARD_HEIGHT + 8, CARD_RADIUS + 3);
+  glow.roundRect(-2, -2, CARD_WIDTH + 4, CARD_HEIGHT + 4, CARD_RADIUS + 2);
 
   if (hint) {
-    glow.stroke({ color: 0x66ff88, width: 4, alpha: 1 });
-  } else if (playable) {
-    glow.stroke({ color: 0xaaff66, width: 3, alpha: 1 });
-    glow.roundRect(-2, -2, CARD_WIDTH + 4, CARD_HEIGHT + 4, CARD_RADIUS + 2);
-    glow.stroke({ color: 0x44cc44, width: 1, alpha: 0.6 });
+    glow.stroke({ color: 0x66ff88, width: 3, alpha: 1 });
   } else {
-    glow.stroke({ color: 0xffffff, width: 1, alpha: 0.3 });
+    glow.stroke({ color: 0xd4a843, width: 2, alpha: 0.9 });
   }
 
   container.addChildAt(glow, 0);

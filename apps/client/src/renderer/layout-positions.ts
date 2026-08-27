@@ -12,63 +12,55 @@ export const BOARD_HEIGHT = 640;
 export const STONE_PANEL_TOP = 468;
 
 /**
- * LAYOUT_VERSION 1 — must match apps/game-engine/src/layout.ts
+ * LAYOUT_VERSION 2 — classic TriPeaks, must match apps/game-engine/src/layout.ts
  *
- *        [0]     [1]     [2]
- *      [3] [4] [5] [6] [7] [8]
- *    [9][10][11][12][13][14][15][16][17]
- *      [18][19][20][21][22][23]
- *        [24]  [25]  [26][27]
+ *        [0]         [1]         [2]
+ *      [3] [4]     [5] [6]     [7] [8]
+ *    [9][10][11] [12][13][14] [15][16][17]
+ *  [18][19][20][21][22][23][24][25][26][27]
+ *
+ * Three separate peaks share a 10-card face-up base.
+ * Higher `layer` = drawn in front (bottom row covers the cards above).
  */
 export function buildTableauPositions(): CardPosition[] {
   const positions: CardPosition[] = new Array(28);
 
-  const overlapX = CARD_WIDTH * 0.5;
-  const overlapY = 26;
-  const row2Left = (BOARD_WIDTH - (8 * overlapX + CARD_WIDTH)) / 2;
-  const row4Top = STONE_PANEL_TOP - CARD_HEIGHT - 6;
+  const hStep = CARD_WIDTH * 0.62;
+  const vStep = 36;
+  const bottomWidth = 9 * hStep + CARD_WIDTH;
+  const startX = (BOARD_WIDTH - bottomWidth) / 2;
+  const bottomY = STONE_PANEL_TOP - CARD_HEIGHT - 16;
 
-  const rowY = {
-    r0: row4Top - overlapY * 4,
-    r1: row4Top - overlapY * 3,
-    r2: row4Top - overlapY * 2,
-    r3: row4Top - overlapY,
-    r4: row4Top,
-  };
+  const slot = (col: number, row: number, layer: number): CardPosition => ({
+    x: startX + col * hStep,
+    y: bottomY - (3 - row) * vStep,
+    layer,
+  });
 
-  const x2 = (index: number) => row2Left + (index - 9) * overlapX;
-  const peakCenter = (middleIndex: number) => x2(middleIndex) + CARD_WIDTH / 2;
+  positions[0] = slot(1.5, 0, 1);
+  positions[1] = slot(4.5, 0, 1);
+  positions[2] = slot(7.5, 0, 1);
 
-  const place = (index: number, leftX: number, row: keyof typeof rowY, layer: number) => {
-    positions[index] = { x: leftX, y: rowY[row], layer };
-  };
+  positions[3] = slot(1, 1, 2);
+  positions[4] = slot(2, 1, 2);
+  positions[5] = slot(4, 1, 2);
+  positions[6] = slot(5, 1, 2);
+  positions[7] = slot(7, 1, 2);
+  positions[8] = slot(8, 1, 2);
 
-  place(0, peakCenter(10) - CARD_WIDTH / 2, 'r0', 0);
-  place(1, peakCenter(13) - CARD_WIDTH / 2, 'r0', 0);
-  place(2, peakCenter(16) - CARD_WIDTH / 2, 'r0', 0);
+  positions[9] = slot(0.5, 2, 3);
+  positions[10] = slot(1.5, 2, 3.01);
+  positions[11] = slot(2.5, 2, 3.02);
+  positions[12] = slot(3.5, 2, 3.03);
+  positions[13] = slot(4.5, 2, 3.04);
+  positions[14] = slot(5.5, 2, 3.05);
+  positions[15] = slot(6.5, 2, 3.06);
+  positions[16] = slot(7.5, 2, 3.07);
+  positions[17] = slot(8.5, 2, 3.08);
 
-  place(3, x2(9), 'r1', 1);
-  place(4, x2(10), 'r1', 1);
-  place(5, x2(12), 'r1', 1);
-  place(6, x2(13), 'r1', 1);
-  place(7, x2(15), 'r1', 1);
-  place(8, x2(16), 'r1', 1);
-
-  for (let i = 9; i <= 17; i++) {
-    place(i, x2(i), 'r2', 2 + (i - 9) * 0.01);
+  for (let i = 0; i < 10; i++) {
+    positions[18 + i] = slot(i, 3, 4 + i * 0.01);
   }
-
-  place(18, x2(9), 'r3', 3);
-  place(19, x2(10), 'r3', 3);
-  place(20, x2(12), 'r3', 3);
-  place(21, x2(13), 'r3', 3);
-  place(22, x2(15), 'r3', 3);
-  place(23, x2(16), 'r3', 3);
-
-  place(24, peakCenter(10) - CARD_WIDTH / 2, 'r4', 4);
-  place(25, peakCenter(13) - CARD_WIDTH / 2, 'r4', 4);
-  place(26, x2(15), 'r4', 4);
-  place(27, x2(16), 'r4', 4.01);
 
   return positions;
 }

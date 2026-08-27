@@ -6,23 +6,24 @@ Three Towers Solitaire (TriPeaks) is a patience card game. Clear all 28 tableau 
 
 ## Layout
 
-Three pyramid peaks, each with 3 rows:
+Classic TriPeaks: three pyramids sharing a 10-card base.
 
 ```
-        [P1]              [P2]              [P3]
-      [P1][P1]          [P2][P2]          [P3][P3]
-    [P1][P1][P1]      [P2][P2][P2]      [P3][P3][P3]
+        [0]         [1]         [2]
+      [3] [4]     [5] [6]     [7] [8]
+    [9][10][11] [12][13][14] [15][16][17]
+  [18][19][20][21][22][23][24][25][26][27]
 ```
 
-- **6 cards per peak** × 3 peaks = **28 tableau cards**
-- **24 cards** in the stock pile
+- **28 tableau cards** (3 + 6 + 9 face-down, 10 face-up)
+- **24 cards** in the stock pile (waste starts empty)
 - **52 cards** total (standard deck)
 
 ### Overlap Rules
 
-- Bottom row cards (row 3) are initially **uncovered** and playable.
-- A card becomes uncovered when **both cards directly below it** (in the row beneath) are removed.
-- Top card of peak (row 1) is blocked by the two cards in row 2.
+- The bottom row of 10 cards is initially **uncovered** and playable.
+- A card becomes uncovered when **both cards directly below it** are removed.
+- Peak tops are blocked until the two cards beneath them are gone.
 
 ## Objective
 

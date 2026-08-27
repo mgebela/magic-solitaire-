@@ -29,7 +29,7 @@ export interface DrawMove {
 export type Move = PlayMove | DrawMove;
 
 /**
- * TriPeaks tableau: 28 positions (indices 0–27) in LAYOUT_VERSION 1.
+ * TriPeaks tableau: 28 positions (indices 0–27) in LAYOUT_VERSION 2 (3–6–9–10).
  * `null` means the card has been removed to the foundation.
  */
 export type Tableau = (Card | null)[];

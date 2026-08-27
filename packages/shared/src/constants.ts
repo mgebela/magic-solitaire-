@@ -1,4 +1,4 @@
 export const TRIPEAKS_TABLEAU_CARD_COUNT = 28;
 export const TRIPEAKS_STOCK_CARD_COUNT = 24;
 export const TRIPEAKS_TOTAL_CARD_COUNT = 52;
-export const LAYOUT_VERSION = 1;
+export const LAYOUT_VERSION = 2;
