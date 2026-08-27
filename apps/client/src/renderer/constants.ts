@@ -1,6 +1,6 @@
-export const CARD_WIDTH = 76;
-export const CARD_HEIGHT = 106;
-export const CARD_RADIUS = 8;
+export const CARD_WIDTH = 90;
+export const CARD_HEIGHT = 126;
+export const CARD_RADIUS = 10;
 
 export const SUIT_COLORS = {
   hearts: 0xcc3333,

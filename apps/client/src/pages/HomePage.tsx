@@ -54,13 +54,12 @@ export default function HomePage() {
     <AppBackground variant="lobby">
       <div className="lobby">
         <header className="lobby-hero">
-          <MagicLogo className="mx-auto" />
+          <MagicLogo className="mx-auto" size="hero" />
           <h1 className="lobby-hero__title">
-            SPACE <span>TOWERS</span>
+            SPACE
+            <span>TOWERS</span>
           </h1>
-          <p className="lobby-hero__tagline">
-            Space Towers Solitaire — clear the three peaks. Chain combos. Chase the high score.
-          </p>
+          <p className="lobby-hero__tagline">Solitaire</p>
         </header>
 
         <div className="lobby-panel mb-6">
@@ -70,7 +69,7 @@ export default function HomePage() {
                 <p className="text-xs uppercase tracking-wide text-white/45">Welcome back</p>
                 <Link
                   to="/profile"
-                  className="text-xl font-semibold text-white hover:text-[var(--color-gold-light)]"
+                  className="text-xl font-semibold text-white hover:text-[var(--color-neon)]"
                 >
                   {user.username}
                 </Link>
@@ -107,7 +106,7 @@ export default function HomePage() {
 
         <div className="grid gap-6 lg:grid-cols-2">
           <div className="lobby-panel">
-            <h2 className="mb-4 font-[family-name:var(--font-display)] text-lg text-[var(--color-gold-light)]">
+            <h2 className="mb-4 text-lg font-extrabold tracking-wide text-[var(--color-neon)]">
               How to Play
             </h2>
             <ul className="space-y-2 text-sm leading-relaxed text-white/65">

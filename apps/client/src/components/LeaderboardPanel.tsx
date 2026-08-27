@@ -37,7 +37,7 @@ export function LeaderboardPanel({ mode = 'timed' }: LeaderboardPanelProps) {
 
   return (
     <div className="lobby-panel">
-      <h3 className="mb-4 font-[family-name:var(--font-display)] text-lg capitalize text-[var(--color-gold-light)]">
+      <h3 className="mb-4 font-[family-name:var(--font-display)] text-lg capitalize text-[var(--color-neon)]">
         {mode} Leaderboard
       </h3>
 
@@ -60,7 +60,7 @@ export function LeaderboardPanel({ mode = 'timed' }: LeaderboardPanelProps) {
                 <span className="font-medium text-white">{entry.username}</span>
               </div>
               <div className="text-right">
-                <div className="font-semibold text-[var(--color-gold)]">{entry.score}</div>
+                <div className="font-semibold text-[var(--color-neon)]">{entry.score}</div>
                 <div className="font-mono text-xs text-white/40">
                   {formatElapsed(entry.elapsedMs)}
                 </div>

@@ -71,24 +71,24 @@ function drawFace(container: Container, card: Card): void {
     text: label,
     style: {
       fontFamily: 'Arial Black, Arial, sans-serif',
-      fontSize: label.length > 1 ? 28 : 36,
+      fontSize: label.length > 1 ? 32 : 42,
       fontWeight: '800',
       fill: color,
     },
   });
-  rank.x = 7;
+  rank.x = 8;
   rank.y = 4;
 
   const suitCorner = new Text({
     text: symbol,
-    style: { fontFamily: 'Georgia, serif', fontSize: 16, fill: color },
+    style: { fontFamily: 'Georgia, serif', fontSize: 20, fill: color },
   });
-  suitCorner.x = CARD_WIDTH - 22;
-  suitCorner.y = 6;
+  suitCorner.x = CARD_WIDTH - 28;
+  suitCorner.y = 8;
 
   const center = new Text({
     text: symbol,
-    style: { fontFamily: 'Georgia, serif', fontSize: 34, fill: color },
+    style: { fontFamily: 'Georgia, serif', fontSize: 48, fill: color },
   });
   center.anchor.set(0.5);
   center.x = CARD_WIDTH / 2;
@@ -165,7 +165,7 @@ export function setStockCount(container: Container, count: number): void {
     text: String(count),
     style: {
       fontFamily: 'Arial Black, Arial, sans-serif',
-      fontSize: 30,
+      fontSize: 36,
       fontWeight: '800',
       fill: 0xffffff,
       dropShadow: {

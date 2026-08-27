@@ -14,8 +14,8 @@ export function AuthLayout({ title, subtitle, children }: AuthLayoutProps) {
       <div className="flex min-h-screen flex-col items-center justify-center p-8">
         <Link to="/" className="mb-8 block">
           <MagicLogo />
-          <span className="mt-2 block text-center font-[family-name:var(--font-display)] text-xl text-[var(--color-gold-light)]">
-            Space Towers Solitaire
+          <span className="mt-2 block text-center font-[family-name:var(--font-logo)] text-2xl tracking-wide text-white">
+            SPACE TOWERS
           </span>
         </Link>
 

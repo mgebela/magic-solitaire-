@@ -20,15 +20,19 @@ export const STONE_PANEL_HEIGHT = BOARD_HEIGHT - STONE_PANEL_TOP;
  *      [3] [4]     [5] [6]     [7] [8]
  *    [9][10][11] [12][13][14] [15][16][17]
  *  [18][19][20][21][22][23][24][25][26][27]
+ *
+ * The 10-card base spans nearly the full board width, matching Space Towers.
  */
 export function buildTableauPositions(): CardPosition[] {
   const positions: CardPosition[] = new Array(28);
 
-  const hStep = CARD_WIDTH * 0.62;
-  const vStep = 32;
-  const bottomWidth = 9 * hStep + CARD_WIDTH;
-  const startX = (BOARD_WIDTH - bottomWidth) / 2;
-  const bottomY = 188;
+  const sideMargin = 22;
+  const bottomWidth = BOARD_WIDTH - sideMargin * 2;
+  const hStep = (bottomWidth - CARD_WIDTH) / 9;
+  const vStep = 58;
+  const startX = sideMargin;
+  /** Sit the 10-card row just above the stock/waste on the stone lip. */
+  const bottomY = STONE_PANEL_TOP - CARD_HEIGHT - 68;
 
   const slot = (col: number, row: number, layer: number): CardPosition => ({
     x: startX + col * hStep,
@@ -67,16 +71,16 @@ export function buildTableauPositions(): CardPosition[] {
 export const TABLEAU_POSITIONS = buildTableauPositions();
 
 /** Cards rest on the stone lip, overlapping the top of the dashboard. */
-const PANEL_CARD_Y = STONE_PANEL_TOP - 44;
+const PANEL_CARD_Y = STONE_PANEL_TOP - 52;
 
-export const STOCK_POSITION: CardPosition = { x: 148, y: PANEL_CARD_Y, layer: 20 };
+export const STOCK_POSITION: CardPosition = { x: 138, y: PANEL_CARD_Y, layer: 20 };
 export const WASTE_POSITION: CardPosition = {
-  x: 148 + CARD_WIDTH + 16,
+  x: 138 + CARD_WIDTH + 14,
   y: PANEL_CARD_Y,
   layer: 21,
 };
 export const FOUNDATION_POSITION: CardPosition = {
-  x: 148 + (CARD_WIDTH + 16) * 2,
+  x: 138 + (CARD_WIDTH + 14) * 2,
   y: PANEL_CARD_Y,
   layer: 20,
 };
