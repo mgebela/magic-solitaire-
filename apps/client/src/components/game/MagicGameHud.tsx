@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import type { GameState } from '@three-towers/shared';
 import { BOARD_ASPECT } from '../../renderer/layout-positions';
+import { formatGameClock } from '../../lib/format-time';
 
 interface MagicGameHudProps {
   state: GameState;
@@ -10,6 +11,7 @@ interface MagicGameHudProps {
   onHint?: () => void;
   onUndo?: () => void;
   allowUndo?: boolean;
+  canUndo?: boolean;
   roundCurrent?: number;
   roundTotal?: number;
   roundLabel?: string;
@@ -23,16 +25,36 @@ export function MagicGameHud({
   onHint,
   onUndo,
   allowUndo,
-  roundCurrent = 1,
-  roundTotal = 10,
-  roundLabel = 'Round',
+  canUndo,
+  roundCurrent,
+  roundTotal,
+  roundLabel,
 }: MagicGameHudProps) {
   const combo = state.combo || 0;
-  const seconds = Math.max(0, Math.floor((state.elapsedMs ?? 0) / 1000));
-  const timerDisplay = state.mode === 'relaxed' ? '∞' : String(seconds);
+  const moves = state.moves.length;
+  const timerDisplay =
+    state.mode === 'relaxed' ? '∞' : formatGameClock(state.elapsedMs ?? 0);
+
+  const showRound = roundLabel !== undefined && roundCurrent !== undefined && roundTotal !== undefined;
 
   return (
     <div className="stone-hud" style={{ aspectRatio: String(BOARD_ASPECT) }}>
+      <div className="stone-hud__status">
+        <span className="stone-hud__status-line">
+          {timerDisplay} | {moves} {moves === 1 ? 'Move' : 'Moves'}
+        </span>
+        {allowUndo && onUndo && (
+          <button
+            type="button"
+            className="stone-hud__undo"
+            onClick={onUndo}
+            disabled={!canUndo}
+          >
+            Undo
+          </button>
+        )}
+      </div>
+
       <div className="stone-hud__vines stone-hud__vines--left" aria-hidden />
       <div className="stone-hud__vines stone-hud__vines--right" aria-hidden />
 
@@ -54,42 +76,41 @@ export function MagicGameHud({
           <div className="stone-hud__combo-ring">
             <span>{combo}x</span>
           </div>
-          <div className="stone-hud__timer">
-            <span className="stone-hud__timer-icon" aria-hidden>
-              ⏱
-            </span>
-            <span className="stone-hud__timer-value">{timerDisplay}</span>
-          </div>
         </div>
 
-        <div className="stone-hud__pit stone-hud__pit--round">
-          <span className="stone-hud__pit-label">{roundLabel}</span>
-          <span className="stone-hud__pit-value">
-            {roundCurrent}/{roundTotal}
-          </span>
-        </div>
+        {showRound ? (
+          <div className="stone-hud__pit stone-hud__pit--round">
+            <span className="stone-hud__pit-label">{roundLabel}</span>
+            <span className="stone-hud__pit-value">
+              {roundCurrent}/{roundTotal}
+            </span>
+          </div>
+        ) : (
+          <div className="stone-hud__pit stone-hud__pit--round">
+            <span className="stone-hud__pit-label">Stock</span>
+            <span className="stone-hud__pit-value">{state.stock.length}</span>
+          </div>
+        )}
 
         <Link to="/" className="stone-hud__exit">
           Exit
         </Link>
       </div>
 
-      {(onHint || (allowUndo && onUndo)) && (
+      {onHint && (
         <div className="stone-hud__extras">
-          {onHint && (
-            <button type="button" className="stone-hud__extra-btn" onClick={onHint}>
-              Hint
-            </button>
-          )}
-          {allowUndo && onUndo && (
-            <button type="button" className="stone-hud__extra-btn" onClick={onUndo}>
-              Undo
-            </button>
-          )}
+          <button type="button" className="stone-hud__extra-btn" onClick={onHint}>
+            Hint
+          </button>
         </div>
       )}
 
       {hintDraw && <p className="stone-hud__hint">Draw from the stock pile</p>}
+      {!state.waste && state.status === 'playing' && (
+        <p className="stone-hud__hint stone-hud__hint--start">
+          Tap any open card to start the waste pile
+        </p>
+      )}
     </div>
   );
 }

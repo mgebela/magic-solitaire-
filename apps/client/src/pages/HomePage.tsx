@@ -109,10 +109,12 @@ export default function HomePage() {
               How to Play
             </h2>
             <ul className="space-y-2 text-sm leading-relaxed text-white/65">
-              <li>• Play cards one rank higher or lower than the waste pile.</li>
-              <li>• Clear all 28 tableau cards before the stock runs out.</li>
-              <li>• Chain plays to build combos and boost your score.</li>
-              <li>• Ace and King connect — wrap around the deck!</li>
+              <li>• Clear all 28 cards from the three peaks onto the waste pile.</li>
+              <li>• Only open (uncovered) cards can be played.</li>
+              <li>• Play a card one rank higher or lower than the waste top card.</li>
+              <li>• When the waste is empty, any open card can start the pile.</li>
+              <li>• Ace and King connect — you can wrap around the deck.</li>
+              <li>• Draw from the stock when stuck; one pass only, no reshuffles.</li>
             </ul>
           </div>
           <LeaderboardPanel mode="timed" />

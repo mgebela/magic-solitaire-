@@ -12,6 +12,7 @@ interface GameCanvasProps {
   onHint?: () => void;
   onUndo?: () => void;
   allowUndo?: boolean;
+  canUndo?: boolean;
   immersive?: boolean;
   roundCurrent?: number;
   roundTotal?: number;
@@ -28,6 +29,7 @@ export function GameCanvas({
   onHint,
   onUndo,
   allowUndo,
+  canUndo,
   immersive = false,
   roundCurrent,
   roundTotal,
@@ -102,6 +104,7 @@ export function GameCanvas({
             onHint={onHint}
             onUndo={onUndo}
             allowUndo={allowUndo}
+            canUndo={canUndo}
             roundCurrent={roundCurrent}
             roundTotal={roundTotal}
             roundLabel={roundLabel}

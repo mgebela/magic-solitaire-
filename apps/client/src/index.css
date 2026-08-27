@@ -375,6 +375,47 @@ body {
   z-index: 5;
 }
 
+.stone-hud__status {
+  position: absolute;
+  top: 2%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  pointer-events: auto;
+  z-index: 6;
+}
+
+.stone-hud__status-line {
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
+}
+
+.stone-hud__undo {
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.45rem;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.stone-hud__undo:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
 .stone-hud__platform {
   position: absolute;
   left: 2.5%;
@@ -449,10 +490,10 @@ body {
 }
 
 .stone-hud__draw-hit {
-  justify-self: center;
+  justify-self: start;
   width: 4.75rem;
   height: 5.5rem;
-  margin-left: 0.5rem;
+  margin-left: 0.75rem;
   border: none;
   background: transparent;
   cursor: pointer;
@@ -558,6 +599,11 @@ body {
   font-size: 0.85rem;
   color: #6dff45;
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+
+.stone-hud__hint--start {
+  bottom: 32%;
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .magic-play-screen__error {

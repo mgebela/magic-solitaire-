@@ -17,6 +17,7 @@ export default function PlayPage() {
   const {
     state,
     mode,
+    engine,
     persisted,
     allowUndo,
     isStarting,
@@ -84,8 +85,6 @@ export default function PlayPage() {
       <GameCanvas
         state={state}
         immersive
-        roundCurrent={1}
-        roundTotal={10}
         onCardClick={(cardId) => {
           clearHint();
           playCard(cardId, accessToken);
@@ -96,6 +95,7 @@ export default function PlayPage() {
         onHint={() => requestHint()}
         onUndo={() => undoMove()}
         allowUndo={allowUndo}
+        canUndo={engine?.canUndo() ?? false}
         className="magic-play-screen__canvas"
       />
 

@@ -21,14 +21,26 @@ describe('GameEngine', () => {
     expect(a.waste?.id).toBe(b.waste?.id);
   });
 
-  it('starts with 28 tableau cards, 23 stock, 1 waste', () => {
+  it('starts with 28 tableau cards, 24 stock, empty waste', () => {
     const state = new GameEngine(baseConfig).init();
 
     expect(countRemainingTableauCards(state.tableau)).toBe(28);
-    expect(state.stock).toHaveLength(23);
-    expect(state.waste).not.toBeNull();
+    expect(state.stock).toHaveLength(24);
+    expect(state.waste).toBeNull();
     expect(state.status).toBe('playing');
     expect(state.combo).toBe(0);
+  });
+
+  it('allows any open card as the first move on empty waste', () => {
+    const engine = new GameEngine(baseConfig);
+    const state = engine.init();
+
+    expect(state.waste).toBeNull();
+    const valid = engine.getValidPlays();
+    expect(valid.length).toBe(state.uncovered.length);
+    for (const id of state.uncovered) {
+      expect(engine.canPlay(id)).toBe(true);
+    }
   });
 
   it('plays a valid card and increments combo', () => {
@@ -58,11 +70,14 @@ describe('GameEngine', () => {
 
   it('rejects invalid play moves', () => {
     const engine = new GameEngine(baseConfig);
-    const state = engine.init();
-    const wasteValue = state.waste!.value;
+    engine.init();
 
-    const unplayable = state.uncovered.find((id) => {
-      const card = state.tableau.find((c) => c?.id === id);
+    const firstPlay = engine.getValidPlays()[0];
+    engine.applyMove({ type: 'play', cardId: firstPlay, timestamp: 1 });
+    const wasteValue = engine.getState().waste!.value;
+
+    const unplayable = engine.getState().uncovered.find((id) => {
+      const card = engine.getState().tableau.find((c) => c?.id === id);
       if (!card) return false;
       const diff = Math.abs(card.value - wasteValue);
       return diff !== 1 && !(card.value === 1 && wasteValue === 13) && !(card.value === 13 && wasteValue === 1);
@@ -79,20 +94,9 @@ describe('GameEngine', () => {
     const engine = new GameEngine(baseConfig);
     engine.init();
 
-    // Force a combo first if possible
-    const state = engine.getState();
-    const wasteValue = state.waste!.value;
-    const playable = state.uncovered.find((id) => {
-      const card = state.tableau.find((c) => c?.id === id);
-      if (!card) return false;
-      const diff = Math.abs(card.value - wasteValue);
-      return diff === 1 || (card.value === 1 && wasteValue === 13) || (card.value === 13 && wasteValue === 1);
-    });
-
-    if (playable) {
-      engine.applyMove({ type: 'play', cardId: playable, timestamp: 1 });
-      expect(engine.getState().combo).toBe(1);
-    }
+    const firstPlay = engine.getValidPlays()[0];
+    engine.applyMove({ type: 'play', cardId: firstPlay, timestamp: 1 });
+    expect(engine.getState().combo).toBe(1);
 
     const stockBefore = engine.getState().stock.length;
     engine.applyMove({ type: 'draw', timestamp: 2 });
@@ -149,22 +153,25 @@ describe('GameEngine', () => {
 
   it('getValidPlays returns only legal moves', () => {
     const engine = new GameEngine(baseConfig);
-    const state = engine.init();
-    const valid = engine.getValidPlays();
+    engine.init();
 
+    const valid = engine.getValidPlays();
     for (const id of valid) {
       expect(engine.canPlay(id)).toBe(true);
     }
 
-    const wasteValue = state.waste!.value;
-    for (const cardId of state.uncovered) {
-      const card = state.tableau.find((c) => c?.id === cardId);
+    const firstPlay = valid[0];
+    engine.applyMove({ type: 'play', cardId: firstPlay, timestamp: 1 });
+    const wasteValue = engine.getState().waste!.value;
+
+    for (const cardId of engine.getState().uncovered) {
+      const card = engine.getState().tableau.find((c) => c?.id === cardId);
       if (!card) continue;
       const diff = Math.abs(card.value - wasteValue);
       const adjacent =
         diff === 1 || (card.value === 1 && wasteValue === 13) || (card.value === 13 && wasteValue === 1);
       if (adjacent) {
-        expect(valid).toContain(cardId);
+        expect(engine.getValidPlays()).toContain(cardId);
       }
     }
   });
@@ -264,7 +271,8 @@ describe('multiplayer seed sync', () => {
     const player2 = new GameEngine(config).init();
 
     expect(player1.tableau.map((c) => c?.id)).toEqual(player2.tableau.map((c) => c?.id));
-    expect(player1.waste?.id).toEqual(player2.waste?.id);
+    expect(player1.waste).toBeNull();
+    expect(player2.waste).toBeNull();
 
     const shuffled = shuffleDeck(createStandardDeck(), seed);
     expect(shuffled.slice(0, 28).map((c) => c.id)).toEqual(player1.tableau.map((c) => c?.id));

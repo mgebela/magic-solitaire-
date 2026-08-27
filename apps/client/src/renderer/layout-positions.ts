@@ -77,9 +77,10 @@ export const TABLEAU_POSITIONS = buildTableauPositions();
 
 const PANEL_CARD_Y = STONE_PANEL_TOP + 42;
 
-export const STOCK_POSITION: CardPosition = { x: 158, y: PANEL_CARD_Y, layer: 20 };
-export const WASTE_POSITION: CardPosition = { x: 258, y: PANEL_CARD_Y, layer: 21 };
-export const FOUNDATION_POSITION: CardPosition = { x: 358, y: PANEL_CARD_Y, layer: 20 };
+/** Stock bottom-left, waste immediately to its right (cardgames.io layout). */
+export const STOCK_POSITION: CardPosition = { x: 52, y: PANEL_CARD_Y, layer: 20 };
+export const WASTE_POSITION: CardPosition = { x: 52 + CARD_WIDTH + 14, y: PANEL_CARD_Y, layer: 21 };
+export const FOUNDATION_POSITION: CardPosition = { x: 52 + (CARD_WIDTH + 14) * 2, y: PANEL_CARD_Y, layer: 20 };
 
 export const PEAK_INDICES = [0, 1, 2] as const;
 
