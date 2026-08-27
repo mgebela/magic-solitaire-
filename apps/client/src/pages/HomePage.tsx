@@ -11,7 +11,7 @@ const MODES = [
   {
     to: '/play',
     title: 'Classic Play',
-    description: 'Timed or relaxed solo TriPeaks on the green felt.',
+    description: 'Timed or relaxed solo TriPeaks among the stone towers.',
     icon: '🃏',
     featured: true,
   },
@@ -23,7 +23,7 @@ const MODES = [
   },
   {
     to: '/vs-ai',
-    title: 'Magic Duel',
+    title: 'Tower Duel',
     description: 'Race the AI on the same deal. Four difficulty levels.',
     icon: '🤖',
   },
@@ -55,9 +55,11 @@ export default function HomePage() {
       <div className="lobby">
         <header className="lobby-hero">
           <MagicLogo className="mx-auto" />
-          <h1 className="lobby-hero__title">Magic Solitaire</h1>
+          <h1 className="lobby-hero__title">
+            SPACE <span>TOWERS</span>
+          </h1>
           <p className="lobby-hero__tagline">
-            Clear the three towers. Chain combos. Chase the high score.
+            Space Towers Solitaire — clear the three peaks. Chain combos. Chase the high score.
           </p>
         </header>
 
@@ -121,7 +123,7 @@ export default function HomePage() {
         </div>
 
         <footer className="mt-10 text-center text-xs text-white/35">
-          Magic Solitaire — TriPeaks on the green felt
+          Space Towers Solitaire
         </footer>
       </div>
     </AppBackground>

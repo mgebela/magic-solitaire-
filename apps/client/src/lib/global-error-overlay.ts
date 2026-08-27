@@ -25,7 +25,7 @@ function ensureOverlay() {
   panel.style.padding = '18px';
 
   const title = document.createElement('div');
-  title.textContent = 'Magic Solitaire runtime error';
+  title.textContent = 'Space Towers Solitaire runtime error';
   title.style.fontWeight = '800';
   title.style.fontSize = '18px';
   title.style.color = '#f0d080';

@@ -3,6 +3,9 @@ import type { GameState } from '@three-towers/shared';
 import { GameRenderer } from '../renderer';
 import { MagicGameHud } from './game/MagicGameHud';
 
+/** Serialize Pixi inits so React StrictMode cannot attach two Applications to one canvas. */
+let canvasInitQueue: Promise<void> = Promise.resolve();
+
 interface GameCanvasProps {
   state: GameState | null;
   onCardClick?: (cardId: string) => void;
@@ -49,7 +52,7 @@ export function GameCanvas({
 
     const renderer = new GameRenderer();
     rendererRef.current = renderer;
-    let mounted = true;
+    let cancelled = false;
     let observer: ResizeObserver | null = null;
 
     const resize = () => {
@@ -57,18 +60,32 @@ export function GameCanvas({
       renderer.resize(rect.width, rect.height);
     };
 
-    renderer.init(canvas).then(() => {
-      if (!mounted) return;
+    canvasInitQueue = canvasInitQueue.then(async () => {
+      if (cancelled) return;
+      try {
+        await renderer.init(canvas);
+      } catch {
+        if (!cancelled) {
+          renderer.destroy();
+        }
+        return;
+      }
+      if (cancelled) {
+        renderer.destroy();
+        return;
+      }
       resize();
       observer = new ResizeObserver(resize);
       observer.observe(frame);
     });
 
     return () => {
-      mounted = false;
+      cancelled = true;
       observer?.disconnect();
       renderer.destroy();
-      rendererRef.current = null;
+      if (rendererRef.current === renderer) {
+        rendererRef.current = null;
+      }
     };
   }, []);
 

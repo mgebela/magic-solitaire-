@@ -6,7 +6,13 @@ import {
 import type { Card, CardId, GameState } from '@three-towers/shared';
 import { getPlayableCards, cardPointsForCombo } from '@three-towers/game-engine';
 import { TweenManager, tween } from './animations';
-import { createCardGraphic, setCardHighlight, setStockCount } from './card-display';
+import {
+  createCardGraphic,
+  createStockGraphic,
+  createWasteSlotGraphic,
+  setCardHighlight,
+  setStockCount,
+} from './card-display';
 import { ScoreEffectManager } from './score-effects';
 import { drawMagicTableBackground } from './table-background';
 import { drawTowerOrbs } from './tower-orbs';
@@ -31,6 +37,15 @@ interface CardSpriteEntry {
   faceUp?: boolean;
 }
 
+function isLive(container: Container): boolean {
+  return !container.destroyed;
+}
+
+function setPosition(container: Container, x: number, y: number): void {
+  if (!isLive(container)) return;
+  container.position.set(x, y);
+}
+
 /**
  * PixiJS renderer for TriPeaks — reads GameState, never computes game logic.
  */
@@ -48,8 +63,13 @@ export class GameRenderer {
   private onCardClick: CardClickHandler | null = null;
   private onDrawClick: DrawClickHandler | null = null;
   private lastTime = performance.now();
+  private destroyed = false;
+  private ready = false;
+  private initFinished = false;
+  private pendingState: { state: GameState; animate: boolean } | null = null;
 
   async init(canvas: HTMLCanvasElement): Promise<void> {
+    this.destroyed = false;
     this.app = new Application();
     await this.app.init({
       canvas,
@@ -61,24 +81,44 @@ export class GameRenderer {
       autoDensity: true,
     });
 
+    if (this.destroyed) {
+      this.app.destroy(false, { children: true });
+      this.app = null;
+      return;
+    }
+
     this.drawFeltBackground();
     this.root.addChild(this.tableauLayer, this.pilesLayer, this.overlayLayer);
     this.app.stage.addChild(this.root);
 
     this.app.ticker.add(() => {
+      if (this.destroyed || !this.ready) return;
       const now = performance.now();
       const dt = now - this.lastTime;
       this.lastTime = now;
       this.tweens.update(dt);
     });
+
+    this.initFinished = true;
+    this.ready = true;
+    if (this.pendingState) {
+      const { state, animate } = this.pendingState;
+      this.pendingState = null;
+      this.renderState(state, animate);
+    }
   }
 
   destroy(): void {
+    this.destroyed = true;
+    this.ready = false;
+    this.pendingState = null;
     this.tweens.clear();
     this.scoreEffects.clear();
     this.sprites.clear();
-    this.app?.destroy(true, { children: true });
-    this.app = null;
+    if (this.initFinished && this.app) {
+      this.app.destroy(false, { children: true });
+      this.app = null;
+    }
   }
 
   setOnCardClick(handler: CardClickHandler | null): void {
@@ -91,13 +131,13 @@ export class GameRenderer {
 
   setHintCardId(cardId: CardId | null): void {
     this.hintCardId = cardId;
-    if (this.state) {
+    if (this.state && this.ready) {
       this.syncTableau(this.state, this.state, false);
     }
   }
 
   resize(width: number, height: number): void {
-    if (!this.app) return;
+    if (!this.app || this.destroyed || !this.ready) return;
     const scale = Math.min(width / BOARD_WIDTH, height / BOARD_HEIGHT);
     this.root.scale.set(scale);
     this.root.x = (width - BOARD_WIDTH * scale) / 2;
@@ -107,6 +147,11 @@ export class GameRenderer {
 
   /** Full sync from a new GameState snapshot. */
   renderState(state: GameState, animate = true): void {
+    if (!this.ready || this.destroyed) {
+      this.pendingState = { state, animate: false };
+      return;
+    }
+
     const prev = this.state;
     this.state = state;
 
@@ -120,6 +165,10 @@ export class GameRenderer {
     const orbs = drawTowerOrbs();
     this.root.addChildAt(bg, 0);
     this.root.addChildAt(orbs, 1);
+
+    const wasteSlot = createWasteSlotGraphic();
+    setPosition(wasteSlot, WASTE_POSITION.x, WASTE_POSITION.y);
+    this.pilesLayer.addChild(wasteSlot);
   }
 
   private syncTableau(state: GameState, prev: GameState | null, animate: boolean): void {
@@ -134,6 +183,8 @@ export class GameRenderer {
       activeKeys.add(key);
 
       const pos = TABLEAU_POSITIONS[index];
+      if (!pos) return;
+
       const isPlayable = validPlays.has(card.id);
       const isUncovered = state.uncovered.includes(card.id);
       const faceUp = isUncovered;
@@ -144,42 +195,24 @@ export class GameRenderer {
         entry = { container, cardId: card.id, slot: 'tableau', tableauIndex: index, faceUp };
         this.sprites.set(key, entry);
         this.tableauLayer.addChild(container);
-        container.alpha = 0;
-        container.position.set(pos.x, pos.y - 20);
-        this.tweens.add(
-          tween(280, (t) => {
-            container.alpha = t;
-            container.y = pos.y - 20 + 20 * t;
-          }),
-        );
+        setPosition(container, pos.x, pos.y);
       } else if (entry.cardId !== card.id || entry.faceUp !== faceUp) {
         this.replaceCardGraphic(entry.container, card, faceUp);
         entry.cardId = card.id;
         entry.faceUp = faceUp;
       }
 
+      if (!isLive(entry.container)) return;
+
       entry.container.zIndex = pos.layer;
       this.tableauLayer.sortableChildren = true;
-
-      if (!animate || !prev) {
-        entry.container.position.set(pos.x, pos.y);
-      } else {
-        const fromX = entry.container.x;
-        const fromY = entry.container.y;
-        this.tweens.add(
-          tween(200, (t) => {
-            entry!.container.x = fromX + (pos.x - fromX) * t;
-            entry!.container.y = fromY + (pos.y - fromY) * t;
-          }),
-        );
-      }
+      setPosition(entry.container, pos.x, pos.y);
 
       setCardHighlight(entry.container, isUncovered, isPlayable, card.id === this.hintCardId);
       entry.container.eventMode = isPlayable ? 'static' : 'none';
       entry.container.cursor = isPlayable ? 'pointer' : 'default';
     });
 
-    // Remove played cards with animation
     for (const [key, entry] of this.sprites) {
       if (!key.startsWith('tableau-') || activeKeys.has(key)) continue;
 
@@ -189,7 +222,7 @@ export class GameRenderer {
         prev.moves.length < state.moves.length &&
         state.moves[state.moves.length - 1]?.type === 'play';
 
-      if (wasJustPlayed) {
+      if (wasJustPlayed && isLive(entry.container)) {
         const lastMove = state.moves[state.moves.length - 1];
         if (lastMove?.type === 'play') {
           const points = cardPointsForCombo(state.combo);
@@ -204,11 +237,15 @@ export class GameRenderer {
         }
 
         this.animateToWaste(entry.container, () => {
-          entry.container.destroy({ children: true });
+          if (isLive(entry.container)) {
+            entry.container.destroy({ children: true });
+          }
           this.sprites.delete(key);
         });
       } else {
-        entry.container.destroy({ children: true });
+        if (isLive(entry.container)) {
+          entry.container.destroy({ children: true });
+        }
         this.sprites.delete(key);
       }
     }
@@ -221,7 +258,9 @@ export class GameRenderer {
     if (!state.waste) {
       const existing = this.sprites.get(key);
       if (existing) {
-        existing.container.destroy({ children: true });
+        if (isLive(existing.container)) {
+          existing.container.destroy({ children: true });
+        }
         this.sprites.delete(key);
       }
       return;
@@ -239,16 +278,16 @@ export class GameRenderer {
 
       const lastMove = state.moves[state.moves.length - 1];
       if (animate && prev && lastMove?.type === 'draw') {
-        entry.container.position.set(STOCK_POSITION.x, STOCK_POSITION.y);
+        setPosition(entry.container, STOCK_POSITION.x, STOCK_POSITION.y);
         this.animateToPosition(entry.container, pos, 250);
-      } else if (animate && prev && lastMove?.type === 'play') {
-        // Position handled by tableau card animation
-        entry.container.position.set(pos.x, pos.y);
+        return;
       }
     }
 
-    entry.container.position.set(pos.x, pos.y);
-    entry.container.zIndex = pos.layer;
+    setPosition(entry.container, pos.x, pos.y);
+    if (isLive(entry.container)) {
+      entry.container.zIndex = pos.layer;
+    }
   }
 
   private syncStock(state: GameState): void {
@@ -258,14 +297,16 @@ export class GameRenderer {
 
     if (state.stock.length === 0) {
       if (entry) {
-        entry.container.destroy({ children: true });
+        if (isLive(entry.container)) {
+          entry.container.destroy({ children: true });
+        }
         this.sprites.delete(key);
       }
       return;
     }
 
     if (!entry) {
-      const container = createCardGraphic(null, false);
+      const container = createStockGraphic();
       container.eventMode = 'static';
       container.cursor = 'pointer';
       container.on('pointertap', () => {
@@ -276,8 +317,10 @@ export class GameRenderer {
       this.pilesLayer.addChild(container);
     }
 
-    entry.container.position.set(pos.x, pos.y);
-    setStockCount(entry.container, state.stock.length);
+    setPosition(entry.container, pos.x, pos.y);
+    if (isLive(entry.container)) {
+      setStockCount(entry.container, state.stock.length);
+    }
   }
 
   private makeInteractiveCard(card: Card, faceUp: boolean, onClick: () => void): Container {
@@ -292,6 +335,7 @@ export class GameRenderer {
   }
 
   private replaceCardGraphic(container: Container, card: Card, faceUp: boolean): void {
+    if (!isLive(container)) return;
     container.removeChildren();
     const fresh = createCardGraphic(card, faceUp);
     for (const child of [...fresh.children]) {
@@ -310,14 +354,23 @@ export class GameRenderer {
     durationMs: number,
     onComplete?: () => void,
   ): void {
+    if (!isLive(container)) {
+      onComplete?.();
+      return;
+    }
     const fromX = container.x;
     const fromY = container.y;
     this.tweens.add(
-      tween(durationMs, (t) => {
-        container.x = fromX + (pos.x - fromX) * t;
-        container.y = fromY + (pos.y - fromY) * t;
-        container.scale.set(1 - t * 0.05);
-      }, onComplete),
+      tween(
+        durationMs,
+        (t) => {
+          if (!isLive(container)) return;
+          container.x = fromX + (pos.x - fromX) * t;
+          container.y = fromY + (pos.y - fromY) * t;
+          container.scale.set(1 - t * 0.05);
+        },
+        onComplete,
+      ),
     );
   }
 }

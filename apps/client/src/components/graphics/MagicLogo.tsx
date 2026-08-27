@@ -4,37 +4,40 @@ interface MagicLogoProps {
 }
 
 export function MagicLogo({ className = '', size = 'lg' }: MagicLogoProps) {
-  const h = size === 'lg' ? 72 : 48;
+  const h = size === 'lg' ? 88 : 52;
 
   return (
     <svg
-      viewBox="0 0 240 80"
+      viewBox="0 0 220 120"
       height={h}
       className={className}
-      aria-hidden
+      aria-label="Space Towers"
     >
       <defs>
-        <linearGradient id="towerGold" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#f0d080" />
-          <stop offset="100%" stopColor="#b8862e" />
-        </linearGradient>
-        <linearGradient id="feltGlow" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#1f7a4f" />
-          <stop offset="100%" stopColor="#0f3d27" />
-        </linearGradient>
+        <radialGradient id="orbGlow" cx="50%" cy="45%" r="50%">
+          <stop offset="0%" stopColor="#dcffd4" />
+          <stop offset="45%" stopColor="#2cff55" />
+          <stop offset="100%" stopColor="#145a22" />
+        </radialGradient>
+        <filter id="softGlow" x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur stdDeviation="4" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
       </defs>
-      {/* Three tower peaks */}
-      {[0, 80, 160].map((x) => (
-        <g key={x} transform={`translate(${x}, 8)`}>
-          <polygon points="40,4 56,28 24,28" fill="url(#towerGold)" opacity="0.95" />
-          <polygon points="24,28 56,28 48,44 32,44" fill="url(#feltGlow)" stroke="#d4a843" strokeWidth="1.5" />
-          <polygon points="16,44 64,44 56,60 24,60" fill="url(#feltGlow)" stroke="#d4a843" strokeWidth="1.5" />
-        </g>
-      ))}
-      {/* Sparkles */}
-      <circle cx="20" cy="18" r="2" fill="#fff8dc" opacity="0.8" />
-      <circle cx="118" cy="12" r="2.5" fill="#fff8dc" opacity="0.9" />
-      <circle cx="210" cy="20" r="2" fill="#fff8dc" opacity="0.7" />
+      <ellipse cx="110" cy="58" rx="70" ry="36" fill="#1dff55" opacity="0.18" />
+      <rect x="58" y="52" width="34" height="22" rx="3" fill="#5a5a5a" />
+      <rect x="94" y="52" width="34" height="22" rx="3" fill="#626262" />
+      <rect x="130" y="52" width="34" height="22" rx="3" fill="#5a5a5a" />
+      <rect x="76" y="32" width="34" height="22" rx="3" fill="#6a6a6a" />
+      <rect x="112" y="32" width="34" height="22" rx="3" fill="#5c5c5c" />
+      <rect x="94" y="8" width="34" height="26" rx="4" fill="#4a4a4a" stroke="#2a2a2a" />
+      <rect x="102" y="14" width="18" height="14" rx="2" fill="#111" />
+      <circle cx="111" cy="21" r="6" fill="url(#orbGlow)" filter="url(#softGlow)" />
+      <path d="M28 78 C48 62, 62 88, 78 74" fill="none" stroke="#2d8a28" strokeWidth="6" />
+      <path d="M192 78 C172 62, 158 88, 142 74" fill="none" stroke="#2d8a28" strokeWidth="6" />
     </svg>
   );
 }

@@ -12,13 +12,25 @@ export function tween(
   onComplete?: () => void,
 ): Tween {
   let elapsed = 0;
+  let finished = false;
   return {
     update(dt: number) {
+      if (finished) return false;
       elapsed += dt;
       const t = Math.min(elapsed / durationMs, 1);
-      onUpdate(easeOutCubic(t));
+      try {
+        onUpdate(easeOutCubic(t));
+      } catch {
+        finished = true;
+        return false;
+      }
       if (t >= 1) {
-        onComplete?.();
+        finished = true;
+        try {
+          onComplete?.();
+        } catch {
+          // ignore
+        }
         return false;
       }
       return true;

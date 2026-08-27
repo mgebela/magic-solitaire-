@@ -43,7 +43,7 @@ export class AppErrorBoundary extends React.Component<
           }}
         >
           <div style={{ color: '#f0d080', fontWeight: 700, fontSize: 18 }}>
-            Magic Solitaire crashed
+            Space Towers Solitaire crashed
           </div>
           <div style={{ marginTop: 8, opacity: 0.85 }}>
             Refresh the page. If it keeps happening, copy the error text below.

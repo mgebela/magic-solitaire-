@@ -8,8 +8,10 @@ export interface CardPosition {
 
 export const BOARD_WIDTH = 960;
 export const BOARD_HEIGHT = 640;
-/** Top edge of the stone dashboard (HTML HUD covers below this). */
-export const STONE_PANEL_TOP = 468;
+
+/** Top of the stone dashboard — stock/waste sit on this slab. */
+export const STONE_PANEL_TOP = 502;
+export const STONE_PANEL_HEIGHT = BOARD_HEIGHT - STONE_PANEL_TOP;
 
 /**
  * LAYOUT_VERSION 2 — classic TriPeaks, must match apps/game-engine/src/layout.ts
@@ -18,18 +20,15 @@ export const STONE_PANEL_TOP = 468;
  *      [3] [4]     [5] [6]     [7] [8]
  *    [9][10][11] [12][13][14] [15][16][17]
  *  [18][19][20][21][22][23][24][25][26][27]
- *
- * Three separate peaks share a 10-card face-up base.
- * Higher `layer` = drawn in front (bottom row covers the cards above).
  */
 export function buildTableauPositions(): CardPosition[] {
   const positions: CardPosition[] = new Array(28);
 
   const hStep = CARD_WIDTH * 0.62;
-  const vStep = 36;
+  const vStep = 32;
   const bottomWidth = 9 * hStep + CARD_WIDTH;
   const startX = (BOARD_WIDTH - bottomWidth) / 2;
-  const bottomY = STONE_PANEL_TOP - CARD_HEIGHT - 16;
+  const bottomY = 188;
 
   const slot = (col: number, row: number, layer: number): CardPosition => ({
     x: startX + col * hStep,
@@ -67,14 +66,36 @@ export function buildTableauPositions(): CardPosition[] {
 
 export const TABLEAU_POSITIONS = buildTableauPositions();
 
-const PANEL_CARD_Y = STONE_PANEL_TOP + 42;
+/** Cards rest on the stone lip, overlapping the top of the dashboard. */
+const PANEL_CARD_Y = STONE_PANEL_TOP - 44;
 
-/** Stock bottom-left, waste immediately to its right (cardgames.io layout). */
-export const STOCK_POSITION: CardPosition = { x: 52, y: PANEL_CARD_Y, layer: 20 };
-export const WASTE_POSITION: CardPosition = { x: 52 + CARD_WIDTH + 14, y: PANEL_CARD_Y, layer: 21 };
-export const FOUNDATION_POSITION: CardPosition = { x: 52 + (CARD_WIDTH + 14) * 2, y: PANEL_CARD_Y, layer: 20 };
+export const STOCK_POSITION: CardPosition = { x: 148, y: PANEL_CARD_Y, layer: 20 };
+export const WASTE_POSITION: CardPosition = {
+  x: 148 + CARD_WIDTH + 16,
+  y: PANEL_CARD_Y,
+  layer: 21,
+};
+export const FOUNDATION_POSITION: CardPosition = {
+  x: 148 + (CARD_WIDTH + 16) * 2,
+  y: PANEL_CARD_Y,
+  layer: 20,
+};
 
 export const PEAK_INDICES = [0, 1, 2] as const;
 
-/** Board aspect ratio for HUD alignment. */
 export const BOARD_ASPECT = BOARD_WIDTH / BOARD_HEIGHT;
+
+function pct(value: number, total: number): string {
+  return `${(value / total) * 100}%`;
+}
+
+export const STOCK_HIT_STYLE = {
+  left: pct(STOCK_POSITION.x, BOARD_WIDTH),
+  top: pct(STOCK_POSITION.y, BOARD_HEIGHT),
+  width: pct(CARD_WIDTH, BOARD_WIDTH),
+  height: pct(CARD_HEIGHT, BOARD_HEIGHT),
+} as const;
+
+export const STONE_PANEL_STYLE = {
+  height: pct(STONE_PANEL_HEIGHT, BOARD_HEIGHT),
+} as const;

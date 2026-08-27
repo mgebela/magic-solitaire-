@@ -22,7 +22,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <AuthLayout title="Create account" subtitle="Join Three Towers Solitaire">
+    <AuthLayout title="Create account" subtitle="Join Space Towers Solitaire">
       <form onSubmit={handleSubmit} className="space-y-4">
         <AuthError message={error} />
         <AuthInput

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 :root {
@@ -8,9 +8,11 @@
   --color-gold: #d4a843;
   --color-gold-light: #f0d080;
   --color-gold-dark: #9a7224;
+  --color-neon: #6dff45;
   --color-cream: #fffdf8;
   --color-rail: #6b4a24;
-  --font-display: 'Cinzel', Georgia, serif;
+  --font-logo: 'Anton', Impact, sans-serif;
+  --font-display: 'Inter', system-ui, sans-serif;
   --font-body: 'Inter', system-ui, sans-serif;
 }
 
@@ -31,9 +33,9 @@ body {
   position: relative;
   min-height: 100vh;
   background:
-    radial-gradient(ellipse 120% 80% at 50% -20%, rgba(212, 168, 67, 0.12), transparent 50%),
-    radial-gradient(ellipse 80% 50% at 50% 100%, rgba(0, 0, 0, 0.45), transparent),
-    linear-gradient(165deg, var(--color-felt-dark) 0%, var(--color-felt-mid) 45%, var(--color-felt-dark) 100%);
+    radial-gradient(ellipse 80% 55% at 50% 18%, rgba(51, 255, 102, 0.16), transparent 55%),
+    radial-gradient(ellipse 80% 50% at 50% 100%, rgba(0, 0, 0, 0.5), transparent),
+    linear-gradient(165deg, #06140a 0%, #0d2a14 45%, #06140a 100%);
 }
 
 .app-background--game {
@@ -74,16 +76,23 @@ body {
 }
 
 .lobby-hero__title {
-  font-family: var(--font-display);
-  font-size: clamp(2rem, 5vw, 3rem);
-  font-weight: 700;
+  font-family: var(--font-logo);
+  font-size: clamp(3rem, 9vw, 5rem);
+  font-weight: 400;
   letter-spacing: 0.06em;
-  background: linear-gradient(180deg, var(--color-gold-light), var(--color-gold));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  text-shadow: 0 2px 20px rgba(212, 168, 67, 0.3);
-  margin: 0.75rem 0 0.25rem;
+  line-height: 0.82;
+  color: #fff;
+  -webkit-text-stroke: 0.07em #111;
+  paint-order: stroke fill;
+  text-shadow: 0 0 24px rgba(51, 255, 102, 0.45);
+  margin: 0.35rem 0 0.5rem;
+}
+
+.lobby-hero__title span {
+  display: block;
+  font-size: 0.48em;
+  letter-spacing: 0.32em;
+  margin-top: 0.12em;
 }
 
 .lobby-hero__tagline {
@@ -367,7 +376,7 @@ body {
   height: 100%;
 }
 
-/* ── Stone dashboard HUD (matches reference layout) ── */
+/* ── Stone dashboard HUD (Space Towers) ── */
 .stone-hud {
   position: absolute;
   inset: 0;
@@ -375,36 +384,36 @@ body {
   z-index: 5;
 }
 
-.stone-hud__status {
+.stone-hud__top-left {
   position: absolute;
-  top: 2%;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 2.4%;
+  left: 2.6%;
   display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.35rem 0.85rem;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  pointer-events: auto;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.92rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #fff;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
   z-index: 6;
 }
 
-.stone-hud__status-line {
-  font-size: 0.95rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  color: #fff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-  white-space: nowrap;
+.stone-hud__top-actions {
+  position: absolute;
+  top: 2.4%;
+  right: 2.6%;
+  display: flex;
+  gap: 0.4rem;
+  pointer-events: auto;
+  z-index: 6;
 }
 
 .stone-hud__undo {
   padding: 0.25rem 0.75rem;
   border-radius: 0.45rem;
   border: 1px solid rgba(255, 255, 255, 0.25);
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.45);
   color: #fff;
   font-size: 0.8rem;
   font-weight: 700;
@@ -416,32 +425,12 @@ body {
   cursor: default;
 }
 
-.stone-hud__platform {
-  position: absolute;
-  left: 2.5%;
-  right: 2.5%;
-  bottom: 0;
-  height: 26.9%;
-  border-radius: 1.35rem 1.35rem 0.85rem 0.85rem;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 18%),
-    linear-gradient(180deg, #7a7a7a 0%, #5a5a5a 45%, #4a4a4a 100%);
-  border: 3px solid #3d3d3d;
-  box-shadow:
-    inset 0 3px 8px rgba(255, 255, 255, 0.12),
-    0 -6px 20px rgba(0, 0, 0, 0.35);
-  display: grid;
-  grid-template-columns: 1.1fr 1.4fr 1.3fr 1fr 0.85fr;
-  align-items: center;
-  padding: 0 1.25rem 0.65rem;
-}
-
 .stone-hud__vines {
   position: absolute;
-  bottom: 22%;
-  width: 3.5rem;
-  height: 4rem;
-  opacity: 0.85;
+  bottom: 20.5%;
+  width: 4.2rem;
+  height: 4.4rem;
+  opacity: 0.9;
   background:
     radial-gradient(ellipse at 30% 80%, #2d7a28 0%, transparent 70%),
     radial-gradient(ellipse at 70% 60%, #3d9a35 0%, transparent 65%);
@@ -449,51 +438,60 @@ body {
 }
 
 .stone-hud__vines--left {
-  left: 4%;
+  left: 3%;
   border-radius: 60% 40% 0 0;
 }
 
 .stone-hud__vines--right {
-  right: 4%;
+  right: 3%;
   border-radius: 40% 60% 0 0;
 }
 
 .stone-hud__pit {
+  position: absolute;
+  bottom: 3.6%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-width: 5.5rem;
-  padding: 0.45rem 0.75rem;
-  border-radius: 0.65rem;
-  background: linear-gradient(180deg, #3d3d3d 0%, #2a2a2a 100%);
-  border: 2px solid #2a2a2a;
-  box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.55);
+  min-width: 5.4rem;
+  padding: 0.4rem 0.7rem 0.5rem;
+  border-radius: 0.55rem;
+  background: linear-gradient(180deg, #3a3a3a 0%, #1f1f1f 100%);
+  border: 2px solid #1a1a1a;
+  box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.65);
+  z-index: 6;
+}
+
+.stone-hud__pit--score {
+  left: 2.3%;
+}
+
+.stone-hud__pit--round {
+  left: 71%;
 }
 
 .stone-hud__pit-label {
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.04em;
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(255, 255, 255, 0.82);
   text-transform: capitalize;
 }
 
 .stone-hud__pit-value {
-  margin-top: 0.15rem;
-  font-size: 1.65rem;
+  margin-top: 0.12rem;
+  font-size: 1.55rem;
   font-weight: 800;
   line-height: 1;
-  color: #6dff45;
+  color: var(--color-neon);
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
   font-variant-numeric: tabular-nums;
 }
 
 .stone-hud__draw-hit {
-  justify-self: start;
-  width: 4.75rem;
-  height: 5.5rem;
-  margin-left: 0.75rem;
+  position: absolute;
+  z-index: 7;
   border: none;
   background: transparent;
   cursor: pointer;
@@ -502,20 +500,66 @@ body {
 
 .stone-hud__draw-hit:disabled {
   cursor: default;
-  opacity: 0.35;
+}
+
+.stone-hud__brand {
+  position: absolute;
+  left: 36%;
+  bottom: 4.2%;
+  width: 19%;
+  text-align: center;
+  z-index: 6;
+}
+
+.stone-hud__title {
+  margin: 0;
+  font-family: var(--font-logo);
+  font-size: clamp(1.15rem, 2.4vw, 1.85rem);
+  line-height: 0.82;
+  letter-spacing: 0.06em;
+  color: #fff;
+  -webkit-text-stroke: 0.06em #111;
+  paint-order: stroke fill;
+  text-shadow: 0 2px 0 #000;
+}
+
+.stone-hud__title span {
+  display: block;
+  font-size: 0.52em;
+  letter-spacing: 0.28em;
+}
+
+.stone-hud__progress {
+  margin: 0.4rem auto 0;
+  width: 78%;
+  height: 0.42rem;
+  border-radius: 999px;
+  background: #2a2a2a;
+  border: 1px solid #1a1a1a;
+  overflow: hidden;
+}
+
+.stone-hud__progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #3dff55, #ffb020);
 }
 
 .stone-hud__center {
+  position: absolute;
+  left: 56.5%;
+  bottom: 2.4%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.35rem;
-  justify-self: center;
+  gap: 0.2rem;
+  z-index: 6;
 }
 
 .stone-hud__combo-ring {
-  width: 4.6rem;
-  height: 4.6rem;
+  position: relative;
+  width: 4.5rem;
+  height: 4.5rem;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -525,6 +569,19 @@ body {
   box-shadow:
     inset 0 2px 8px rgba(255, 255, 255, 0.18),
     0 4px 10px rgba(0, 0, 0, 0.45);
+}
+
+.stone-hud__combo-label {
+  position: absolute;
+  top: -0.85rem;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #fff;
+  text-shadow: 0 1px 3px #000;
+}
+
+.stone-hud__combo-value {
   font-size: 1.35rem;
   font-weight: 800;
   color: #fff;
@@ -534,56 +591,50 @@ body {
 .stone-hud__timer {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
-  color: #6dff45;
+  gap: 0.3rem;
+  color: var(--color-neon);
   font-weight: 800;
-  font-size: 1.35rem;
+  font-size: 1.2rem;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  font-variant-numeric: tabular-nums;
 }
 
 .stone-hud__timer-icon {
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
 }
 
 .stone-hud__exit {
-  justify-self: end;
+  position: absolute;
+  right: 2.4%;
+  bottom: 5.2%;
   pointer-events: auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 5.25rem;
-  padding: 0.6rem 1.1rem;
-  border-radius: 0.55rem;
-  background: linear-gradient(180deg, #5de63a 0%, #3db824 100%);
-  border: 2px solid #2d8a18;
+  min-width: 5.1rem;
+  padding: 0.55rem 1.05rem;
+  border-radius: 0.4rem;
+  background: linear-gradient(180deg, #3a3a3a 0%, #1c1c1c 100%);
+  border: 2px solid #111;
   color: #fff;
   font-size: 0.95rem;
   font-weight: 800;
   text-decoration: none;
-  letter-spacing: 0.03em;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  letter-spacing: 0.08em;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+  z-index: 6;
 }
 
 .stone-hud__exit:hover {
-  filter: brightness(1.06);
-}
-
-.stone-hud__extras {
-  position: absolute;
-  top: 3%;
-  right: 3%;
-  display: flex;
-  gap: 0.4rem;
-  pointer-events: auto;
+  filter: brightness(1.12);
 }
 
 .stone-hud__extra-btn {
   padding: 0.3rem 0.65rem;
   border-radius: 0.45rem;
   border: 1px solid rgba(255, 255, 255, 0.25);
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.45);
   color: rgba(255, 255, 255, 0.9);
   font-size: 0.7rem;
   font-weight: 600;
@@ -592,18 +643,17 @@ body {
 
 .stone-hud__hint {
   position: absolute;
-  bottom: 29%;
+  bottom: 28%;
   left: 50%;
   transform: translateX(-50%);
   margin: 0;
   font-size: 0.85rem;
-  color: #6dff45;
+  color: var(--color-neon);
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
 }
 
 .stone-hud__hint--start {
-  bottom: 32%;
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .magic-play-screen__error {

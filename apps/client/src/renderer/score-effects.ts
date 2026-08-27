@@ -47,13 +47,16 @@ export class ScoreEffectManager {
     const startY = y;
     tweens.add(
       tween(900, (t) => {
+        if (text.destroyed) return;
         text.y = startY - 48 * t;
         text.alpha = 1 - t;
         const pulse = 1 + Math.sin(t * Math.PI) * (combo > 1 ? 0.15 : 0.05);
         text.scale.set(pulse);
       }, () => {
-        layer.removeChild(text);
-        text.destroy();
+        if (!text.destroyed) {
+          layer.removeChild(text);
+          text.destroy();
+        }
         this.effects = this.effects.filter((e) => e !== effect);
       }),
     );

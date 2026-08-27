@@ -15,7 +15,7 @@ export function AuthLayout({ title, subtitle, children }: AuthLayoutProps) {
         <Link to="/" className="mb-8 block">
           <MagicLogo />
           <span className="mt-2 block text-center font-[family-name:var(--font-display)] text-xl text-[var(--color-gold-light)]">
-            Magic Solitaire
+            Space Towers Solitaire
           </span>
         </Link>
 

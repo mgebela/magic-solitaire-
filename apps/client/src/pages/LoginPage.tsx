@@ -21,7 +21,7 @@ export default function LoginPage() {
   };
 
   return (
-    <AuthLayout title="Sign in" subtitle="Welcome back to Three Towers">
+    <AuthLayout title="Sign in" subtitle="Welcome back to Space Towers">
       <form onSubmit={handleSubmit} className="space-y-4">
         <AuthError message={error} />
         <AuthInput
