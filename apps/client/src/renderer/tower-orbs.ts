@@ -1,136 +1,180 @@
-import { Assets, Container, Graphics, Sprite, Texture } from 'pixi.js';
+import { Container, Graphics } from 'pixi.js';
 import { PEAK_INDICES, TABLEAU_POSITIONS } from './layout-positions';
 import { CARD_WIDTH } from './constants';
 
-/** Weathered limestone pyramid shrine with a caged neon orb above each peak. */
-export async function drawTowerOrbs(): Promise<Container> {
-  const stoneTex = (await Assets.load('/textures/space-towers-stone.png')) as Texture;
+/**
+ * Top-down square ziggurat with a recessed neon orb — Space Towers peaks.
+ */
+export function drawTowerOrbs(): Container {
   const orbs = new Container();
 
   for (const index of PEAK_INDICES) {
     const pos = TABLEAU_POSITIONS[index];
     const cx = pos.x + CARD_WIDTH / 2;
-    orbs.addChild(drawShrine(stoneTex, cx, pos.y));
+    orbs.addChild(drawZiggurat(cx, pos.y));
   }
 
   return orbs;
 }
 
-function drawShrine(stoneTex: Texture, cx: number, peakY: number): Container {
-  const shrine = new Container();
-  const orbY = peakY - 58;
+function drawZiggurat(cx: number, peakY: number): Container {
+  const root = new Container();
+  const size = 90;
+  const gap = 7;
+  const pyramidBottom = peakY - gap;
+  const cy = pyramidBottom - size / 2;
 
   const bloom = new Graphics();
-  bloom.circle(cx, orbY, 58);
-  bloom.fill({ color: 0x1dff55, alpha: 0.13 });
-  bloom.circle(cx, orbY, 30);
-  bloom.fill({ color: 0x6dff45, alpha: 0.26 });
-  shrine.addChild(bloom);
+  bloom.circle(cx, cy, 54);
+  bloom.fill({ color: 0x2cff55, alpha: 0.15 });
+  bloom.circle(cx, cy, 26);
+  bloom.fill({ color: 0x6dff45, alpha: 0.2 });
+  root.addChild(bloom);
 
-  const shadow = new Graphics();
-  shadow.ellipse(cx, peakY + 36, 62, 11);
-  shadow.fill({ color: 0x000000, alpha: 0.32 });
-  shrine.addChild(shadow);
+  const sideGlow = new Graphics();
+  sideGlow.ellipse(cx - size / 2 - 1, pyramidBottom + 5, 4, 10);
+  sideGlow.fill({ color: 0x3dff66, alpha: 0.9 });
+  sideGlow.ellipse(cx + size / 2 + 1, pyramidBottom + 5, 4, 10);
+  sideGlow.fill({ color: 0x3dff66, alpha: 0.9 });
+  root.addChild(sideGlow);
 
-  // Pyramid tucks behind the peak card so the tableau sits on the shrine.
-  addStoneBlock(shrine, stoneTex, cx - 62, peakY + 10, 58, 36, 6);
-  addStoneBlock(shrine, stoneTex, cx + 4, peakY + 12, 58, 34, 6);
-  addStoneBlock(shrine, stoneTex, cx - 44, peakY - 18, 88, 32, 6);
-  addStoneBlock(shrine, stoneTex, cx - 30, peakY - 46, 60, 30, 6);
+  addStoneSlab(root, cx - 52, peakY - 3, 104, 24);
 
-  addMossTuft(shrine, cx - 58, peakY + 38, 1);
-  addMossTuft(shrine, cx + 54, peakY + 36, -1);
-  addMossTuft(shrine, cx - 38, peakY - 8, 1);
-  addMossTuft(shrine, cx + 32, peakY - 12, -1);
+  const bands = [
+    { size: 90, fill: 0x6c6c6a, hole: 76 },
+    { size: 76, fill: 0x5d5d5b, hole: 62 },
+    { size: 62, fill: 0x50504e, hole: 48 },
+    { size: 48, fill: 0x434341, hole: 34 },
+    { size: 34, fill: 0x373735, hole: 22 },
+  ];
+  for (const band of bands) {
+    addStepBand(root, cx, cy, band.size, band.hole, band.fill);
+  }
 
-  const cage = new Graphics();
-  cage.roundRect(cx - 18, peakY - 80, 36, 36, 3);
-  cage.fill({ color: 0x141412 });
-  cage.roundRect(cx - 18, peakY - 80, 36, 36, 3);
-  cage.stroke({ color: 0xcac6b0, width: 2.6 });
-  cage.moveTo(cx - 18, peakY - 62);
-  cage.lineTo(cx + 18, peakY - 62);
-  cage.moveTo(cx, peakY - 80);
-  cage.lineTo(cx, peakY - 44);
-  cage.moveTo(cx - 12, peakY - 76);
-  cage.lineTo(cx - 5, peakY - 48);
-  cage.moveTo(cx + 12, peakY - 76);
-  cage.lineTo(cx + 5, peakY - 48);
-  cage.stroke({ color: 0xeae6d4, width: 1.2, alpha: 0.75 });
-  shrine.addChild(cage);
+  addLadders(root, cx, cy, 88, 44);
 
   const well = new Graphics();
-  well.roundRect(cx - 12, peakY - 74, 24, 22, 2);
-  well.fill({ color: 0x030503 });
-  shrine.addChild(well);
+  well.roundRect(cx - 11, cy - 11, 22, 22, 2);
+  well.fill({ color: 0x141412 });
+  well.roundRect(cx - 11, cy - 11, 22, 22, 2);
+  well.stroke({ color: 0x0a0a08, width: 1.5 });
+  root.addChild(well);
 
-  const glow = new Graphics();
-  glow.circle(cx, orbY, 15);
-  glow.fill({ color: 0x33ff66, alpha: 0.55 });
-  shrine.addChild(glow);
+  const orbGlow = new Graphics();
+  orbGlow.circle(cx, cy, 15);
+  orbGlow.fill({ color: 0x33ff66, alpha: 0.42 });
+  root.addChild(orbGlow);
 
-  const light = new Graphics();
-  light.circle(cx, orbY, 9);
-  light.fill({ color: 0x2cff55 });
-  light.circle(cx - 2.2, orbY - 3, 3);
-  light.fill({ color: 0xf4ffe8, alpha: 0.95 });
-  shrine.addChild(light);
+  const orb = new Graphics();
+  orb.circle(cx, cy, 8.2);
+  orb.fill({ color: 0x20ee52 });
+  orb.circle(cx - 1.6, cy - 2, 3);
+  orb.fill({ color: 0xf4ffe8, alpha: 0.96 });
+  root.addChild(orb);
 
-  return shrine;
+  return root;
 }
 
-function addMossTuft(parent: Container, x: number, y: number, dir: number): void {
-  const moss = new Graphics();
-  moss.moveTo(x, y);
-  moss.quadraticCurveTo(x + dir * 10, y - 16, x + dir * 18, y - 4);
-  moss.quadraticCurveTo(x + dir * 8, y - 6, x, y);
-  moss.fill({ color: 0x1b5c1e, alpha: 0.88 });
-  moss.moveTo(x + dir * 4, y - 2);
-  moss.quadraticCurveTo(x + dir * 14, y - 20, x + dir * 22, y - 2);
-  moss.quadraticCurveTo(x + dir * 10, y - 4, x + dir * 4, y - 2);
-  moss.fill({ color: 0x2d8a32, alpha: 0.8 });
-  parent.addChild(moss);
-}
-
-function addStoneBlock(
-  parent: Container,
-  texture: Texture,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  radius: number,
-): void {
-  const plate = new Sprite(texture);
-  plate.x = x;
-  plate.y = y;
-  plate.width = w;
-  plate.height = h;
-  parent.addChild(plate);
-
-  const mask = new Graphics();
-  mask.roundRect(x, y, w, h, radius);
-  mask.fill({ color: 0xffffff });
-  plate.mask = mask;
-  parent.addChild(mask);
-
-  const frame = new Graphics();
-  frame.roundRect(x, y, w, h, radius);
-  frame.stroke({ color: 0x3f3c32, width: 2.2 });
-  frame.moveTo(x + 6, y + 3);
-  frame.lineTo(x + w - 6, y + 3);
-  frame.stroke({ color: 0xeee8d4, width: 1.6, alpha: 0.32 });
-  frame.moveTo(x + 6, y + h - 4);
-  frame.lineTo(x + w - 6, y + h - 4);
-  frame.stroke({ color: 0x1c1a14, width: 1.6, alpha: 0.35 });
-  parent.addChild(frame);
+function addStoneSlab(parent: Container, x: number, y: number, w: number, h: number): void {
+  const slab = new Graphics();
+  slab.roundRect(x, y, w, h, 3);
+  slab.fill({ color: 0x5a5a58 });
+  slab.roundRect(x, y, w, h, 3);
+  slab.stroke({ color: 0x2c2c2a, width: 2 });
+  slab.moveTo(x + 6, y + 2.5);
+  slab.lineTo(x + w - 6, y + 2.5);
+  slab.stroke({ color: 0x8a8a86, width: 1.2, alpha: 0.32 });
+  parent.addChild(slab);
 
   const pits = new Graphics();
   for (let i = 0; i < 12; i++) {
-    const px = x + 8 + ((i * 19) % (w - 16));
-    const py = y + 6 + ((i * 13) % (h - 12));
-    pits.circle(px, py, 1.2 + (i % 3) * 0.5);
-    pits.fill({ color: i % 2 ? 0x5c5848 : 0xd8d4c0, alpha: 0.42 });
+    pits.circle(x + 8 + ((i * 19) % (w - 16)), y + 5 + ((i * 13) % (h - 10)), 1.1);
+    pits.fill({ color: i % 2 ? 0x3a3a38 : 0x8a8a86, alpha: 0.38 });
   }
   parent.addChild(pits);
+}
+
+function addStepBand(
+  parent: Container,
+  cx: number,
+  cy: number,
+  outer: number,
+  inner: number,
+  fill: number,
+): void {
+  const x = cx - outer / 2;
+  const y = cy - outer / 2;
+  const ix = cx - inner / 2;
+  const iy = cy - inner / 2;
+
+  const g = new Graphics();
+  g.roundRect(x, y, outer, outer, 3);
+  g.fill({ color: fill });
+  g.roundRect(ix, iy, inner, inner, 2);
+  g.cut();
+  g.roundRect(x, y, outer, outer, 3);
+  g.stroke({ color: 0x2e2e2c, width: 1.5 });
+  g.roundRect(ix, iy, inner, inner, 2);
+  g.stroke({ color: 0x8c8c86, width: 1.1, alpha: 0.4 });
+  parent.addChild(g);
+
+  const grain = new Graphics();
+  const band = (outer - inner) / 2;
+  for (let i = 0; i < 8; i++) {
+    const side = i % 4;
+    const t = (Math.floor(i / 4) + 1) / 3;
+    let px = cx;
+    let py = cy;
+    if (side === 0) {
+      px = x + 8 + t * (outer - 16);
+      py = y + band * 0.45;
+    } else if (side === 1) {
+      px = x + 8 + t * (outer - 16);
+      py = y + outer - band * 0.45;
+    } else if (side === 2) {
+      px = x + band * 0.45;
+      py = y + 8 + t * (outer - 16);
+    } else {
+      px = x + outer - band * 0.45;
+      py = y + 8 + t * (outer - 16);
+    }
+    grain.circle(px, py, 1);
+    grain.fill({ color: 0x7a7a76, alpha: 0.35 });
+  }
+  parent.addChild(grain);
+}
+
+function addLadders(parent: Container, cx: number, cy: number, outer: number, inner: number): void {
+  const rungs = 6;
+  const travel = (outer - inner) / 2 - 4;
+
+  const north = new Graphics();
+  const south = new Graphics();
+  const west = new Graphics();
+  const east = new Graphics();
+
+  for (let i = 0; i < rungs; i++) {
+    const t = (i + 0.25) / rungs;
+    const len = 5.2 - t * 1.1;
+    const d = 6 + t * travel;
+
+    north.moveTo(cx - len, cy - outer / 2 + d);
+    north.lineTo(cx + len, cy - outer / 2 + d);
+
+    south.moveTo(cx - len, cy + outer / 2 - d);
+    south.lineTo(cx + len, cy + outer / 2 - d);
+
+    west.moveTo(cx - outer / 2 + d, cy - len);
+    west.lineTo(cx - outer / 2 + d, cy + len);
+
+    east.moveTo(cx + outer / 2 - d, cy - len);
+    east.lineTo(cx + outer / 2 - d, cy + len);
+  }
+
+  const stroke = { color: 0xc8c8c2, width: 1.45, alpha: 0.84 } as const;
+  north.stroke(stroke);
+  south.stroke(stroke);
+  west.stroke(stroke);
+  east.stroke(stroke);
+  parent.addChild(north, south, west, east);
 }

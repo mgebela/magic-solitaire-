@@ -172,12 +172,7 @@ export class GameRenderer {
       bg.destroy({ children: true });
       return;
     }
-    const orbs = await drawTowerOrbs();
-    if (this.destroyed) {
-      bg.destroy({ children: true });
-      orbs.destroy({ children: true });
-      return;
-    }
+    const orbs = drawTowerOrbs();
     this.root.addChildAt(bg, 0);
     this.root.addChildAt(orbs, 1);
 
