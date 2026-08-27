@@ -33,8 +33,9 @@ describe('isRankAdjacent', () => {
 });
 
 describe('canPlayCard', () => {
-  it('requires a waste card', () => {
-    expect(canPlayCard(card('a', 5), null)).toBe(false);
+  it('allows any open card on an empty waste pile', () => {
+    expect(canPlayCard(card('a', 5), null)).toBe(true);
+    expect(canPlayCard(card('b', 13), null)).toBe(true);
   });
 
   it('validates rank adjacency', () => {

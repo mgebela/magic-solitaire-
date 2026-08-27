@@ -8,7 +8,7 @@ export function isRankAdjacent(a: number, b: number): boolean {
 }
 
 export function canPlayCard(card: Card, waste: Card | null): boolean {
-  if (!waste) return false;
+  if (!waste) return true;
   return isRankAdjacent(card.value, waste.value);
 }
 

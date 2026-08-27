@@ -96,7 +96,6 @@ export class GameEngine {
   canPlay(cardId: CardId): boolean {
     if (this.state.status !== 'playing') return false;
     if (!this.state.uncovered.includes(cardId)) return false;
-    if (!this.state.waste) return false;
 
     const index = findTableauIndex(this.state.tableau, cardId);
     if (index === -1) return false;
@@ -110,7 +109,7 @@ export class GameEngine {
   }
 
   getValidPlays(): CardId[] {
-    if (this.state.status !== 'playing' || !this.state.waste) return [];
+    if (this.state.status !== 'playing') return [];
     return getPlayableCards(this.state.tableau, this.state.uncovered, this.state.waste).map(
       (c) => c.id,
     );
@@ -145,13 +144,12 @@ export class GameEngine {
     }
 
     const tableau: Tableau = [...tableauCards];
-    const waste = this.drawFromStock(stock);
 
     const state: GameState = {
       seed: actualSeed,
       tableau,
       stock,
-      waste,
+      waste: null,
       foundation: [],
       uncovered: computeUncovered(tableau),
       score: 0,
