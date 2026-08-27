@@ -9,8 +9,8 @@ export interface CardPosition {
 export const BOARD_WIDTH = 960;
 export const BOARD_HEIGHT = 640;
 
-/** Top of the stone dashboard — matches the photographic limestone slab. */
-export const STONE_PANEL_TOP = 460;
+/** Top of the stone dashboard — matches the photographic limestone lip (~74.5%). */
+export const STONE_PANEL_TOP = 476;
 export const STONE_PANEL_HEIGHT = BOARD_HEIGHT - STONE_PANEL_TOP;
 
 /**
@@ -31,8 +31,8 @@ export function buildTableauPositions(): CardPosition[] {
   const hStep = (bottomWidth - CARD_WIDTH) / 9;
   const vStep = 58;
   const startX = sideMargin;
-  /** Sit the 10-card row just above the stock/waste on the stone lip. */
-  const bottomY = STONE_PANEL_TOP - CARD_HEIGHT - 42;
+  /** Sit the 10-card row on the moss, just above the limestone lip. */
+  const bottomY = STONE_PANEL_TOP - CARD_HEIGHT - 18;
 
   const slot = (col: number, row: number, layer: number): CardPosition => ({
     x: startX + col * hStep,
@@ -70,8 +70,8 @@ export function buildTableauPositions(): CardPosition[] {
 
 export const TABLEAU_POSITIONS = buildTableauPositions();
 
-/** Cards rest on the stone lip, overlapping the top of the dashboard. */
-const PANEL_CARD_Y = STONE_PANEL_TOP - 52;
+/** Stock and waste sit on the limestone slab, not on the moss above it. */
+const PANEL_CARD_Y = STONE_PANEL_TOP + 32;
 
 export const STOCK_POSITION: CardPosition = { x: 138, y: PANEL_CARD_Y, layer: 20 };
 export const WASTE_POSITION: CardPosition = {

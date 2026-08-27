@@ -696,7 +696,7 @@ body {
 
 .stone-hud__hint {
   position: absolute;
-  bottom: 28%;
+  bottom: 27%;
   left: 50%;
   transform: translateX(-50%);
   margin: 0;
