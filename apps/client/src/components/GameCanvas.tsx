@@ -20,6 +20,9 @@ interface GameCanvasProps {
   roundCurrent?: number;
   roundTotal?: number;
   roundLabel?: string;
+  roundValue?: string;
+  exitTo?: string;
+  onExit?: () => void;
   className?: string;
 }
 
@@ -37,6 +40,9 @@ export function GameCanvas({
   roundCurrent,
   roundTotal,
   roundLabel,
+  roundValue,
+  exitTo,
+  onExit,
   className,
 }: GameCanvasProps) {
   const stageRef = useRef<HTMLDivElement>(null);
@@ -125,6 +131,9 @@ export function GameCanvas({
             roundCurrent={roundCurrent}
             roundTotal={roundTotal}
             roundLabel={roundLabel}
+            roundValue={roundValue}
+            exitTo={exitTo}
+            onExit={onExit}
           />
         )}
       </div>

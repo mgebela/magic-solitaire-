@@ -1,0 +1,81 @@
+const MUTE_KEY = 'space-towers-muted';
+
+let ctx: AudioContext | null = null;
+let muted = localStorage.getItem(MUTE_KEY) === '1';
+
+function audioContext(): AudioContext | null {
+  if (typeof window === 'undefined') return null;
+  if (!ctx) {
+    const Ctor = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!Ctor) return null;
+    ctx = new Ctor();
+  }
+  if (ctx.state === 'suspended') {
+    void ctx.resume();
+  }
+  return ctx;
+}
+
+function tone(
+  frequency: number,
+  duration: number,
+  type: OscillatorType,
+  gain: number,
+  delay = 0,
+): void {
+  if (muted) return;
+  const audio = audioContext();
+  if (!audio) return;
+  const start = audio.currentTime + delay;
+  const osc = audio.createOscillator();
+  const amp = audio.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(frequency, start);
+  amp.gain.setValueAtTime(gain, start);
+  amp.gain.exponentialRampToValueAtTime(0.001, start + duration);
+  osc.connect(amp);
+  amp.connect(audio.destination);
+  osc.start(start);
+  osc.stop(start + duration);
+}
+
+export const sound = {
+  unlock(): void {
+    audioContext();
+  },
+  isMuted(): boolean {
+    return muted;
+  },
+  setMuted(value: boolean): void {
+    muted = value;
+    localStorage.setItem(MUTE_KEY, value ? '1' : '0');
+    if (!value) audioContext();
+  },
+  toggleMuted(): boolean {
+    sound.setMuted(!muted);
+    return muted;
+  },
+  playCard(combo: number): void {
+    tone(480 + Math.min(combo, 8) * 36, 0.09, 'triangle', 0.07);
+    if (combo >= 2) {
+      tone(640 + combo * 24, 0.12, 'sine', 0.05, 0.04);
+    }
+    if (combo >= 4) {
+      tone(880, 0.16, 'sine', 0.045, 0.08);
+    }
+  },
+  draw(): void {
+    tone(196, 0.11, 'square', 0.035);
+    tone(148, 0.14, 'triangle', 0.03, 0.04);
+  },
+  win(): void {
+    tone(523, 0.14, 'triangle', 0.07);
+    tone(659, 0.16, 'triangle', 0.06, 0.12);
+    tone(784, 0.28, 'sine', 0.07, 0.24);
+  },
+  lose(): void {
+    tone(330, 0.16, 'sawtooth', 0.04);
+    tone(247, 0.22, 'triangle', 0.04, 0.12);
+    tone(196, 0.3, 'triangle', 0.035, 0.26);
+  },
+};

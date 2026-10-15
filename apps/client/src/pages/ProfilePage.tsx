@@ -67,7 +67,7 @@ export default function ProfilePage() {
           <div className="space-y-8">
             <section className="lobby-panel">
               <h2 className="mb-4 text-lg font-semibold text-white">Overview</h2>
-              <dl className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+              <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3">
                 <StatsCard label="Games played" value={stats.totals.gamesPlayed} />
                 <StatsCard label="Wins" value={stats.totals.wins} />
                 <StatsCard
@@ -78,6 +78,15 @@ export default function ProfilePage() {
                 <StatsCard
                   label="Time played"
                   value={formatDuration(stats.totals.totalElapsedMs)}
+                />
+                <StatsCard
+                  label="Daily streak"
+                  value={stats.totals.dailyStreak}
+                  subtext={`Best ${stats.totals.dailyBestStreak}`}
+                />
+                <StatsCard
+                  label="Best daily streak"
+                  value={stats.totals.dailyBestStreak}
                 />
               </dl>
             </section>

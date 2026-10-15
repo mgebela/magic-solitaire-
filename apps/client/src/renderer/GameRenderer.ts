@@ -17,6 +17,7 @@ import { ScoreEffectManager } from './score-effects';
 import { drawMagicTableBackground } from './table-background';
 import { drawTowerOrbs } from './tower-orbs';
 import { CARD_WIDTH } from './constants';
+import { sound } from '../lib/sound';
 import {
   BOARD_HEIGHT,
   BOARD_WIDTH,
@@ -160,6 +161,16 @@ export class GameRenderer {
 
     const prev = this.state;
     this.state = state;
+
+    if (prev && animate) {
+      const lastMove = state.moves[state.moves.length - 1];
+      if (state.moves.length > prev.moves.length && lastMove) {
+        if (lastMove.type === 'play') sound.playCard(state.combo);
+        if (lastMove.type === 'draw') sound.draw();
+      }
+      if (prev.status === 'playing' && state.status === 'won') sound.win();
+      if (prev.status === 'playing' && state.status === 'lost') sound.lose();
+    }
 
     this.syncTableau(state, prev, animate);
     this.syncWaste(state, prev, animate);

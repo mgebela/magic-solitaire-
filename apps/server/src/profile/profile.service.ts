@@ -9,6 +9,7 @@ import type {
   PlayerStatisticsResponse,
   PlayerTotals,
 } from '@three-towers/shared';
+import { loadDailyStreak } from '../daily/streak';
 import { GamesService } from '../games/games.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { UsersService } from '../users/users.service';
@@ -29,7 +30,7 @@ export class ProfileService {
       throw new NotFoundException('User not found');
     }
 
-    const [byMode, recentGames, totalsRow] = await Promise.all([
+    const [byMode, recentGames, totalsRow, dailyStreak] = await Promise.all([
       Promise.all(TRACKED_MODES.map((mode) => this.getModeStatistics(userId, mode))),
       this.gamesService.listRecentGames(userId, 15),
       this.prisma.game.aggregate({
@@ -40,6 +41,7 @@ export class ProfileService {
         _count: true,
         _sum: { elapsedMs: true },
       }),
+      loadDailyStreak(this.prisma, userId),
     ]);
 
     const [wins, losses] = await Promise.all([
@@ -61,19 +63,12 @@ export class ProfileService {
       losses,
       winRate: gamesPlayed > 0 ? wins / gamesPlayed : 0,
       totalElapsedMs: totalsRow._sum.elapsedMs ?? 0,
+      dailyStreak: dailyStreak.current,
+      dailyBestStreak: dailyStreak.best,
     };
 
     return {
-      user: {
-        id: user.id,
-        email: user.email,
-        username: user.username,
-        country: user.country ?? undefined,
-        language: user.language ?? undefined,
-        avatarUrl: user.avatarUrl ?? undefined,
-        emailVerified: user.emailVerified,
-        createdAt: user.createdAt,
-      },
+      user: this.usersService.toPublic(user),
       totals,
       byMode,
       recentGames,

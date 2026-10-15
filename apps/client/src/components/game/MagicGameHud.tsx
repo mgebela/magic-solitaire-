@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { TRIPEAKS_TABLEAU_CARD_COUNT, type GameState } from '@three-towers/shared';
+import { sound } from '../../lib/sound';
 import { BOARD_ASPECT, STOCK_HIT_STYLE } from '../../renderer/layout-positions';
 
 interface MagicGameHudProps {
@@ -14,6 +16,9 @@ interface MagicGameHudProps {
   roundCurrent?: number;
   roundTotal?: number;
   roundLabel?: string;
+  roundValue?: string;
+  exitTo?: string;
+  onExit?: () => void;
 }
 
 export function MagicGameHud({
@@ -28,18 +33,23 @@ export function MagicGameHud({
   roundCurrent = 1,
   roundTotal = 1,
   roundLabel = 'Round',
+  roundValue,
+  exitTo = '/',
+  onExit,
 }: MagicGameHudProps) {
   const combo = state.combo || 0;
   const remainingTableau = state.tableau.filter(Boolean).length;
   const progress = 1 - remainingTableau / TRIPEAKS_TABLEAU_CARD_COUNT;
   const timerSeconds = Math.floor((state.elapsedMs ?? 0) / 1000);
+  const pitValue = roundValue ?? `${roundCurrent}/${roundTotal}`;
+  const [muted, setMuted] = useState(sound.isMuted());
 
   return (
     <div className="stone-hud" style={{ aspectRatio: String(BOARD_ASPECT) }}>
       <div className="stone-hud__top-left">
         <span>SCORE {state.score}</span>
         <span>
-          {roundLabel.toUpperCase()} {roundCurrent} / {roundTotal}
+          {roundLabel.toUpperCase()} {roundValue ?? `${roundCurrent} / ${roundTotal}`}
         </span>
       </div>
 
@@ -59,6 +69,14 @@ export function MagicGameHud({
             Hint
           </button>
         )}
+        <button
+          type="button"
+          className="stone-hud__extra-btn"
+          onClick={() => setMuted(sound.toggleMuted())}
+          aria-pressed={muted}
+        >
+          {muted ? 'Sound off' : 'Sound on'}
+        </button>
       </div>
 
       <button
@@ -100,12 +118,10 @@ export function MagicGameHud({
 
       <div className="stone-hud__pit stone-hud__pit--round">
         <span className="stone-hud__pit-label">{roundLabel}</span>
-        <span className="stone-hud__pit-value">
-          {roundCurrent}/{roundTotal}
-        </span>
+        <span className="stone-hud__pit-value">{pitValue}</span>
       </div>
 
-      <Link to="/" className="stone-hud__exit">
+      <Link to={exitTo} className="stone-hud__exit" onClick={onExit}>
         EXIT
       </Link>
 

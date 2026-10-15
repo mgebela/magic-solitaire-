@@ -78,9 +78,8 @@ export default function VsAiPage() {
       <GameCanvas
         state={playerState}
         immersive
-        roundCurrent={1}
-        roundTotal={10}
-        roundLabel="Round"
+        roundLabel="AI"
+        roundValue={String(aiState?.score ?? 0)}
         onCardClick={playCard}
         onDraw={() => drawCard()}
         className="magic-play-screen__canvas"

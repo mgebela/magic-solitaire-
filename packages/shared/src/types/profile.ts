@@ -18,6 +18,8 @@ export interface PlayerTotals {
   losses: number;
   winRate: number;
   totalElapsedMs: number;
+  dailyStreak: number;
+  dailyBestStreak: number;
 }
 
 export interface PlayerStatisticsResponse {

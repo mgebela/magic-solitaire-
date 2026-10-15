@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { HowToPlay } from '../components/HowToPlay';
 import { AppBackground } from '../components/layout/AppBackground';
 import { LeaderboardPanel } from '../components/LeaderboardPanel';
 import { GameButton, GameLink } from '../components/ui/GameButton';
@@ -42,6 +43,7 @@ const MODES = [
 
 export default function HomePage() {
   const { user, tokens, logout, fetchProfile } = useAuthStore();
+  const [showHowto, setShowHowto] = useState(false);
 
   useEffect(() => {
     if (tokens && !user) {
@@ -51,6 +53,7 @@ export default function HomePage() {
 
   return (
     <AppBackground variant="lobby">
+      <HowToPlay forceOpen={showHowto} onClose={() => setShowHowto(false)} />
       <div className="lobby">
         <header className="lobby-hero">
           <h1 className="lobby-hero__title">
@@ -115,6 +118,9 @@ export default function HomePage() {
               <li>• Ace and King connect — you can wrap around the deck.</li>
               <li>• Draw from the stock when stuck; one pass only, no reshuffles.</li>
             </ul>
+            <GameButton variant="ghost" className="mt-4 w-full" onClick={() => setShowHowto(true)}>
+              Show guide
+            </GameButton>
           </div>
           <LeaderboardPanel mode="timed" />
         </div>

@@ -1,3 +1,4 @@
+import type { DailyStreak } from '../daily-streak';
 import type { GameState, GameStatus } from './game';
 import type { LeaderboardEntry } from './game-api';
 
@@ -19,6 +20,7 @@ export interface DailyAttemptSummary {
 export interface DailyChallengeResponse extends DailyChallengeInfo {
   canPlay: boolean;
   state?: GameState;
+  streak?: DailyStreak;
 }
 
 export interface DailyLeaderboardResponse {

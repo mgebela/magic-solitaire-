@@ -19,6 +19,7 @@ import type {
 } from '@three-towers/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { GamesService } from '../games/games.service';
+import { loadDailyStreak } from './streak';
 
 @Injectable()
 export class DailyService {
@@ -34,26 +35,26 @@ export class DailyService {
     const existing = await this.findDailyAttempt(userId, challengeDate);
 
     if (!existing) {
-      return {
+      return this.withStreak(userId, {
         date,
         seed,
         layoutVersion: LAYOUT_VERSION,
         attempt: null,
         canPlay: true,
-      };
+      });
     }
 
     const session = await this.gamesService.getGame(userId, existing.id);
     const attempt = this.toAttemptSummary(existing);
 
-    return {
+    return this.withStreak(userId, {
       date,
       seed,
       layoutVersion: LAYOUT_VERSION,
       attempt,
       canPlay: existing.status === PrismaGameStatus.playing,
       state: session.state,
-    };
+    });
   }
 
   async startToday(userId: string): Promise<DailyChallengeResponse> {
@@ -86,7 +87,7 @@ export class DailyService {
       },
     });
 
-    return {
+    return this.withStreak(userId, {
       date,
       seed,
       layoutVersion: LAYOUT_VERSION,
@@ -98,7 +99,7 @@ export class DailyService {
       },
       canPlay: true,
       state,
-    };
+    });
   }
 
   async getLeaderboard(dateStr?: string, limit = 10): Promise<DailyLeaderboardResponse> {
@@ -128,6 +129,16 @@ export class DailyService {
     }));
 
     return { date, entries };
+  }
+
+  private async withStreak(
+    userId: string,
+    payload: DailyChallengeResponse,
+  ): Promise<DailyChallengeResponse> {
+    return {
+      ...payload,
+      streak: await loadDailyStreak(this.prisma, userId),
+    };
   }
 
   private async findDailyAttempt(userId: string, challengeDate: Date) {
