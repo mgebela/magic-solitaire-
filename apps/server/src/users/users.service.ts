@@ -17,6 +17,10 @@ export class UsersService {
       id: user.id,
       email: user.email,
       username: user.username,
+      walletAddress: user.walletAddress,
+      walletChain: user.walletChain,
+      authMethod: user.authMethod,
+      tokenBalance: user.tokenBalance,
       country: user.country,
       language: user.language,
       avatarUrl: user.avatarUrl,
@@ -37,6 +41,10 @@ export class UsersService {
     return this.repository.findByUsername(username);
   }
 
+  findByWalletAddress(address: string): Promise<User | null> {
+    return this.repository.findByWalletAddress(address);
+  }
+
   create(input: CreateUserInput): Promise<User> {
     return this.repository.create(input);
   }
@@ -47,5 +55,9 @@ export class UsersService {
 
   markEmailVerified(id: string): Promise<User> {
     return this.repository.markEmailVerified(id);
+  }
+
+  adjustTokenBalance(id: string, delta: number): Promise<User> {
+    return this.repository.adjustTokenBalance(id, delta);
   }
 }

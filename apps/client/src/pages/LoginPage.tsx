@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthButton, AuthError, AuthInput, AuthLayout } from '../components/AuthLayout';
+import { WalletSignInButton } from '../components/WalletSignInButton';
 import { useAuthStore } from '../stores/authStore';
 
 export default function LoginPage() {
@@ -44,6 +45,14 @@ export default function LoginPage() {
           Sign in
         </AuthButton>
       </form>
+
+      <div className="my-6 flex items-center gap-3 text-xs text-white/40">
+        <div className="h-px flex-1 bg-white/10" />
+        <span>or</span>
+        <div className="h-px flex-1 bg-white/10" />
+      </div>
+
+      <WalletSignInButton />
 
       <div className="mt-6 space-y-2 text-center text-sm text-white/60">
         <p>

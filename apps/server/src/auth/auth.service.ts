@@ -54,6 +54,7 @@ export class AuthService {
       email: dto.email,
       username: dto.username,
       passwordHash,
+      authMethod: 'email',
       country: dto.country,
       language: dto.language,
     });
@@ -65,7 +66,15 @@ export class AuthService {
       );
     }
 
-    const tokens = await this.issueTokens(user.id, user.email);
+    const tokens = await this.issueTokens(user.id, user.email ?? user.id);
+    return { user: this.usersService.toPublic(user), tokens };
+  }
+
+  async loginWithUser(user: import('@three-towers/shared').User): Promise<AuthResponse> {
+    const tokens = await this.issueTokens(
+      user.id,
+      user.email ?? user.walletAddress ?? user.id,
+    );
     return { user: this.usersService.toPublic(user), tokens };
   }
 
@@ -75,12 +84,16 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
+    if (!user.passwordHash) {
+      throw new UnauthorizedException('This account uses wallet sign-in');
+    }
+
     const valid = await bcrypt.compare(dto.password, user.passwordHash);
     if (!valid) {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    const tokens = await this.issueTokens(user.id, user.email);
+    const tokens = await this.issueTokens(user.id, user.email ?? user.walletAddress ?? user.id);
     return { user: this.usersService.toPublic(user), tokens };
   }
 
@@ -116,7 +129,7 @@ export class AuthService {
     }
 
     await this.prisma.refreshToken.delete({ where: { id: stored.id } });
-    return this.issueTokens(user.id, user.email);
+    return this.issueTokens(user.id, user.email ?? user.walletAddress ?? user.id);
   }
 
   async logout(refreshToken: string): Promise<{ message: string }> {
@@ -208,9 +221,9 @@ export class AuthService {
     };
   }
 
-  private async issueTokens(userId: string, email: string): Promise<AuthTokens> {
-    const accessPayload: JwtPayload = { sub: userId, email, type: 'access' };
-    const refreshPayload: JwtPayload = { sub: userId, email, type: 'refresh' };
+  private async issueTokens(userId: string, emailOrSubject: string): Promise<AuthTokens> {
+    const accessPayload: JwtPayload = { sub: userId, email: emailOrSubject, type: 'access' };
+    const refreshPayload: JwtPayload = { sub: userId, email: emailOrSubject, type: 'refresh' };
 
     const accessToken = this.jwtService.sign(accessPayload, {
       secret: this.configService.getOrThrow<string>('JWT_SECRET'),

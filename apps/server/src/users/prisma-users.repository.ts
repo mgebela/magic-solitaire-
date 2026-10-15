@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
+import { PublicKey } from '@solana/web3.js';
 import type { User } from '@three-towers/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import {
@@ -30,12 +31,33 @@ export class PrismaUsersRepository implements UsersRepository {
     return user ? mapPrismaUser(user) : null;
   }
 
+  async findByWalletAddress(address: string): Promise<User | null> {
+    const normalized = this.normalizeWalletAddress(address);
+    const user = await this.prisma.user.findUnique({
+      where: { walletAddress: normalized },
+    });
+    return user ? mapPrismaUser(user) : null;
+  }
+
+  private normalizeWalletAddress(address: string): string {
+    try {
+      return new PublicKey(address).toBase58();
+    } catch {
+      return address;
+    }
+  }
+
   async create(input: CreateUserInput): Promise<User> {
     const user = await this.prisma.user.create({
       data: {
-        email: input.email.toLowerCase(),
+        email: input.email?.toLowerCase() ?? null,
         username: input.username,
-        passwordHash: input.passwordHash,
+        passwordHash: input.passwordHash ?? null,
+        walletAddress: input.walletAddress
+          ? this.normalizeWalletAddress(input.walletAddress)
+          : null,
+        walletChain: input.walletChain ?? null,
+        authMethod: input.authMethod,
         country: input.country,
         language: input.language,
       },
@@ -57,5 +79,21 @@ export class PrismaUsersRepository implements UsersRepository {
       data: { emailVerified: true },
     });
     return mapPrismaUser(user);
+  }
+
+  async adjustTokenBalance(id: string, delta: number): Promise<User> {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) throw new BadRequestException('User not found');
+
+    const newBalance = user.tokenBalance + delta;
+    if (newBalance < 0) {
+      throw new BadRequestException('Insufficient token balance');
+    }
+
+    const updated = await this.prisma.user.update({
+      where: { id },
+      data: { tokenBalance: newBalance },
+    });
+    return mapPrismaUser(updated);
   }
 }

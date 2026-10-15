@@ -13,6 +13,7 @@ import RoomPage from './pages/RoomPage';
 import PuzzlesPage from './pages/PuzzlesPage';
 import PuzzlePlayPage from './pages/PuzzlePlayPage';
 import ProfilePage from './pages/ProfilePage';
+import TokensPage from './pages/TokensPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 
 function AuthBootstrap({ children }: { children: React.ReactNode }) {
@@ -41,6 +42,7 @@ export default function App() {
           <Route path="/puzzles" element={<PuzzlesPage />} />
           <Route path="/puzzles/:id" element={<PuzzlePlayPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/tokens" element={<TokensPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />

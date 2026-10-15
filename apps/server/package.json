@@ -6,7 +6,7 @@
     "build": "prisma generate && tsc",
     "dev": "prisma generate && tsc && concurrently -k \"tsc -w --preserveWatchOutput\" \"nodemon -q --watch dist --delay 0.5 dist/main.js\"",
     "start": "node dist/main.js",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "prisma generate && tsc --noEmit",
     "lint": "echo 'No lint configured yet'",
     "clean": "rm -rf dist",
     "db:generate": "prisma generate",
@@ -35,6 +35,9 @@
     "passport-jwt": "^4.0.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
+    "@solana/web3.js": "^1.98.2",
+    "bs58": "^6.0.0",
+    "tweetnacl": "^1.0.3",
     "socket.io": "^4.8.1"
   },
   "devDependencies": {

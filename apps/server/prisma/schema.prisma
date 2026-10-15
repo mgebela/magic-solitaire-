@@ -8,23 +8,81 @@ datasource db {
 }
 
 model User {
-  id            String   @id @default(uuid()) @db.Uuid
-  email         String   @unique
-  username      String   @unique
-  passwordHash  String   @map("password_hash")
+  id            String      @id @default(uuid()) @db.Uuid
+  email         String?     @unique
+  username      String      @unique
+  passwordHash  String?     @map("password_hash")
+  walletAddress String?     @unique @map("wallet_address")
+  walletChain   WalletChain? @map("wallet_chain")
+  authMethod    AuthMethod  @default(email) @map("auth_method")
+  tokenBalance  Int         @default(0) @map("token_balance")
   country       String?
   language      String?
-  avatarUrl     String?  @map("avatar_url")
-  emailVerified Boolean  @default(false) @map("email_verified")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  avatarUrl     String?     @map("avatar_url")
+  emailVerified Boolean     @default(false) @map("email_verified")
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
 
   refreshTokens       RefreshToken[]
   passwordResetTokens PasswordResetToken[]
   games               Game[]
   moves               Move[]
+  tokenTransactions   TokenTransaction[]
 
   @@map("users")
+}
+
+enum AuthMethod {
+  email
+  wallet
+}
+
+enum WalletChain {
+  ethereum
+  solana
+}
+
+model WalletNonce {
+  id        String   @id @default(uuid()) @db.Uuid
+  address   String   @unique
+  nonce     String
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([expiresAt])
+  @@map("wallet_nonces")
+}
+
+enum TokenTransactionType {
+  purchase
+  multiplayer_entry
+  grant
+  refund
+}
+
+enum TokenTransactionStatus {
+  pending
+  completed
+  failed
+}
+
+model TokenTransaction {
+  id            String                 @id @default(uuid()) @db.Uuid
+  userId        String                 @map("user_id") @db.Uuid
+  type          TokenTransactionType
+  amount        Int
+  balanceAfter  Int                    @map("balance_after")
+  packageId     String?                @map("package_id")
+  cryptoTxHash  String?                @map("crypto_tx_hash")
+  cryptoAmount  String?                @map("crypto_amount")
+  status        TokenTransactionStatus @default(pending)
+  createdAt     DateTime               @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([cryptoTxHash])
+  @@map("token_transactions")
 }
 
 model RefreshToken {

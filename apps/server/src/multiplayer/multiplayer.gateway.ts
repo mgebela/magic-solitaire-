@@ -20,6 +20,7 @@ import {
 } from '@three-towers/shared';
 import type { JwtPayload } from '../auth/auth.types';
 import { UsersService } from '../users/users.service';
+import { TokensService } from '../tokens/tokens.service';
 import { PlayerSessionService } from './player-session.service';
 import { RoomService } from './room.service';
 
@@ -42,6 +43,7 @@ export class MultiplayerGateway implements OnGatewayConnection, OnGatewayDisconn
   constructor(
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService,
+    private readonly tokensService: TokensService,
     private readonly roomService: RoomService,
     private readonly sessionService: PlayerSessionService,
   ) {}
@@ -164,10 +166,31 @@ export class MultiplayerGateway implements OnGatewayConnection, OnGatewayDisconn
   }
 
   @SubscribeMessage(MULTIPLAYER_EVENTS.START_GAME)
-  handleStartGame(@ConnectedSocket() client: Socket) {
+  async handleStartGame(@ConnectedSocket() client: Socket) {
     const { userId } = client.data as SocketData;
 
     try {
+      const roomPreview = this.roomService.getRoomByUserId(userId);
+      if (!roomPreview) {
+        return { error: 'Not in a room' };
+      }
+
+      // Deduct Solitaire Tokens from each player before ranked/casual matches start
+      if (roomPreview.mode === 'ranked' || roomPreview.mode === 'casual') {
+        for (const [playerId] of roomPreview.players) {
+          try {
+            await this.tokensService.deductMultiplayerEntry(playerId);
+          } catch (err) {
+            return {
+              error:
+                err instanceof Error
+                  ? err.message
+                  : 'A player does not have enough Solitaire Tokens',
+            };
+          }
+        }
+      }
+
       const room = this.roomService.startGame(userId);
       const serialized = this.roomService.serializeRoom(room);
 

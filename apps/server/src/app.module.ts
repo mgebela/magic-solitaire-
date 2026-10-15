@@ -9,6 +9,7 @@ import { LeaderboardModule } from './leaderboard/leaderboard.module';
 import { MultiplayerModule } from './multiplayer/multiplayer.module';
 import { ProfileModule } from './profile/profile.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { TokensModule } from './tokens/tokens.module';
 import { UsersModule } from './users/users.module';
 
 @Module({
@@ -25,6 +26,7 @@ import { UsersModule } from './users/users.module';
     LeaderboardModule,
     ProfileModule,
     MultiplayerModule,
+    TokensModule,
   ],
   controllers: [AppController, HealthController],
 })

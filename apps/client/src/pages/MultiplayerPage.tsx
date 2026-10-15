@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import type { MultiplayerMode } from '@three-towers/shared';
+import { MULTIPLAYER_ENTRY_COST } from '@three-towers/shared';
 import { AppBackground } from '../components/layout/AppBackground';
 import { GameButton } from '../components/ui/GameButton';
 import { useAuthStore } from '../stores/authStore';
@@ -50,8 +51,24 @@ export default function MultiplayerPage() {
 
           <h1 className="page-title mt-4">Multiplayer</h1>
           <p className="page-subtitle">
-            Race opponents on the same seeded board. Highest score wins.
+            Race opponents on the same seeded board. Highest score wins. Each match costs{' '}
+            {MULTIPLAYER_ENTRY_COST} Solitaire Tokens.
           </p>
+
+          <div className="mt-4 flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+            <div>
+              <p className="text-xs text-white/50">Your tokens</p>
+              <p className="text-xl font-bold text-[var(--color-neon)]">
+                {user.tokenBalance} ST
+              </p>
+            </div>
+            <Link
+              to="/tokens"
+              className="text-sm font-medium text-[var(--color-neon)] hover:underline"
+            >
+              Buy tokens →
+            </Link>
+          </div>
 
           {error && (
             <div className="mt-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm text-red-300">

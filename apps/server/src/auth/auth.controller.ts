@@ -5,6 +5,7 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -19,10 +20,15 @@ import {
   RegisterDto,
   ResetPasswordDto,
 } from './dto/auth.dto';
+import { WalletNonceDto, WalletVerifyDto } from './dto/wallet.dto';
+import { WalletAuthService } from './wallet-auth.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly walletAuthService: WalletAuthService,
+  ) {}
 
   @Post('register')
   register(@Body() dto: RegisterDto) {
@@ -63,6 +69,17 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   resetPassword(@Body() dto: ResetPasswordDto) {
     return this.authService.resetPassword(dto);
+  }
+
+  @Get('wallet/nonce')
+  walletNonce(@Query() dto: WalletNonceDto) {
+    return this.walletAuthService.createNonce(dto.address);
+  }
+
+  @Post('wallet/verify')
+  @HttpCode(HttpStatus.OK)
+  walletVerify(@Body() dto: WalletVerifyDto) {
+    return this.walletAuthService.verifyWallet(dto.message, dto.signature);
   }
 
   @Get('google')

@@ -6,6 +6,7 @@ import type {
   LoginRequest,
   RegisterRequest,
   UserPublic,
+  WalletVerifyRequest,
 } from '@three-towers/shared';
 import { apiFetch } from '../lib/api';
 
@@ -15,6 +16,7 @@ interface AuthState {
   isLoading: boolean;
   error: string | null;
   login: (dto: LoginRequest) => Promise<void>;
+  walletLogin: (dto: WalletVerifyRequest) => Promise<void>;
   register: (dto: RegisterRequest) => Promise<void>;
   logout: () => Promise<void>;
   fetchProfile: () => Promise<void>;
@@ -43,6 +45,23 @@ export const useAuthStore = create<AuthState>()(
           set({
             isLoading: false,
             error: err instanceof Error ? err.message : 'Login failed',
+          });
+          throw err;
+        }
+      },
+
+      walletLogin: async (dto) => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await apiFetch<AuthResponse>('/auth/wallet/verify', {
+            method: 'POST',
+            body: JSON.stringify(dto),
+          });
+          set({ user: response.user, tokens: response.tokens, isLoading: false });
+        } catch (err) {
+          set({
+            isLoading: false,
+            error: err instanceof Error ? err.message : 'Wallet sign-in failed',
           });
           throw err;
         }
