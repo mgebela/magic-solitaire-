@@ -25,9 +25,18 @@ export async function apiFetch<T>(
   });
 
   const contentType = response.headers.get('content-type') ?? '';
-  const isJson = contentType.includes('application/json');
   const rawText = await response.text().catch(() => '');
-  const body = isJson && rawText ? (JSON.parse(rawText) as unknown) : null;
+  const trimmed = rawText.trim();
+  const looksLikeJson = trimmed.startsWith('{') || trimmed.startsWith('[');
+  const isJson = contentType.includes('application/json') || looksLikeJson;
+  let body: unknown = null;
+  if (isJson && trimmed) {
+    try {
+      body = JSON.parse(trimmed) as unknown;
+    } catch {
+      body = null;
+    }
+  }
 
   if (!response.ok) {
     const message =
@@ -41,8 +50,11 @@ export async function apiFetch<T>(
   }
 
   if (body === null) {
+    const looksLikeHtml = /^\s*</.test(rawText);
     throw new ApiError(
-      'Invalid response from server (expected JSON).',
+      looksLikeHtml
+        ? 'Game server is offline. Wallet sign-in needs the API connected.'
+        : 'Invalid response from server (expected JSON).',
       response.status,
       { url, contentType, preview: rawText.slice(0, 200) },
     );
