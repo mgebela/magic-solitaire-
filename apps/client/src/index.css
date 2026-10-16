@@ -42,8 +42,8 @@ a {
   position: relative;
   min-height: 100vh;
   background:
-    linear-gradient(180deg, rgba(2, 8, 4, 0.12) 0%, rgba(2, 8, 4, 0.28) 42%, rgba(2, 8, 4, 0.78) 100%),
-    url('/textures/space-towers-lobby.png') center 12% / cover no-repeat,
+    linear-gradient(180deg, rgba(2, 8, 4, 0.04) 0%, rgba(2, 8, 4, 0.16) 42%, rgba(2, 8, 4, 0.78) 100%),
+    url('/textures/space-towers-lobby.png') center top / cover no-repeat,
     #020805;
 }
 
@@ -58,35 +58,41 @@ a {
   pointer-events: none;
   position: fixed;
   inset: 0;
-  background: radial-gradient(ellipse at 50% 28%, transparent 32%, rgba(0, 0, 0, 0.58) 100%);
+  background: radial-gradient(ellipse at 50% 16%, transparent 22%, rgba(0, 0, 0, 0.52) 100%);
 }
 
 /* ── Lobby ── */
 .lobby {
   max-width: 960px;
   margin: 0 auto;
-  padding: 2rem 1.5rem 3rem;
+  padding: 0.5rem 1.5rem 3rem;
 }
 
 .lobby-hero {
   text-align: center;
-  padding-top: 1.25rem;
-  margin-bottom: 2.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: clamp(19rem, 52vh, 34rem);
+  padding: 0.75rem 0 0.2rem;
+  margin-bottom: 0.85rem;
 }
 
 .lobby-hero__title {
   font-family: var(--font-logo);
-  font-size: clamp(4.2rem, 12vw, 7.2rem);
+  font-size: clamp(2.7rem, 7.4vw, 4.8rem);
   font-weight: 400;
   letter-spacing: 0.02em;
   line-height: 0.78;
   color: #fff;
-  -webkit-text-stroke: 0.055em #000;
+  -webkit-text-stroke: 0.045em #000;
   paint-order: stroke fill;
   text-shadow:
-    0 0 18px rgba(255, 255, 255, 0.35),
-    0 0 42px rgba(51, 255, 102, 0.55);
+    0 8px 24px rgba(0, 0, 0, 0.7),
+    0 0 28px rgba(51, 255, 102, 0.35);
   margin: 0 0 0.15rem;
+  position: relative;
+  z-index: 1;
 }
 
 .lobby-hero__title span {
@@ -98,11 +104,20 @@ a {
 }
 
 .lobby-hero__tagline {
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 1.05rem;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.95rem;
   letter-spacing: 0.42em;
   text-transform: uppercase;
-  margin: 0 0 0.5rem;
+  margin: 0.15rem 0 0;
+  text-shadow: 0 4px 14px rgba(0, 0, 0, 0.75);
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-height: 740px) {
+  .lobby-hero {
+    min-height: clamp(12.5rem, 34vh, 18rem);
+  }
 }
 
 .lobby-panel {
