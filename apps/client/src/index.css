@@ -94,6 +94,8 @@ a {
   flex-direction: column;
   align-items: center;
   transform: translate(calc(-50% + 0.7vw), -50%);
+  text-decoration: none;
+  color: inherit;
 }
 
 .lobby-hero__title {
@@ -418,6 +420,14 @@ a {
 
 .hint-banner--active {
   color: #7ee8ff;
+}
+
+.auth-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 0 1.5rem 3rem;
 }
 
 .auth-panel {

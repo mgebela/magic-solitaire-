@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom';
-import { MagicLogo } from '../components/graphics/MagicLogo';
 import { AppBackground } from '../components/layout/AppBackground';
 
 interface AuthLayoutProps {
@@ -10,14 +9,17 @@ interface AuthLayoutProps {
 
 export function AuthLayout({ title, subtitle, children }: AuthLayoutProps) {
   return (
-    <AppBackground variant="lobby">
-      <div className="flex min-h-screen flex-col items-center justify-center p-8">
-        <Link to="/" className="mb-8 block">
-          <MagicLogo />
-          <span className="mt-2 block text-center font-[family-name:var(--font-logo)] text-2xl tracking-wide text-white">
-            SPACE TOWERS
-          </span>
-        </Link>
+    <AppBackground variant="home">
+      <div className="auth-page">
+        <header className="lobby-hero">
+          <Link to="/" className="lobby-hero__lockup" aria-label="Space Towers home">
+            <span className="lobby-hero__title">
+              <span className="lobby-hero__space">SPACE</span>
+              <span className="lobby-hero__towers">TOWERS</span>
+            </span>
+            <span className="lobby-hero__tagline">Solitaire</span>
+          </Link>
+        </header>
 
         <div className="auth-panel">
           <h1 className="page-title mb-1 !text-4xl">{title}</h1>
