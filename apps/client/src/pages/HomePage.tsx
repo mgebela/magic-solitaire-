@@ -56,11 +56,13 @@ export default function HomePage() {
       <HowToPlay forceOpen={showHowto} onClose={() => setShowHowto(false)} />
       <div className="lobby">
         <header className="lobby-hero">
-          <h1 className="lobby-hero__title">
-            <span className="lobby-hero__space">SPACE</span>
-            <span className="lobby-hero__towers">TOWERS</span>
-          </h1>
-          <p className="lobby-hero__tagline">Solitaire</p>
+          <div className="lobby-hero__lockup">
+            <h1 className="lobby-hero__title">
+              <span className="lobby-hero__space">SPACE</span>
+              <span className="lobby-hero__towers">TOWERS</span>
+            </h1>
+            <p className="lobby-hero__tagline">Solitaire</p>
+          </div>
         </header>
 
         <div className="lobby-panel mb-6">
