@@ -52,13 +52,13 @@ export default function HomePage() {
   }, [tokens, user, fetchProfile]);
 
   return (
-    <AppBackground variant="lobby">
+    <AppBackground variant="home">
       <HowToPlay forceOpen={showHowto} onClose={() => setShowHowto(false)} />
       <div className="lobby">
         <header className="lobby-hero">
           <h1 className="lobby-hero__title">
-            SPACE
-            <span>TOWERS</span>
+            <span className="lobby-hero__space">SPACE</span>
+            <span className="lobby-hero__towers">TOWERS</span>
           </h1>
           <p className="lobby-hero__tagline">Solitaire</p>
         </header>

@@ -41,9 +41,17 @@ a {
 .app-background {
   position: relative;
   min-height: 100vh;
+  overflow-x: hidden;
   background:
     linear-gradient(180deg, rgba(2, 8, 4, 0.04) 0%, rgba(2, 8, 4, 0.16) 42%, rgba(2, 8, 4, 0.78) 100%),
     url('/textures/space-towers-lobby.png') center top / cover no-repeat,
+    #020805;
+}
+
+.app-background--home {
+  background:
+    linear-gradient(180deg, rgba(2, 8, 4, 0.02) 0%, rgba(2, 8, 4, 0.12) 46%, rgba(2, 8, 4, 0.84) 100%),
+    url('/textures/space-towers-lobby.png') center top / 150% auto no-repeat,
     #020805;
 }
 
@@ -58,65 +66,86 @@ a {
   pointer-events: none;
   position: fixed;
   inset: 0;
-  background: radial-gradient(ellipse at 50% 16%, transparent 22%, rgba(0, 0, 0, 0.52) 100%);
+  background: radial-gradient(ellipse at 50% 18%, transparent 28%, rgba(0, 0, 0, 0.48) 100%);
 }
 
 /* ── Lobby ── */
 .lobby {
   max-width: 960px;
   margin: 0 auto;
-  padding: 0.5rem 1.5rem 3rem;
+  padding: 0 1.5rem 3rem;
 }
 
 .lobby-hero {
+  width: 100vw;
+  max-width: 100vw;
+  margin: 0 calc(50% - 50vw) 0.75rem;
+  height: max(18rem, 40vw);
+  display: grid;
+  grid-template-rows: 2.7fr auto auto 0.52fr;
+  justify-items: center;
   text-align: center;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  min-height: clamp(19rem, 52vh, 34rem);
-  padding: 0.75rem 0 0.2rem;
-  margin-bottom: 0.85rem;
+  box-sizing: border-box;
 }
 
 .lobby-hero__title {
+  grid-row: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   font-family: var(--font-logo);
-  font-size: clamp(2.7rem, 7.4vw, 4.8rem);
+  font-size: clamp(3.1rem, 8.4vw, 5.4rem);
   font-weight: 400;
-  letter-spacing: 0.02em;
-  line-height: 0.78;
+  line-height: 0.82;
   color: #fff;
   -webkit-text-stroke: 0.045em #000;
   paint-order: stroke fill;
   text-shadow:
     0 8px 24px rgba(0, 0, 0, 0.7),
     0 0 28px rgba(51, 255, 102, 0.35);
-  margin: 0 0 0.15rem;
+  margin: 0;
   position: relative;
   z-index: 1;
+  text-align: center;
 }
 
-.lobby-hero__title span {
+.lobby-hero__space {
+  display: block;
+  letter-spacing: 0.06em;
+  padding-left: 0.06em;
+}
+
+.lobby-hero__towers {
   display: block;
   font-size: 0.42em;
-  letter-spacing: 0.38em;
-  margin-top: 0.08em;
-  padding-left: 0.15em;
+  letter-spacing: 0.48em;
+  padding-left: 0.48em;
+  margin-top: 0.12em;
 }
 
 .lobby-hero__tagline {
+  grid-row: 3;
   color: rgba(255, 255, 255, 0.72);
-  font-size: 0.95rem;
-  letter-spacing: 0.42em;
+  font-size: 0.92rem;
+  letter-spacing: 0.52em;
+  padding-left: 0.52em;
   text-transform: uppercase;
-  margin: 0.15rem 0 0;
+  margin: 0.28rem 0 0;
   text-shadow: 0 4px 14px rgba(0, 0, 0, 0.75);
   position: relative;
   z-index: 1;
 }
 
-@media (max-height: 740px) {
+@media (max-width: 700px) {
+  .app-background--home {
+    background:
+      linear-gradient(180deg, rgba(2, 8, 4, 0.02) 0%, rgba(2, 8, 4, 0.12) 46%, rgba(2, 8, 4, 0.84) 100%),
+      url('/textures/space-towers-lobby.png') center top / 220% auto no-repeat,
+      #020805;
+  }
+
   .lobby-hero {
-    min-height: clamp(12.5rem, 34vh, 18rem);
+    height: max(16.5rem, 58vw);
   }
 }
 

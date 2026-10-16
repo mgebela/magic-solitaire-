@@ -1,6 +1,6 @@
 interface AppBackgroundProps {
   children: React.ReactNode;
-  variant?: 'lobby' | 'game';
+  variant?: 'lobby' | 'game' | 'home';
 }
 
 export function AppBackground({ children, variant = 'lobby' }: AppBackgroundProps) {
