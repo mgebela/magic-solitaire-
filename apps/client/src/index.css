@@ -22,6 +22,15 @@ body {
   font-family: var(--font-body);
   color: #f5f5f0;
   background: var(--color-felt-dark);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button,
+input,
+a {
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
 }
 
 #root {
@@ -97,14 +106,15 @@ body {
 }
 
 .lobby-panel {
-  border-radius: 1.1rem;
-  border: 3px solid #3a3a38;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
   background:
-    linear-gradient(180deg, rgba(20, 20, 18, 0.55) 0%, rgba(8, 8, 8, 0.72) 100%),
+    linear-gradient(180deg, rgba(20, 20, 18, 0.58) 0%, rgba(8, 8, 8, 0.76) 100%),
     url('/textures/space-towers-stone.png') center / cover;
   box-shadow:
-    0 8px 28px rgba(0, 0, 0, 0.55),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    0 18px 40px rgba(0, 0, 0, 0.48),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 0 0 1px rgba(0, 0, 0, 0.35);
   padding: 1.5rem;
 }
 
@@ -130,12 +140,13 @@ body {
   gap: 1rem;
   align-items: flex-start;
   padding: 1.25rem;
-  border-radius: 0.9rem;
-  border: 2px solid #4a4a46;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   background:
-    linear-gradient(180deg, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.55)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0.5)),
     url('/textures/space-towers-stone.png') center / cover;
-  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
   text-decoration: none;
   color: inherit;
 }
@@ -177,26 +188,39 @@ body {
 
 /* ── Buttons ── */
 .game-btn {
+  appearance: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.35rem;
-  padding: 0.55rem 1.1rem;
-  border-radius: 0.65rem;
+  padding: 0.62rem 1.15rem;
+  border-radius: 0.8rem;
   font-size: 0.875rem;
   font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.1;
   text-decoration: none;
-  border: none;
+  border: 1px solid transparent;
   cursor: pointer;
-  transition: filter 0.15s, transform 0.1s;
+  transition:
+    filter 0.16s ease,
+    transform 0.12s ease,
+    box-shadow 0.16s ease,
+    border-color 0.16s ease,
+    background-color 0.16s ease;
 }
 
 .game-btn:hover:not(:disabled) {
-  filter: brightness(1.08);
+  filter: brightness(1.07);
 }
 
 .game-btn:active:not(:disabled) {
-  transform: scale(0.98);
+  transform: translateY(1px) scale(0.985);
+}
+
+.game-btn:focus-visible {
+  outline: 2px solid rgba(109, 255, 69, 0.85);
+  outline-offset: 2px;
 }
 
 .game-btn:disabled {
@@ -205,29 +229,36 @@ body {
 }
 
 .game-btn--primary {
-  background: linear-gradient(180deg, #6dff45, #2db824);
-  color: #06200a;
-  box-shadow: 0 2px 12px rgba(51, 255, 102, 0.35);
+  background: linear-gradient(180deg, #8cff63 0%, #4be034 52%, #28b422 100%);
+  color: #05240c;
+  border-color: rgba(210, 255, 170, 0.45);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(0, 70, 16, 0.22),
+    0 8px 18px rgba(51, 255, 102, 0.26);
 }
 
 .game-btn--accent {
-  background: rgba(51, 255, 102, 0.12);
+  background: rgba(51, 255, 102, 0.1);
   color: var(--color-neon);
-  border: 1px solid rgba(51, 255, 102, 0.4);
+  border-color: rgba(51, 255, 102, 0.38);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .game-btn--secondary {
   background:
-    linear-gradient(180deg, rgba(40, 40, 38, 0.62), rgba(12, 12, 12, 0.82)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(12, 12, 12, 0.72)),
     url('/textures/space-towers-stone.png') center / cover;
   color: #fff;
-  border: 2px solid #2a2a28;
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .game-btn--ghost {
-  background: transparent;
-  color: rgba(255, 255, 255, 0.82);
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.86);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 /* ── Game shell header ── */
@@ -338,15 +369,133 @@ body {
 .auth-panel {
   width: 100%;
   max-width: 28rem;
-  border-radius: 1.1rem;
-  border: 3px solid #3a3a38;
+  border-radius: 1.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
   background:
-    linear-gradient(180deg, rgba(20, 20, 18, 0.55) 0%, rgba(8, 8, 8, 0.72) 100%),
+    linear-gradient(180deg, rgba(20, 20, 18, 0.58) 0%, rgba(8, 8, 8, 0.78) 100%),
     url('/textures/space-towers-stone.png') center / cover;
   box-shadow:
-    0 8px 28px rgba(0, 0, 0, 0.55),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12);
-  padding: 2rem;
+    0 22px 48px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 0 0 1px rgba(0, 0, 0, 0.35);
+  padding: 2rem 1.85rem 1.85rem;
+}
+
+.wallet-options__label {
+  margin: 0 0 0.7rem;
+  text-align: center;
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.48);
+}
+
+.wallet-options__list {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.wallet-option {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  width: 100%;
+  padding: 0.62rem 0.7rem;
+  border-radius: 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(0, 0, 0, 0.38));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.16s ease, transform 0.12s ease, background 0.16s ease;
+}
+
+.wallet-option:hover:not(:disabled) {
+  border-color: rgba(109, 255, 69, 0.48);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0.32));
+}
+
+.wallet-option:focus-visible {
+  outline: 2px solid rgba(109, 255, 69, 0.85);
+  outline-offset: 2px;
+}
+
+.wallet-option:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.wallet-option__icon {
+  display: grid;
+  place-items: center;
+  width: 2.05rem;
+  height: 2.05rem;
+  border-radius: 0.65rem;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.wallet-option__icon svg {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.wallet-option--phantom .wallet-option__icon {
+  color: #d8c7ff;
+  background: rgba(124, 58, 237, 0.18);
+}
+
+.wallet-option--solflare .wallet-option__icon {
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.16);
+}
+
+.wallet-option--backpack .wallet-option__icon {
+  color: #fda4af;
+  background: rgba(244, 63, 94, 0.16);
+}
+
+.wallet-option__copy {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.wallet-option__name {
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.wallet-option__status {
+  flex-shrink: 0;
+  padding: 0.18rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.62);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.wallet-option--phantom .wallet-option__status {
+  color: #ddd6fe;
+}
+
+.wallet-option--solflare .wallet-option__status {
+  color: #fde68a;
+}
+
+.wallet-option--backpack .wallet-option__status {
+  color: #fecdd3;
 }
 
 .page-back {
@@ -382,16 +531,19 @@ body {
 
 .stone-input {
   width: 100%;
-  border-radius: 0.55rem;
-  border: 2px solid #3a3a36;
-  background: rgba(0, 0, 0, 0.45);
+  border-radius: 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.42);
   color: #fff;
   outline: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .stone-input:focus {
   border-color: rgba(109, 255, 69, 0.55);
-  box-shadow: 0 0 0 1px rgba(109, 255, 69, 0.28);
+  box-shadow:
+    0 0 0 3px rgba(109, 255, 69, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .stat-cell {
@@ -476,12 +628,14 @@ body {
 }
 
 .stone-hud__undo {
-  padding: 0.25rem 0.75rem;
-  border-radius: 0.45rem;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  background: rgba(0, 0, 0, 0.45);
+  appearance: none;
+  padding: 0.32rem 0.8rem;
+  border-radius: 0.7rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0.48));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
   color: #fff;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 700;
   cursor: pointer;
 }
@@ -500,11 +654,11 @@ body {
   justify-content: center;
   min-width: 5.6rem;
   padding: 0.45rem 0.75rem 0.55rem;
-  border-radius: 0.45rem;
+  border-radius: 0.75rem;
   background:
     linear-gradient(180deg, rgba(20, 20, 18, 0.78) 0%, rgba(8, 8, 8, 0.88) 100%),
     url('/textures/space-towers-stone.png') center / cover;
-  border: 2px solid #2a2a28;
+  border: 1px solid rgba(255, 255, 255, 0.14);
   box-shadow:
     inset 0 5px 12px rgba(0, 0, 0, 0.72),
     0 1px 0 rgba(255, 255, 255, 0.12);
@@ -665,17 +819,19 @@ body {
   justify-content: center;
   min-width: 5.1rem;
   padding: 0.55rem 1.05rem;
-  border-radius: 0.4rem;
+  border-radius: 0.75rem;
   background:
-    linear-gradient(180deg, rgba(40, 40, 38, 0.7), rgba(12, 12, 12, 0.88)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(12, 12, 12, 0.82)),
     url('/textures/space-towers-stone.png') center / cover;
-  border: 2px solid #1a1a18;
+  border: 1px solid rgba(255, 255, 255, 0.16);
   color: #fff;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 800;
   text-decoration: none;
   letter-spacing: 0.08em;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 6px 14px rgba(0, 0, 0, 0.35);
   z-index: 6;
 }
 
@@ -684,11 +840,13 @@ body {
 }
 
 .stone-hud__extra-btn {
-  padding: 0.3rem 0.65rem;
-  border-radius: 0.45rem;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  background: rgba(0, 0, 0, 0.45);
-  color: rgba(255, 255, 255, 0.9);
+  appearance: none;
+  padding: 0.32rem 0.7rem;
+  border-radius: 0.7rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0.48));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.92);
   font-size: 0.7rem;
   font-weight: 600;
   cursor: pointer;

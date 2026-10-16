@@ -37,7 +37,7 @@ export function AuthInput({
     <label className="block">
       <span className="mb-1 block text-sm text-white/70">{label}</span>
       <input
-        className="stone-input px-4 py-2.5 placeholder-white/30 transition"
+        className="stone-input px-4 py-3 placeholder-white/30 transition"
         {...props}
       />
     </label>
@@ -51,7 +51,7 @@ export function AuthButton({
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & { loading?: boolean }) {
   return (
     <button
-      className="game-btn game-btn--primary w-full py-2.5 disabled:cursor-not-allowed disabled:opacity-50"
+      className="game-btn game-btn--primary w-full py-3 disabled:cursor-not-allowed disabled:opacity-50"
       disabled={loading || props.disabled}
       {...props}
     >

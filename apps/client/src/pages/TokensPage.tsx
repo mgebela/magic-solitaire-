@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import type { PurchaseTokensResponse, TokenPackage } from '@three-towers/shared';
 import { MULTIPLAYER_ENTRY_COST } from '@three-towers/shared';
 import { AppBackground } from '../components/layout/AppBackground';
+import { GameButton } from '../components/ui/GameButton';
 import { apiFetch, ApiError } from '../lib/api';
 import { useAuthStore } from '../stores/authStore';
 
@@ -100,14 +101,14 @@ export default function TokensPage() {
                 <p className="mt-1 text-sm text-white/50">{pkg.cryptoAmount} SOL</p>
                 <p className="mt-2 text-xs text-white/40">{pkg.description}</p>
                 {tokens && (
-                  <button
-                    type="button"
+                  <GameButton
+                    variant="primary"
+                    className="mt-4 w-full"
                     disabled={loadingId === pkg.id}
                     onClick={() => purchase(pkg.id)}
-                    className="mt-4 w-full rounded-lg bg-[var(--color-neon)] py-2 text-sm font-semibold text-black disabled:opacity-50"
                   >
                     {loadingId === pkg.id ? 'Processing…' : 'Buy with SOL'}
-                  </button>
+                  </GameButton>
                 )}
               </div>
             ))}
