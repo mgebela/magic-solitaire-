@@ -8,7 +8,7 @@ export interface SolanaWalletProvider {
   isBackpack?: boolean;
   isConnected?: boolean;
   publicKey?: { toString(): string };
-  connect(): Promise<{ publicKey: { toString(): string } } | void>;
+  connect(): Promise<{ publicKey: { toString(): string } } | boolean | void>;
   signMessage(
     message: Uint8Array,
     display?: 'utf8' | 'hex',
@@ -66,6 +66,17 @@ function normalizeSignature(result: Uint8Array | { signature: Uint8Array | strin
   return result.signature;
 }
 
+function publicKeyFromConnectResult(
+  connected: unknown,
+  provider: SolanaWalletProvider,
+): { toString(): string } | undefined {
+  if (connected && typeof connected === 'object' && 'publicKey' in connected) {
+    const key = (connected as { publicKey?: { toString(): string } }).publicKey;
+    if (key) return key;
+  }
+  return provider.publicKey;
+}
+
 export async function connectSolanaWallet(id: SolanaWalletId): Promise<string> {
   const wallet = WALLET_META.find((item) => item.id === id);
   const provider = getInjectedProvider(id);
@@ -76,9 +87,7 @@ export async function connectSolanaWallet(id: SolanaWalletId): Promise<string> {
   }
 
   const connected = await provider.connect();
-  const publicKey = connected && 'publicKey' in connected && connected.publicKey
-    ? connected.publicKey
-    : provider.publicKey;
+  const publicKey = publicKeyFromConnectResult(connected, provider);
   if (!publicKey) {
     throw new Error(`${wallet.name} did not return a public key.`);
   }
