@@ -87,20 +87,24 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     try {
       if (accessToken) {
-        const session = await gameApi.createGame(accessToken, { mode });
-        const state = { ...session.state, mode };
-        const engine = createEngineForState(state, mode, false);
+        try {
+          const session = await gameApi.createGame(accessToken, { mode });
+          const state = { ...session.state, mode };
+          const engine = createEngineForState(state, mode, false);
 
-        set({
-          engine,
-          state,
-          gameId: session.id,
-          persisted: true,
-          allowUndo: false,
-          timerStartedAt: Date.now(),
-          isStarting: false,
-        });
-        return;
+          set({
+            engine,
+            state,
+            gameId: session.id,
+            persisted: true,
+            allowUndo: false,
+            timerStartedAt: Date.now(),
+            isStarting: false,
+          });
+          return;
+        } catch {
+          // Hosted wallet-auth API has no game persistence — play locally.
+        }
       }
 
       const engine = new GameEngine({ mode, allowUndo: true });

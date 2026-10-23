@@ -20,10 +20,18 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
-# Proxy /api to the NestJS server (set API_ORIGIN, e.g. https://api.example.com)
-[[edge_functions]]
-  function = "api-proxy"
-  path = "/api/*"
+# Wallet nonce/verify (and a few JSON stubs) live in netlify/functions/api.ts.
+# Set API_ORIGIN to proxy those same /api/* paths to a NestJS server instead.
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+# Force /api/* to the function so the SPA rewrite below cannot return index.html.
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+  force = true
 
 # SPA routing — static files in dist are served before this rule
 [[redirects]]
