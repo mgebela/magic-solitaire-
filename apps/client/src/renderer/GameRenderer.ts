@@ -1,6 +1,7 @@
 import {
   Application,
   Container,
+  Rectangle,
   type FederatedPointerEvent,
 } from 'pixi.js';
 import type { Card, CardId, GameState } from '@three-towers/shared';
@@ -32,6 +33,7 @@ export type DrawClickHandler = () => void;
 
 interface CardSpriteEntry {
   container: Container;
+  motion: Container;
   cardId: CardId;
   slot: 'tableau' | 'waste' | 'stock';
   tableauIndex?: number;
@@ -43,13 +45,25 @@ function isLive(container: Container): boolean {
   return !container.destroyed;
 }
 
-function centerOf(pos: CardPosition): { x: number; y: number } {
-  return { x: pos.x + CARD_WIDTH / 2, y: pos.y + CARD_HEIGHT / 2 };
+/**
+ * Root stays top-left for hit-testing. Motion child is pivoted at the
+ * card center so flips/arcs/hovers don't shift the clickable box.
+ */
+function assembleCard(art: Container): { root: Container; motion: Container } {
+  const root = new Container();
+  const motion = new Container();
+  motion.position.set(CARD_WIDTH / 2, CARD_HEIGHT / 2);
+  motion.pivot.set(CARD_WIDTH / 2, CARD_HEIGHT / 2);
+  motion.addChild(art);
+  root.addChild(motion);
+  root.hitArea = new Rectangle(0, 0, CARD_WIDTH, CARD_HEIGHT);
+  root.interactiveChildren = false;
+  return { root, motion };
 }
 
-function withPivot(container: Container): Container {
-  container.pivot.set(CARD_WIDTH / 2, CARD_HEIGHT / 2);
-  return container;
+function artOf(entry: CardSpriteEntry): Container | null {
+  const art = entry.motion.children[0];
+  return art instanceof Container && !art.destroyed ? art : null;
 }
 
 /**
@@ -198,25 +212,32 @@ export class GameRenderer {
     this.root.addChildAt(bg, 0);
     this.root.addChildAt(orbs, 1);
 
-    const wasteSlot = withPivot(createWasteSlotGraphic());
+    const wasteSlot = createWasteSlotGraphic();
     this.place(wasteSlot, WASTE_POSITION);
     this.pilesLayer.addChild(wasteSlot);
   }
 
   private place(container: Container, pos: CardPosition): void {
     if (!isLive(container)) return;
-    const center = centerOf(pos);
-    container.position.set(center.x, center.y);
+    container.position.set(pos.x, pos.y);
     container.zIndex = pos.layer;
   }
 
   private pulseHighlights(now: number): void {
     const pulse = 0.62 + Math.sin(now / 260) * 0.28;
     for (const entry of this.sprites.values()) {
-      if (!isLive(entry.container)) continue;
-      const glow = entry.container.children.find((child) => child.label === 'highlight');
+      const art = artOf(entry);
+      if (!art) continue;
+      const glow = art.children.find((child) => child.label === 'highlight');
       if (glow) glow.alpha = pulse;
     }
+  }
+
+  private isPlayableId(cardId: CardId): boolean {
+    if (!this.state) return false;
+    return getPlayableCards(this.state.tableau, this.state.uncovered, this.state.waste).some(
+      (card) => card.id === cardId,
+    );
   }
 
   private syncTableau(state: GameState, prev: GameState | null, animate: boolean): void {
@@ -239,20 +260,19 @@ export class GameRenderer {
 
       let entry = this.sprites.get(key);
       if (!entry) {
-        const container = this.makeInteractiveCard(card, faceUp, () => this.onCardClick?.(card.id));
-        entry = { container, cardId: card.id, slot: 'tableau', tableauIndex: index, faceUp };
+        entry = this.makeInteractiveCard(card, faceUp, index);
         this.sprites.set(key, entry);
-        this.tableauLayer.addChild(container);
-        this.place(container, pos);
+        this.tableauLayer.addChild(entry.container);
+        this.place(entry.container, pos);
       } else if (entry.cardId !== card.id) {
-        this.replaceCardGraphic(entry.container, card, faceUp);
+        this.replaceCardGraphic(entry, card, faceUp);
         entry.cardId = card.id;
         entry.faceUp = faceUp;
       } else if (entry.faceUp !== faceUp && !entry.flipping) {
         if (animate && faceUp) {
           this.animateFlip(entry, card, true);
         } else {
-          this.replaceCardGraphic(entry.container, card, faceUp);
+          this.replaceCardGraphic(entry, card, faceUp);
           entry.faceUp = faceUp;
         }
       }
@@ -263,11 +283,14 @@ export class GameRenderer {
         this.place(entry.container, pos);
       }
 
-      setCardHighlight(entry.container, isUncovered, isPlayable, card.id === this.hintCardId);
+      const art = artOf(entry);
+      if (art) {
+        setCardHighlight(art, isUncovered, isPlayable, card.id === this.hintCardId);
+      }
       entry.container.eventMode = isPlayable ? 'static' : 'none';
       entry.container.cursor = isPlayable ? 'pointer' : 'default';
       if (!isPlayable && !entry.flipping) {
-        entry.container.scale.set(1);
+        entry.motion.scale.set(1);
       }
     });
 
@@ -282,17 +305,17 @@ export class GameRenderer {
 
       if (wasJustPlayed && isLive(entry.container)) {
         const lastMove = state.moves[state.moves.length - 1];
-        if (lastMove?.type === 'play' && state.waste) {
+        if (lastMove?.type === 'play' && lastMove.cardId === entry.cardId && state.waste) {
           this.scoreEffects.spawn(
             this.overlayLayer,
             this.tweens,
-            entry.container.x,
-            entry.container.y - CARD_HEIGHT * 0.2,
+            entry.container.x + CARD_WIDTH / 2,
+            entry.container.y,
             cardPointsForCombo(state.combo),
             state.combo,
           );
           this.sprites.delete(key);
-          this.launchToWaste(entry.container, state.waste);
+          this.launchToWaste(entry, state.waste);
           continue;
         }
       }
@@ -331,20 +354,31 @@ export class GameRenderer {
       prev.waste?.id !== state.waste.id;
 
     if (drew) {
-      const flyer = withPivot(createCardGraphic(state.waste, false));
-      this.place(flyer, STOCK_POSITION);
-      this.overlayLayer.addChild(flyer);
+      const assembled = assembleCard(createCardGraphic(state.waste, false));
+      this.place(assembled.root, STOCK_POSITION);
+      this.overlayLayer.addChild(assembled.root);
+      const flyer: CardSpriteEntry = {
+        container: assembled.root,
+        motion: assembled.motion,
+        cardId: state.waste.id,
+        slot: 'waste',
+      };
       this.launchDraw(flyer, state.waste);
       return;
     }
 
     if (!entry) {
-      const container = withPivot(createCardGraphic(state.waste, true));
-      entry = { container, cardId: state.waste.id, slot: 'waste' };
+      const assembled = assembleCard(createCardGraphic(state.waste, true));
+      entry = {
+        container: assembled.root,
+        motion: assembled.motion,
+        cardId: state.waste.id,
+        slot: 'waste',
+      };
       this.sprites.set(key, entry);
-      this.pilesLayer.addChild(container);
+      this.pilesLayer.addChild(entry.container);
     } else if (entry.cardId !== state.waste.id) {
-      this.replaceCardGraphic(entry.container, state.waste, true);
+      this.replaceCardGraphic(entry, state.waste, true);
       entry.cardId = state.waste.id;
     }
 
@@ -366,146 +400,168 @@ export class GameRenderer {
     }
 
     if (!entry) {
-      const container = withPivot(createStockGraphic());
-      container.eventMode = 'static';
-      container.cursor = 'pointer';
-      container.on('pointertap', () => {
+      const assembled = assembleCard(createStockGraphic());
+      assembled.root.eventMode = 'static';
+      assembled.root.cursor = 'pointer';
+      assembled.root.on('pointertap', () => {
         this.onDrawClick?.();
       });
-      entry = { container, cardId: 'stock', slot: 'stock' };
+      entry = {
+        container: assembled.root,
+        motion: assembled.motion,
+        cardId: 'stock',
+        slot: 'stock',
+      };
       this.sprites.set(key, entry);
-      this.pilesLayer.addChild(container);
+      this.pilesLayer.addChild(entry.container);
     }
 
     this.place(entry.container, STOCK_POSITION);
-    if (isLive(entry.container)) {
-      setStockCount(entry.container, state.stock.length);
+    const art = artOf(entry);
+    if (art) {
+      setStockCount(art, state.stock.length);
     }
   }
 
-  private makeInteractiveCard(card: Card, faceUp: boolean, onClick: () => void): Container {
-    const container = withPivot(createCardGraphic(card, faceUp));
-    container.eventMode = 'static';
-    container.cursor = 'pointer';
-    container.on('pointerover', () => {
-      if (!isLive(container) || this.wasteFlyer === container) return;
-      container.scale.set(1.06);
+  private makeInteractiveCard(card: Card, faceUp: boolean, tableauIndex: number): CardSpriteEntry {
+    const assembled = assembleCard(createCardGraphic(card, faceUp));
+    const entry: CardSpriteEntry = {
+      container: assembled.root,
+      motion: assembled.motion,
+      cardId: card.id,
+      slot: 'tableau',
+      tableauIndex,
+      faceUp,
+    };
+
+    const root = entry.container;
+    const motion = entry.motion;
+    root.eventMode = 'static';
+    root.cursor = 'pointer';
+    root.on('pointerover', () => {
+      if (!isLive(root) || this.wasteFlyer === root || !this.isPlayableId(entry.cardId)) return;
+      motion.scale.set(1.06);
     });
-    container.on('pointerout', () => {
-      if (!isLive(container) || this.wasteFlyer === container) return;
-      container.scale.set(1);
+    root.on('pointerout', () => {
+      if (!isLive(root) || this.wasteFlyer === root) return;
+      motion.scale.set(1);
     });
-    container.on('pointerdown', () => {
-      if (!isLive(container) || this.wasteFlyer === container) return;
-      container.scale.set(0.95);
+    root.on('pointerdown', () => {
+      if (!isLive(root) || this.wasteFlyer === root || !this.isPlayableId(entry.cardId)) return;
+      motion.scale.set(0.95);
     });
-    container.on('pointerup', () => {
-      if (!isLive(container) || this.wasteFlyer === container) return;
-      container.scale.set(1.06);
+    root.on('pointerup', () => {
+      if (!isLive(root) || this.wasteFlyer === root || !this.isPlayableId(entry.cardId)) return;
+      motion.scale.set(1.06);
     });
-    container.on('pointerupoutside', () => {
-      if (!isLive(container) || this.wasteFlyer === container) return;
-      container.scale.set(1);
+    root.on('pointerupoutside', () => {
+      if (!isLive(root) || this.wasteFlyer === root) return;
+      motion.scale.set(1);
     });
-    container.on('pointertap', (e: FederatedPointerEvent) => {
+    root.on('pointertap', (e: FederatedPointerEvent) => {
       e.stopPropagation();
-      onClick();
+      if (!this.isPlayableId(entry.cardId)) return;
+      this.onCardClick?.(entry.cardId);
     });
-    return container;
+    return entry;
   }
 
-  private replaceCardGraphic(container: Container, card: Card, faceUp: boolean): void {
-    if (!isLive(container)) return;
-    container.removeChildren();
-    const fresh = createCardGraphic(card, faceUp);
-    for (const child of [...fresh.children]) {
-      container.addChild(child);
-    }
-    fresh.destroy({ children: false });
+  private replaceCardGraphic(entry: CardSpriteEntry, card: Card, faceUp: boolean): void {
+    if (!isLive(entry.motion)) return;
+    entry.motion.removeChildren();
+    entry.motion.addChild(createCardGraphic(card, faceUp));
   }
 
   private animateFlip(entry: CardSpriteEntry, card: Card, faceUp: boolean): void {
-    const container = entry.container;
-    if (!isLive(container)) return;
+    const motion = entry.motion;
+    if (!isLive(motion)) return;
     entry.flipping = true;
-    const startScale = container.scale.x || 1;
     this.tweens.add(
       tween(
         220,
         (_t, raw) => {
-          if (!isLive(container)) return;
+          if (!isLive(motion)) return;
           const squash = raw < 0.5 ? 1 - raw * 2 : (raw - 0.5) * 2;
-          container.scale.x = Math.max(0.08, startScale * squash);
+          motion.scale.x = Math.max(0.08, squash);
           if (raw >= 0.5 && entry.faceUp !== faceUp) {
-            this.replaceCardGraphic(container, card, faceUp);
+            this.replaceCardGraphic(entry, card, faceUp);
             entry.faceUp = faceUp;
           }
         },
         () => {
-          if (!isLive(container)) return;
-          container.scale.x = startScale;
+          if (!isLive(motion)) return;
+          motion.scale.set(1);
           entry.flipping = false;
           entry.faceUp = faceUp;
+          const art = artOf(entry);
+          if (art && this.state) {
+            const playable = this.isPlayableId(entry.cardId);
+            setCardHighlight(art, true, playable, entry.cardId === this.hintCardId);
+          }
         },
         easeInOutCubic,
       ),
     );
   }
 
-  private launchToWaste(container: Container, waste: Card): void {
+  private launchToWaste(entry: CardSpriteEntry, waste: Card): void {
+    const container = entry.container;
     if (!isLive(container)) return;
     this.wasteFlyer = container;
     container.eventMode = 'none';
     container.cursor = 'default';
-    container.scale.set(1);
-    setCardHighlight(container, false, false, false);
+    entry.motion.scale.set(1);
+    const art = artOf(entry);
+    if (art) setCardHighlight(art, false, false, false);
     this.overlayLayer.addChild(container);
     container.zIndex = 80;
 
     const from = { x: container.x, y: container.y };
-    const to = centerOf(WASTE_POSITION);
+    const to = { x: WASTE_POSITION.x, y: WASTE_POSITION.y };
     const spin = from.x < to.x ? 0.18 : -0.18;
 
-    this.animateArc(container, from, to, 340, spin, 1.08, () => {
+    this.animateArc(entry, from, to, 340, spin, 1.08, () => {
       if (this.wasteFlyer !== container) {
         if (isLive(container)) container.destroy({ children: true });
         return;
       }
-      this.settleAsWaste(container, waste.id);
+      this.settleAsWaste(entry, waste.id);
     });
   }
 
-  private launchDraw(container: Container, waste: Card): void {
+  private launchDraw(entry: CardSpriteEntry, waste: Card): void {
+    const container = entry.container;
     if (!isLive(container)) return;
     this.wasteFlyer = container;
     container.zIndex = 80;
-    const from = centerOf(STOCK_POSITION);
-    const to = centerOf(WASTE_POSITION);
+    const from = { x: STOCK_POSITION.x, y: STOCK_POSITION.y };
+    const to = { x: WASTE_POSITION.x, y: WASTE_POSITION.y };
     let flipped = false;
 
-    this.animateArc(container, from, to, 300, 0.12, null, () => {
+    this.animateArc(entry, from, to, 300, 0.12, null, () => {
       if (this.wasteFlyer !== container) {
         if (isLive(container)) container.destroy({ children: true });
         return;
       }
-      this.settleAsWaste(container, waste.id);
+      this.settleAsWaste(entry, waste.id);
     });
 
     this.tweens.add(
       tween(300, (_t, raw) => {
-        if (!isLive(container)) return;
+        if (!isLive(entry.motion)) return;
         if (raw >= 0.42 && !flipped) {
           flipped = true;
-          this.replaceCardGraphic(container, waste, true);
+          this.replaceCardGraphic(entry, waste, true);
         }
         const squash = raw < 0.42 ? 1 - (raw / 0.42) * 0.88 : Math.min(1, (raw - 0.42) / 0.28);
-        container.scale.x = Math.max(0.1, squash);
-        container.scale.y = 1;
+        entry.motion.scale.x = Math.max(0.1, squash);
+        entry.motion.scale.y = 1;
       }),
     );
   }
 
-  private settleAsWaste(container: Container, cardId: CardId): void {
+  private settleAsWaste(entry: CardSpriteEntry, cardId: CardId): void {
+    const container = entry.container;
     const existing = this.sprites.get('waste');
     if (existing && existing.container !== container && isLive(existing.container)) {
       existing.container.destroy({ children: true });
@@ -514,23 +570,25 @@ export class GameRenderer {
       this.wasteFlyer = null;
       return;
     }
-    container.rotation = 0;
-    container.scale.set(1);
+    entry.motion.rotation = 0;
+    entry.motion.scale.set(1);
     this.pilesLayer.addChild(container);
     this.place(container, WASTE_POSITION);
-    this.sprites.set('waste', { container, cardId, slot: 'waste' });
+    entry.cardId = cardId;
+    entry.slot = 'waste';
+    this.sprites.set('waste', entry);
     this.wasteFlyer = null;
 
     this.tweens.add(
       tween(
         140,
         (t) => {
-          if (!isLive(container)) return;
+          if (!isLive(entry.motion)) return;
           const squash = 1 + Math.sin(t * Math.PI) * 0.06;
-          container.scale.set(1 + (1 - t) * 0.04, squash);
+          entry.motion.scale.set(1 + (1 - t) * 0.04, squash);
         },
         () => {
-          if (isLive(container)) container.scale.set(1);
+          if (isLive(entry.motion)) entry.motion.scale.set(1);
         },
         easeOutBack,
       ),
@@ -538,7 +596,7 @@ export class GameRenderer {
   }
 
   private animateArc(
-    container: Container,
+    entry: CardSpriteEntry,
     from: { x: number; y: number },
     to: { x: number; y: number },
     durationMs: number,
@@ -546,6 +604,8 @@ export class GameRenderer {
     peakScale: number | null,
     onComplete: () => void,
   ): void {
+    const container = entry.container;
+    const motion = entry.motion;
     if (!isLive(container)) {
       onComplete();
       return;
@@ -562,13 +622,13 @@ export class GameRenderer {
           const mt = 1 - t;
           container.x = mt * mt * from.x + 2 * mt * t * control.x + t * t * to.x;
           container.y = mt * mt * from.y + 2 * mt * t * control.y + t * t * to.y;
-          container.rotation = Math.sin(t * Math.PI) * spin;
+          motion.rotation = Math.sin(t * Math.PI) * spin;
           if (peakScale != null) {
             const scale =
               t < 0.45
                 ? 1 + (peakScale - 1) * (t / 0.45)
                 : peakScale - (peakScale - 1) * ((t - 0.45) / 0.55);
-            container.scale.set(scale);
+            motion.scale.set(scale);
           }
         },
         onComplete,
