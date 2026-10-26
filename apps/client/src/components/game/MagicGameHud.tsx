@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { TRIPEAKS_TABLEAU_CARD_COUNT, type GameState } from '@three-towers/shared';
 import { sound } from '../../lib/sound';
@@ -43,6 +43,26 @@ export function MagicGameHud({
   const timerSeconds = Math.floor((state.elapsedMs ?? 0) / 1000);
   const pitValue = roundValue ?? `${roundCurrent}/${roundTotal}`;
   const [muted, setMuted] = useState(sound.isMuted());
+  const [scorePop, setScorePop] = useState(0);
+  const [comboPop, setComboPop] = useState(0);
+  const prevScore = useRef(state.score);
+  const prevCombo = useRef(combo);
+
+  useEffect(() => {
+    if (state.score > prevScore.current) {
+      setScorePop((n) => n + 1);
+    }
+    prevScore.current = state.score;
+  }, [state.score]);
+
+  useEffect(() => {
+    if (combo > prevCombo.current) {
+      setComboPop((n) => n + 1);
+    }
+    prevCombo.current = combo;
+  }, [combo]);
+
+  const comboHeat = combo >= 5 ? 'blaze' : combo >= 3 ? 'hot' : combo >= 2 ? 'warm' : '';
 
   return (
     <div className="stone-hud" style={{ aspectRatio: String(BOARD_ASPECT) }}>
@@ -88,9 +108,11 @@ export function MagicGameHud({
         aria-label={`Draw card, ${state.stock.length} remaining`}
       />
 
-      <div className="stone-hud__pit stone-hud__pit--score">
+      <div className={`stone-hud__pit stone-hud__pit--score ${scorePop ? 'stone-hud__pit--pop' : ''}`}>
         <span className="stone-hud__pit-label">Score</span>
-        <span className="stone-hud__pit-value">{state.score}</span>
+        <span key={scorePop} className="stone-hud__pit-value">
+          {state.score}
+        </span>
       </div>
 
       <div className="stone-hud__brand">
@@ -104,7 +126,10 @@ export function MagicGameHud({
       </div>
 
       <div className="stone-hud__center">
-        <div className="stone-hud__combo-ring">
+        <div
+          key={comboPop}
+          className={`stone-hud__combo-ring ${comboHeat ? `stone-hud__combo-ring--${comboHeat}` : ''}`}
+        >
           <span className="stone-hud__combo-label">COMBOS</span>
           <span className="stone-hud__combo-value">{combo}x</span>
         </div>

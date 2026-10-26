@@ -6,6 +6,13 @@ import { MagicGameHud } from './game/MagicGameHud';
 /** Serialize Pixi inits so React StrictMode cannot attach two Applications to one canvas. */
 let canvasInitQueue: Promise<void> = Promise.resolve();
 
+function boardSignature(state: GameState): string {
+  const tableau = state.tableau
+    .map((card) => (card ? `${card.id}:${state.uncovered.includes(card.id) ? 1 : 0}` : '.'))
+    .join('');
+  return `${state.status}|${state.moves.length}|${state.score}|${state.combo}|${state.waste?.id ?? ''}|${state.stock.length}|${tableau}`;
+}
+
 interface GameCanvasProps {
   state: GameState | null;
   onCardClick?: (cardId: string) => void;
@@ -50,6 +57,7 @@ export function GameCanvas({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rendererRef = useRef<GameRenderer | null>(null);
   const prevStateRef = useRef<GameState | null>(null);
+  const boardKeyRef = useRef<string>('');
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -58,6 +66,8 @@ export function GameCanvas({
 
     const renderer = new GameRenderer();
     rendererRef.current = renderer;
+    prevStateRef.current = null;
+    boardKeyRef.current = '';
     let cancelled = false;
     let observer: ResizeObserver | null = null;
 
@@ -83,6 +93,11 @@ export function GameCanvas({
       resize();
       observer = new ResizeObserver(resize);
       observer.observe(frame);
+      const latest = prevStateRef.current;
+      if (latest) {
+        renderer.renderState(latest, false);
+        boardKeyRef.current = boardSignature(latest);
+      }
     });
 
     return () => {
@@ -109,9 +124,12 @@ export function GameCanvas({
 
   useEffect(() => {
     if (!state || !rendererRef.current) return;
+    const key = boardSignature(state);
+    if (key === boardKeyRef.current) return;
     const animate = prevStateRef.current !== null;
     rendererRef.current.renderState(state, animate);
     prevStateRef.current = state;
+    boardKeyRef.current = key;
   }, [state]);
 
   return (

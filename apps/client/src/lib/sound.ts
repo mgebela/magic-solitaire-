@@ -56,12 +56,12 @@ export const sound = {
     return muted;
   },
   playCard(combo: number): void {
-    tone(480 + Math.min(combo, 8) * 36, 0.09, 'triangle', 0.07);
+    tone(540 + Math.min(combo, 8) * 48, 0.08, 'triangle', 0.09);
     if (combo >= 2) {
-      tone(640 + combo * 24, 0.12, 'sine', 0.05, 0.04);
+      tone(720 + combo * 30, 0.14, 'sine', 0.065, 0.03);
     }
     if (combo >= 4) {
-      tone(880, 0.16, 'sine', 0.045, 0.08);
+      tone(1040, 0.2, 'sine', 0.055, 0.06);
     }
   },
   draw(): void {

@@ -5,7 +5,7 @@ import {
 } from 'pixi.js';
 import type { Card, CardId, GameState } from '@three-towers/shared';
 import { getPlayableCards, cardPointsForCombo } from '@three-towers/game-engine';
-import { TweenManager, tween } from './animations';
+import { TweenManager, easeInOutCubic, easeOutBack, easeOutQuart, tween } from './animations';
 import {
   createCardGraphic,
   createStockGraphic,
@@ -16,7 +16,7 @@ import {
 import { ScoreEffectManager } from './score-effects';
 import { drawMagicTableBackground } from './table-background';
 import { drawTowerOrbs } from './tower-orbs';
-import { CARD_WIDTH } from './constants';
+import { CARD_HEIGHT, CARD_WIDTH } from './constants';
 import { sound } from '../lib/sound';
 import {
   BOARD_HEIGHT,
@@ -36,15 +36,20 @@ interface CardSpriteEntry {
   slot: 'tableau' | 'waste' | 'stock';
   tableauIndex?: number;
   faceUp?: boolean;
+  flipping?: boolean;
 }
 
 function isLive(container: Container): boolean {
   return !container.destroyed;
 }
 
-function setPosition(container: Container, x: number, y: number): void {
-  if (!isLive(container)) return;
-  container.position.set(x, y);
+function centerOf(pos: CardPosition): { x: number; y: number } {
+  return { x: pos.x + CARD_WIDTH / 2, y: pos.y + CARD_HEIGHT / 2 };
+}
+
+function withPivot(container: Container): Container {
+  container.pivot.set(CARD_WIDTH / 2, CARD_HEIGHT / 2);
+  return container;
 }
 
 /**
@@ -68,6 +73,7 @@ export class GameRenderer {
   private ready = false;
   private initFinished = false;
   private pendingState: { state: GameState; animate: boolean } | null = null;
+  private wasteFlyer: Container | null = null;
 
   async init(canvas: HTMLCanvasElement): Promise<void> {
     this.destroyed = false;
@@ -95,6 +101,9 @@ export class GameRenderer {
       return;
     }
 
+    this.tableauLayer.sortableChildren = true;
+    this.pilesLayer.sortableChildren = true;
+    this.overlayLayer.sortableChildren = true;
     this.root.addChild(this.tableauLayer, this.pilesLayer, this.overlayLayer);
     this.app.stage.addChild(this.root);
 
@@ -104,6 +113,7 @@ export class GameRenderer {
       const dt = now - this.lastTime;
       this.lastTime = now;
       this.tweens.update(dt);
+      this.pulseHighlights(now);
     });
 
     this.initFinished = true;
@@ -119,6 +129,7 @@ export class GameRenderer {
     this.destroyed = true;
     this.ready = false;
     this.pendingState = null;
+    this.wasteFlyer = null;
     this.tweens.clear();
     this.scoreEffects.clear();
     this.sprites.clear();
@@ -187,9 +198,25 @@ export class GameRenderer {
     this.root.addChildAt(bg, 0);
     this.root.addChildAt(orbs, 1);
 
-    const wasteSlot = createWasteSlotGraphic();
-    setPosition(wasteSlot, WASTE_POSITION.x, WASTE_POSITION.y);
+    const wasteSlot = withPivot(createWasteSlotGraphic());
+    this.place(wasteSlot, WASTE_POSITION);
     this.pilesLayer.addChild(wasteSlot);
+  }
+
+  private place(container: Container, pos: CardPosition): void {
+    if (!isLive(container)) return;
+    const center = centerOf(pos);
+    container.position.set(center.x, center.y);
+    container.zIndex = pos.layer;
+  }
+
+  private pulseHighlights(now: number): void {
+    const pulse = 0.62 + Math.sin(now / 260) * 0.28;
+    for (const entry of this.sprites.values()) {
+      if (!isLive(entry.container)) continue;
+      const glow = entry.container.children.find((child) => child.label === 'highlight');
+      if (glow) glow.alpha = pulse;
+    }
   }
 
   private syncTableau(state: GameState, prev: GameState | null, animate: boolean): void {
@@ -216,22 +243,32 @@ export class GameRenderer {
         entry = { container, cardId: card.id, slot: 'tableau', tableauIndex: index, faceUp };
         this.sprites.set(key, entry);
         this.tableauLayer.addChild(container);
-        setPosition(container, pos.x, pos.y);
-      } else if (entry.cardId !== card.id || entry.faceUp !== faceUp) {
+        this.place(container, pos);
+      } else if (entry.cardId !== card.id) {
         this.replaceCardGraphic(entry.container, card, faceUp);
         entry.cardId = card.id;
         entry.faceUp = faceUp;
+      } else if (entry.faceUp !== faceUp && !entry.flipping) {
+        if (animate && faceUp) {
+          this.animateFlip(entry, card, true);
+        } else {
+          this.replaceCardGraphic(entry.container, card, faceUp);
+          entry.faceUp = faceUp;
+        }
       }
 
       if (!isLive(entry.container)) return;
 
-      entry.container.zIndex = pos.layer;
-      this.tableauLayer.sortableChildren = true;
-      setPosition(entry.container, pos.x, pos.y);
+      if (!entry.flipping) {
+        this.place(entry.container, pos);
+      }
 
       setCardHighlight(entry.container, isUncovered, isPlayable, card.id === this.hintCardId);
       entry.container.eventMode = isPlayable ? 'static' : 'none';
       entry.container.cursor = isPlayable ? 'pointer' : 'default';
+      if (!isPlayable && !entry.flipping) {
+        entry.container.scale.set(1);
+      }
     });
 
     for (const [key, entry] of this.sprites) {
@@ -245,36 +282,34 @@ export class GameRenderer {
 
       if (wasJustPlayed && isLive(entry.container)) {
         const lastMove = state.moves[state.moves.length - 1];
-        if (lastMove?.type === 'play') {
-          const points = cardPointsForCombo(state.combo);
+        if (lastMove?.type === 'play' && state.waste) {
           this.scoreEffects.spawn(
             this.overlayLayer,
             this.tweens,
-            entry.container.x + CARD_WIDTH / 2,
-            entry.container.y,
-            points,
+            entry.container.x,
+            entry.container.y - CARD_HEIGHT * 0.2,
+            cardPointsForCombo(state.combo),
             state.combo,
           );
-        }
-
-        this.animateToWaste(entry.container, () => {
-          if (isLive(entry.container)) {
-            entry.container.destroy({ children: true });
-          }
           this.sprites.delete(key);
-        });
-      } else {
-        if (isLive(entry.container)) {
-          entry.container.destroy({ children: true });
+          this.launchToWaste(entry.container, state.waste);
+          continue;
         }
-        this.sprites.delete(key);
       }
+
+      if (isLive(entry.container)) {
+        entry.container.destroy({ children: true });
+      }
+      this.sprites.delete(key);
     }
   }
 
   private syncWaste(state: GameState, prev: GameState | null, animate: boolean): void {
     const key = 'waste';
-    const pos = WASTE_POSITION;
+
+    if (this.wasteFlyer && isLive(this.wasteFlyer)) {
+      return;
+    }
 
     if (!state.waste) {
       const existing = this.sprites.get(key);
@@ -288,32 +323,36 @@ export class GameRenderer {
     }
 
     let entry = this.sprites.get(key);
+    const lastMove = state.moves[state.moves.length - 1];
+    const drew =
+      animate &&
+      prev &&
+      lastMove?.type === 'draw' &&
+      prev.waste?.id !== state.waste.id;
+
+    if (drew) {
+      const flyer = withPivot(createCardGraphic(state.waste, false));
+      this.place(flyer, STOCK_POSITION);
+      this.overlayLayer.addChild(flyer);
+      this.launchDraw(flyer, state.waste);
+      return;
+    }
+
     if (!entry) {
-      const container = createCardGraphic(state.waste, true);
+      const container = withPivot(createCardGraphic(state.waste, true));
       entry = { container, cardId: state.waste.id, slot: 'waste' };
       this.sprites.set(key, entry);
       this.pilesLayer.addChild(container);
     } else if (entry.cardId !== state.waste.id) {
       this.replaceCardGraphic(entry.container, state.waste, true);
       entry.cardId = state.waste.id;
-
-      const lastMove = state.moves[state.moves.length - 1];
-      if (animate && prev && lastMove?.type === 'draw') {
-        setPosition(entry.container, STOCK_POSITION.x, STOCK_POSITION.y);
-        this.animateToPosition(entry.container, pos, 250);
-        return;
-      }
     }
 
-    setPosition(entry.container, pos.x, pos.y);
-    if (isLive(entry.container)) {
-      entry.container.zIndex = pos.layer;
-    }
+    this.place(entry.container, WASTE_POSITION);
   }
 
   private syncStock(state: GameState): void {
     const key = 'stock';
-    const pos = STOCK_POSITION;
     let entry = this.sprites.get(key);
 
     if (state.stock.length === 0) {
@@ -327,7 +366,7 @@ export class GameRenderer {
     }
 
     if (!entry) {
-      const container = createStockGraphic();
+      const container = withPivot(createStockGraphic());
       container.eventMode = 'static';
       container.cursor = 'pointer';
       container.on('pointertap', () => {
@@ -338,16 +377,36 @@ export class GameRenderer {
       this.pilesLayer.addChild(container);
     }
 
-    setPosition(entry.container, pos.x, pos.y);
+    this.place(entry.container, STOCK_POSITION);
     if (isLive(entry.container)) {
       setStockCount(entry.container, state.stock.length);
     }
   }
 
   private makeInteractiveCard(card: Card, faceUp: boolean, onClick: () => void): Container {
-    const container = createCardGraphic(card, faceUp);
+    const container = withPivot(createCardGraphic(card, faceUp));
     container.eventMode = 'static';
     container.cursor = 'pointer';
+    container.on('pointerover', () => {
+      if (!isLive(container) || this.wasteFlyer === container) return;
+      container.scale.set(1.06);
+    });
+    container.on('pointerout', () => {
+      if (!isLive(container) || this.wasteFlyer === container) return;
+      container.scale.set(1);
+    });
+    container.on('pointerdown', () => {
+      if (!isLive(container) || this.wasteFlyer === container) return;
+      container.scale.set(0.95);
+    });
+    container.on('pointerup', () => {
+      if (!isLive(container) || this.wasteFlyer === container) return;
+      container.scale.set(1.06);
+    });
+    container.on('pointerupoutside', () => {
+      if (!isLive(container) || this.wasteFlyer === container) return;
+      container.scale.set(1);
+    });
     container.on('pointertap', (e: FederatedPointerEvent) => {
       e.stopPropagation();
       onClick();
@@ -365,32 +424,155 @@ export class GameRenderer {
     fresh.destroy({ children: false });
   }
 
-  private animateToWaste(container: Container, onComplete: () => void): void {
-    this.animateToPosition(container, WASTE_POSITION, 280, onComplete);
+  private animateFlip(entry: CardSpriteEntry, card: Card, faceUp: boolean): void {
+    const container = entry.container;
+    if (!isLive(container)) return;
+    entry.flipping = true;
+    const startScale = container.scale.x || 1;
+    this.tweens.add(
+      tween(
+        220,
+        (_t, raw) => {
+          if (!isLive(container)) return;
+          const squash = raw < 0.5 ? 1 - raw * 2 : (raw - 0.5) * 2;
+          container.scale.x = Math.max(0.08, startScale * squash);
+          if (raw >= 0.5 && entry.faceUp !== faceUp) {
+            this.replaceCardGraphic(container, card, faceUp);
+            entry.faceUp = faceUp;
+          }
+        },
+        () => {
+          if (!isLive(container)) return;
+          container.scale.x = startScale;
+          entry.flipping = false;
+          entry.faceUp = faceUp;
+        },
+        easeInOutCubic,
+      ),
+    );
   }
 
-  private animateToPosition(
-    container: Container,
-    pos: CardPosition,
-    durationMs: number,
-    onComplete?: () => void,
-  ): void {
+  private launchToWaste(container: Container, waste: Card): void {
+    if (!isLive(container)) return;
+    this.wasteFlyer = container;
+    container.eventMode = 'none';
+    container.cursor = 'default';
+    container.scale.set(1);
+    setCardHighlight(container, false, false, false);
+    this.overlayLayer.addChild(container);
+    container.zIndex = 80;
+
+    const from = { x: container.x, y: container.y };
+    const to = centerOf(WASTE_POSITION);
+    const spin = from.x < to.x ? 0.18 : -0.18;
+
+    this.animateArc(container, from, to, 340, spin, 1.08, () => {
+      if (this.wasteFlyer !== container) {
+        if (isLive(container)) container.destroy({ children: true });
+        return;
+      }
+      this.settleAsWaste(container, waste.id);
+    });
+  }
+
+  private launchDraw(container: Container, waste: Card): void {
+    if (!isLive(container)) return;
+    this.wasteFlyer = container;
+    container.zIndex = 80;
+    const from = centerOf(STOCK_POSITION);
+    const to = centerOf(WASTE_POSITION);
+    let flipped = false;
+
+    this.animateArc(container, from, to, 300, 0.12, null, () => {
+      if (this.wasteFlyer !== container) {
+        if (isLive(container)) container.destroy({ children: true });
+        return;
+      }
+      this.settleAsWaste(container, waste.id);
+    });
+
+    this.tweens.add(
+      tween(300, (_t, raw) => {
+        if (!isLive(container)) return;
+        if (raw >= 0.42 && !flipped) {
+          flipped = true;
+          this.replaceCardGraphic(container, waste, true);
+        }
+        const squash = raw < 0.42 ? 1 - (raw / 0.42) * 0.88 : Math.min(1, (raw - 0.42) / 0.28);
+        container.scale.x = Math.max(0.1, squash);
+        container.scale.y = 1;
+      }),
+    );
+  }
+
+  private settleAsWaste(container: Container, cardId: CardId): void {
+    const existing = this.sprites.get('waste');
+    if (existing && existing.container !== container && isLive(existing.container)) {
+      existing.container.destroy({ children: true });
+    }
     if (!isLive(container)) {
-      onComplete?.();
+      this.wasteFlyer = null;
       return;
     }
-    const fromX = container.x;
-    const fromY = container.y;
+    container.rotation = 0;
+    container.scale.set(1);
+    this.pilesLayer.addChild(container);
+    this.place(container, WASTE_POSITION);
+    this.sprites.set('waste', { container, cardId, slot: 'waste' });
+    this.wasteFlyer = null;
+
+    this.tweens.add(
+      tween(
+        140,
+        (t) => {
+          if (!isLive(container)) return;
+          const squash = 1 + Math.sin(t * Math.PI) * 0.06;
+          container.scale.set(1 + (1 - t) * 0.04, squash);
+        },
+        () => {
+          if (isLive(container)) container.scale.set(1);
+        },
+        easeOutBack,
+      ),
+    );
+  }
+
+  private animateArc(
+    container: Container,
+    from: { x: number; y: number },
+    to: { x: number; y: number },
+    durationMs: number,
+    spin: number,
+    peakScale: number | null,
+    onComplete: () => void,
+  ): void {
+    if (!isLive(container)) {
+      onComplete();
+      return;
+    }
+    const control = {
+      x: (from.x + to.x) / 2 + (to.x - from.x) * 0.08,
+      y: Math.min(from.y, to.y) - 78,
+    };
     this.tweens.add(
       tween(
         durationMs,
         (t) => {
           if (!isLive(container)) return;
-          container.x = fromX + (pos.x - fromX) * t;
-          container.y = fromY + (pos.y - fromY) * t;
-          container.scale.set(1 - t * 0.05);
+          const mt = 1 - t;
+          container.x = mt * mt * from.x + 2 * mt * t * control.x + t * t * to.x;
+          container.y = mt * mt * from.y + 2 * mt * t * control.y + t * t * to.y;
+          container.rotation = Math.sin(t * Math.PI) * spin;
+          if (peakScale != null) {
+            const scale =
+              t < 0.45
+                ? 1 + (peakScale - 1) * (t / 0.45)
+                : peakScale - (peakScale - 1) * ((t - 0.45) / 0.55);
+            container.scale.set(scale);
+          }
         },
         onComplete,
+        easeOutQuart,
       ),
     );
   }

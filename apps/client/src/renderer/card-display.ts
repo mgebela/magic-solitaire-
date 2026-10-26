@@ -147,9 +147,9 @@ export function setCardHighlight(
   glow.roundRect(-3, -3, CARD_WIDTH + 6, CARD_HEIGHT + 6, CARD_RADIUS + 3);
 
   if (hint) {
-    glow.stroke({ color: 0xbbff66, width: 4, alpha: 1 });
+    glow.stroke({ color: 0xe8ff8a, width: 3.2, alpha: 0.95 });
   } else {
-    glow.stroke({ color: 0x44ff66, width: 4, alpha: 1 });
+    glow.stroke({ color: 0x8fd96a, width: 2.6, alpha: 0.82 });
   }
 
   container.addChildAt(glow, 0);
