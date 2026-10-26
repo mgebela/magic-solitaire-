@@ -14,10 +14,10 @@ export default function RoomPage() {
   const {
     room,
     myState,
-    opponentStates,
     results,
     connected,
     error,
+    userId,
     connect,
     joinRoom,
     leaveRoom,
@@ -29,20 +29,21 @@ export default function RoomPage() {
     clearError,
   } = useMultiplayerStore();
 
-  const isHost = room && user && room.hostId === user.id;
-  const myPlayer = room?.players.find((p) => p.userId === user?.id);
+  const myId = userId;
+  const isHost = Boolean(room && myId && room.hostId === myId);
+  const myPlayer = room?.players.find((p) => p.userId === myId);
   const allReady = room?.players.every((p) => p.ready) ?? false;
   const canStart = isHost && allReady && (room?.players.length ?? 0) >= 2;
 
   useEffect(() => {
     if (tokens?.accessToken && user) {
-      connect(tokens.accessToken, user.id);
+      void connect(user.username);
     }
   }, [tokens?.accessToken, user, connect]);
 
   useEffect(() => {
     if (connected && code && (!room || room.code !== code)) {
-      joinRoom(code);
+      void joinRoom(code);
     }
   }, [connected, code, room, joinRoom]);
 
@@ -64,8 +65,17 @@ export default function RoomPage() {
   if (!room) {
     return (
       <AppBackground variant="lobby">
-        <div className="flex min-h-screen items-center justify-center text-white/60">
-          Joining room…
+        <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-8 text-center text-white/60">
+          {error ? (
+            <>
+              <p className="max-w-md text-sm text-red-300">{error}</p>
+              <Link to="/multiplayer" className="game-btn game-btn--primary">
+                Back to Multiplayer
+              </Link>
+            </>
+          ) : (
+            <p>Joining room…</p>
+          )}
         </div>
       </AppBackground>
     );
@@ -87,15 +97,14 @@ export default function RoomPage() {
       </h2>
       <ul className="space-y-2">
         {room.players.map((player) => {
-          const liveState = player.userId === user.id ? myState : opponentStates[player.userId];
-          const score = liveState?.score ?? player.score;
-          const status = liveState?.status ?? player.status;
+          const score = player.userId === myId ? (myState?.score ?? player.score) : player.score;
+          const status = player.userId === myId ? (myState?.status ?? player.status) : player.status;
 
           return (
             <li
               key={player.userId}
               className={`rounded-lg px-3 py-2 text-sm ${
-                player.userId === user.id ? 'bg-[var(--color-gold)]/10' : 'bg-white/5'
+                player.userId === myId ? 'bg-[var(--color-gold)]/10' : 'bg-white/5'
               }`}
             >
               <div className="flex items-center justify-between">
@@ -133,7 +142,7 @@ export default function RoomPage() {
             <li
               key={entry.userId}
               className={`flex items-center justify-between rounded-lg px-4 py-3 ${
-                entry.userId === user.id ? 'bg-[var(--color-gold)]/10' : 'bg-white/5'
+                entry.userId === myId ? 'bg-[var(--color-gold)]/10' : 'bg-white/5'
               }`}
             >
               <div className="flex items-center gap-3">
@@ -182,11 +191,10 @@ export default function RoomPage() {
           <p className="play-rivals__title">Rivals</p>
           <ul>
             {room.players.map((player) => {
-              const liveState = player.userId === user.id ? myState : opponentStates[player.userId];
-              const score = liveState?.score ?? player.score;
+              const score = player.userId === myId ? (myState.score ?? player.score) : player.score;
               return (
                 <li key={player.userId}>
-                  <span className={player.userId === user.id ? 'text-[var(--color-gold)]' : undefined}>
+                  <span className={player.userId === myId ? 'text-[var(--color-gold)]' : undefined}>
                     {player.username}
                   </span>
                   <span>{score}</span>

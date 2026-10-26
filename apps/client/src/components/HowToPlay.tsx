@@ -9,9 +9,7 @@ interface HowToPlayProps {
 }
 
 export function HowToPlay({ forceOpen, onClose }: HowToPlayProps) {
-  const [open, setOpen] = useState(
-    () => Boolean(forceOpen) || localStorage.getItem(STORAGE_KEY) !== '1',
-  );
+  const [open, setOpen] = useState(() => Boolean(forceOpen));
 
   useEffect(() => {
     if (forceOpen) {

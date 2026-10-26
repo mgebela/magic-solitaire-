@@ -1,28 +1,33 @@
 import { create } from 'zustand';
 import { GameEngine, InvalidMoveError } from '@three-towers/game-engine';
+import type { GameRoom, GameState, MultiplayerMode, RoomResult } from '@three-towers/shared';
+import { ensureFirebaseAuth, isFirebaseConfigured, missingFirebaseMessage } from '../lib/firebase';
 import {
-  MULTIPLAYER_EVENTS,
-  type GameRoom,
-  type GameStartedPayload,
-  type GameState,
-  type MultiplayerMode,
-  type PlayerUpdatePayload,
-  type RoomResult,
-} from '@three-towers/shared';
-import { disconnectMultiplayerSocket, getMultiplayerSocket, getSocket } from '../lib/socket';
+  createFirebaseRoom,
+  joinFirebaseRoom,
+  leaveFirebaseRoom,
+  patchPlayerHud,
+  resultsFromRoom,
+  setFirebaseReady,
+  startFirebaseRoom,
+  stopRoomSubscription,
+  subscribeToRoom,
+} from '../lib/firebase-rooms';
+
+const HUD_INTERVAL_MS = 1000;
 
 interface MultiplayerStore {
   connected: boolean;
   room: GameRoom | null;
   myState: GameState | null;
   engine: GameEngine | null;
-  opponentStates: Record<string, GameState>;
   results: RoomResult | null;
   error: string | null;
   timerStartedAt: number | null;
   userId: string | null;
+  username: string | null;
 
-  connect: (accessToken: string, userId: string) => void;
+  connect: (username: string) => Promise<void>;
   disconnect: () => void;
   createRoom: (mode: MultiplayerMode) => Promise<GameRoom | null>;
   joinRoom: (code: string) => Promise<GameRoom | null>;
@@ -36,214 +41,253 @@ interface MultiplayerStore {
   reset: () => void;
 }
 
-function createEngineForState(state: GameState, mode: MultiplayerMode): GameEngine {
-  return new GameEngine({ mode, allowUndo: false, seed: state.seed }, state);
+let lastHudWriteAt = 0;
+
+function messageFrom(err: unknown, fallback: string): string {
+  return err instanceof Error ? err.message : fallback;
 }
 
-export const useMultiplayerStore = create<MultiplayerStore>((set, get) => ({
-  connected: false,
-  room: null,
-  myState: null,
-  engine: null,
-  opponentStates: {},
-  results: null,
-  error: null,
-  timerStartedAt: null,
-  userId: null,
-
-  clearError: () => set({ error: null }),
-
-  reset: () =>
-    set({
-      room: null,
-      myState: null,
-      engine: null,
-      opponentStates: {},
-      results: null,
-      error: null,
-      timerStartedAt: null,
-    }),
-
-  connect: (accessToken, userId) => {
-    const socket = getMultiplayerSocket(accessToken);
-
-    socket.off(MULTIPLAYER_EVENTS.ROOM_UPDATED);
-    socket.off(MULTIPLAYER_EVENTS.GAME_STARTED);
-    socket.off(MULTIPLAYER_EVENTS.PLAYER_UPDATED);
-    socket.off(MULTIPLAYER_EVENTS.GAME_FINISHED);
-    socket.off(MULTIPLAYER_EVENTS.ERROR);
-
-    socket.on('connect', () => set({ connected: true, userId }));
-    socket.on('disconnect', () => set({ connected: false }));
-
-    socket.on(MULTIPLAYER_EVENTS.ROOM_UPDATED, (room: GameRoom) => {
-      set({ room });
+export const useMultiplayerStore = create<MultiplayerStore>((set, get) => {
+  function writeHud(force = false): void {
+    const { room, myState } = get();
+    if (!room || !myState) return;
+    const now = Date.now();
+    if (!force && now - lastHudWriteAt < HUD_INTERVAL_MS) return;
+    lastHudWriteAt = now;
+    const finished = myState.status === 'won' || myState.status === 'lost';
+    void patchPlayerHud(room.code, {
+      score: myState.score,
+      status: myState.status,
+      elapsedMs: myState.elapsedMs,
+      combo: myState.combo,
+      finishedAt: finished ? new Date().toISOString() : null,
+    }).catch((err) => {
+      set({ error: messageFrom(err, 'Failed to sync score') });
     });
+  }
 
-    socket.on(MULTIPLAYER_EVENTS.GAME_STARTED, (payload: GameStartedPayload) => {
-      const engine = createEngineForState(payload.yourState, payload.room.mode);
+  function applyRoom(room: GameRoom): void {
+    const { engine } = get();
+    const results = resultsFromRoom(room);
+    const shouldStart = room.status === 'playing' && room.seed != null && !engine;
+
+    if (shouldStart) {
+      const gameEngine = new GameEngine({ mode: room.mode, allowUndo: false, seed: room.seed });
+      const state = gameEngine.init();
+      lastHudWriteAt = 0;
       set({
-        room: payload.room,
-        myState: payload.yourState,
-        engine,
-        opponentStates: {},
+        room,
+        engine: gameEngine,
+        myState: state,
         results: null,
         timerStartedAt: Date.now(),
+        error: null,
       });
-    });
+      writeHud(true);
+      return;
+    }
 
-    socket.on(MULTIPLAYER_EVENTS.PLAYER_UPDATED, (payload: PlayerUpdatePayload) => {
-      const { userId: myId } = get();
-      if (payload.userId === myId) {
-        const room = get().room;
-        if (room) {
-          const engine = createEngineForState(payload.state, room.mode);
-          set({ myState: payload.state, engine });
+    set({
+      room,
+      results: results ?? get().results,
+    });
+  }
+
+  function listen(code: string): void {
+    subscribeToRoom(code, (room) => {
+      if (!room) {
+        if (get().room) {
+          stopRoomSubscription();
+          set({
+            error: 'Room closed',
+            room: null,
+            engine: null,
+            myState: null,
+            results: null,
+            timerStartedAt: null,
+          });
         }
-      } else {
-        set((s) => ({
-          opponentStates: { ...s.opponentStates, [payload.userId]: payload.state },
-        }));
+        return;
       }
+      applyRoom(room);
     });
+  }
 
-    socket.on(MULTIPLAYER_EVENTS.GAME_FINISHED, (results: RoomResult) => {
-      set({ results });
-    });
+  return {
+    connected: false,
+    room: null,
+    myState: null,
+    engine: null,
+    results: null,
+    error: null,
+    timerStartedAt: null,
+    userId: null,
+    username: null,
 
-    socket.on(MULTIPLAYER_EVENTS.ERROR, (payload: { message: string }) => {
-      set({ error: payload.message });
-    });
+    clearError: () => set({ error: null }),
 
-    if (!socket.connected) {
-      socket.connect();
-    } else {
-      set({ connected: true, userId });
-    }
-  },
+    reset: () =>
+      set({
+        room: null,
+        myState: null,
+        engine: null,
+        results: null,
+        error: null,
+        timerStartedAt: null,
+      }),
 
-  disconnect: () => {
-    disconnectMultiplayerSocket();
-    set({ connected: false });
-  },
+    connect: async (username) => {
+      if (get().connected && get().userId && get().username === username) {
+        return;
+      }
 
-  createRoom: async (mode) => {
-    const socket = getSocket();
-    if (!socket) {
-      set({ error: 'Not connected' });
-      return null;
-    }
-    return new Promise((resolve) => {
-      socket.emit(MULTIPLAYER_EVENTS.CREATE_ROOM, { mode }, (response: { room?: GameRoom; error?: string }) => {
-        if (response.error) {
-          set({ error: response.error });
-          resolve(null);
-          return;
-        }
-        if (response.room) {
-          set({ room: response.room, results: null });
-          resolve(response.room);
-        }
+      if (!isFirebaseConfigured()) {
+        set({ connected: false, userId: null, username, error: missingFirebaseMessage() });
+        return;
+      }
+
+      try {
+        const uid = await ensureFirebaseAuth();
+        set({ connected: true, userId: uid, username, error: null });
+      } catch (err) {
+        set({
+          connected: false,
+          error: messageFrom(err, missingFirebaseMessage()),
+        });
+      }
+    },
+
+    disconnect: () => {
+      const { room } = get();
+      stopRoomSubscription();
+      if (room) {
+        void leaveFirebaseRoom(room.code);
+      }
+      lastHudWriteAt = 0;
+      set({
+        connected: false,
+        room: null,
+        myState: null,
+        engine: null,
+        results: null,
+        timerStartedAt: null,
       });
-    });
-  },
+    },
 
-  joinRoom: async (code) => {
-    const socket = getSocket();
-    if (!socket) {
-      set({ error: 'Not connected' });
-      return null;
-    }
-    return new Promise((resolve) => {
-      socket.emit(MULTIPLAYER_EVENTS.JOIN_ROOM, { code }, (response: { room?: GameRoom; error?: string }) => {
-        if (response.error) {
-          set({ error: response.error });
-          resolve(null);
-          return;
-        }
-        if (response.room) {
-          set({ room: response.room, results: null });
-          resolve(response.room);
-        }
+    createRoom: async (mode) => {
+      const { username, connected } = get();
+      if (!connected) {
+        set({ error: 'Not connected' });
+        return null;
+      }
+      try {
+        const room = await createFirebaseRoom(mode, username ?? 'player');
+        listen(room.code);
+        set({ room, results: null, error: null, engine: null, myState: null, timerStartedAt: null });
+        return room;
+      } catch (err) {
+        set({ error: messageFrom(err, 'Could not create room') });
+        return null;
+      }
+    },
+
+    joinRoom: async (code) => {
+      const { username, connected, room } = get();
+      const normalized = code.trim().toUpperCase();
+      if (room?.code === normalized) return room;
+      if (!connected) {
+        set({ error: 'Not connected' });
+        return null;
+      }
+      try {
+        const joined = await joinFirebaseRoom(normalized, username ?? 'player');
+        set({
+          room: joined,
+          results: null,
+          error: null,
+          engine: null,
+          myState: null,
+          timerStartedAt: null,
+        });
+        listen(joined.code);
+        applyRoom(joined);
+        return get().room;
+      } catch (err) {
+        set({ error: messageFrom(err, 'Could not join room') });
+        return null;
+      }
+    },
+
+    leaveRoom: () => {
+      const { room } = get();
+      stopRoomSubscription();
+      if (room) {
+        void leaveFirebaseRoom(room.code);
+      }
+      lastHudWriteAt = 0;
+      get().reset();
+    },
+
+    setReady: (ready) => {
+      const { room } = get();
+      if (!room) return;
+      void setFirebaseReady(room.code, ready).catch((err) => {
+        set({ error: messageFrom(err, 'Could not update ready') });
       });
-    });
-  },
+    },
 
-  leaveRoom: () => {
-    getSocket()?.emit(MULTIPLAYER_EVENTS.LEAVE_ROOM);
-    get().reset();
-  },
+    startGame: () => {
+      const { room } = get();
+      if (!room) return;
+      void startFirebaseRoom(room.code).catch((err) => {
+        set({ error: messageFrom(err, 'Could not start game') });
+      });
+    },
 
-  setReady: (ready) => {
-    getSocket()?.emit(MULTIPLAYER_EVENTS.SET_READY, { ready });
-  },
+    playCard: (cardId) => {
+      const { engine, timerStartedAt, room } = get();
+      if (!engine || !timerStartedAt || !room) return;
 
-  startGame: () => {
-    getSocket()?.emit(MULTIPLAYER_EVENTS.START_GAME);
-  },
+      const timestamp = Date.now();
+      const elapsedMs = timestamp - timerStartedAt;
 
-  playCard: (cardId) => {
-    const { engine, timerStartedAt, room } = get();
-    if (!engine || !timerStartedAt || !room) return;
+      try {
+        const state = engine.applyMove({ type: 'play', cardId, timestamp });
+        engine.setElapsedMs(elapsedMs);
+        set({ myState: state, error: null });
+        writeHud(true);
+      } catch (err) {
+        const message = err instanceof InvalidMoveError ? err.message : 'Invalid move';
+        set({ error: message });
+      }
+    },
 
-    const timestamp = Date.now();
-    const elapsedMs = timestamp - timerStartedAt;
+    drawCard: () => {
+      const { engine, timerStartedAt, room } = get();
+      if (!engine || !timerStartedAt || !room) return;
 
-    try {
-      const state = engine.applyMove({ type: 'play', cardId, timestamp });
-      engine.setElapsedMs(elapsedMs);
-      set({ myState: state, error: null });
+      const timestamp = Date.now();
+      const elapsedMs = timestamp - timerStartedAt;
 
-      const socket = getSocket();
-      socket?.emit(
-        MULTIPLAYER_EVENTS.SUBMIT_MOVE,
-        { move: { type: 'play', cardId, timestamp }, elapsedMs },
-        (result: { accepted?: boolean; error?: string }) => {
-          if (result && !result.accepted && result.error) {
-            set({ error: result.error });
-          }
-        },
-      );
-    } catch (err) {
-      const message = err instanceof InvalidMoveError ? err.message : 'Invalid move';
-      set({ error: message });
-    }
-  },
+      try {
+        const state = engine.applyMove({ type: 'draw', timestamp });
+        engine.setElapsedMs(elapsedMs);
+        set({ myState: state, error: null });
+        writeHud(true);
+      } catch (err) {
+        const message = err instanceof InvalidMoveError ? err.message : 'Cannot draw';
+        set({ error: message });
+      }
+    },
 
-  drawCard: () => {
-    const { engine, timerStartedAt, room } = get();
-    if (!engine || !timerStartedAt || !room) return;
+    tickTimer: () => {
+      const { engine, timerStartedAt, myState, room } = get();
+      if (!engine || !timerStartedAt || !myState || myState.status !== 'playing' || !room) return;
 
-    const timestamp = Date.now();
-    const elapsedMs = timestamp - timerStartedAt;
-
-    try {
-      const state = engine.applyMove({ type: 'draw', timestamp });
-      engine.setElapsedMs(elapsedMs);
-      set({ myState: state, error: null });
-
-      const socket = getSocket();
-      socket?.emit(
-        MULTIPLAYER_EVENTS.SUBMIT_MOVE,
-        { move: { type: 'draw', timestamp }, elapsedMs },
-        (result: { accepted?: boolean; error?: string }) => {
-          if (result && !result.accepted && result.error) {
-            set({ error: result.error });
-          }
-        },
-      );
-    } catch (err) {
-      const message = err instanceof InvalidMoveError ? err.message : 'Cannot draw';
-      set({ error: message });
-    }
-  },
-
-  tickTimer: () => {
-    const { engine, timerStartedAt, myState, room } = get();
-    if (!engine || !timerStartedAt || !myState || myState.status !== 'playing' || !room) return;
-
-    const elapsedMs = Date.now() - timerStartedAt;
-    const state = engine.setElapsedMs(elapsedMs);
-    set({ myState: state });
-  },
-}));
+      const elapsedMs = Date.now() - timerStartedAt;
+      const state = engine.setElapsedMs(elapsedMs);
+      set({ myState: state });
+      writeHud(false);
+    },
+  };
+});

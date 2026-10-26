@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import type { MultiplayerMode } from '@three-towers/shared';
-import { MULTIPLAYER_ENTRY_COST } from '@three-towers/shared';
 import { AppBackground } from '../components/layout/AppBackground';
 import { GameButton } from '../components/ui/GameButton';
 import { useAuthStore } from '../stores/authStore';
@@ -10,19 +9,21 @@ import { useMultiplayerStore } from '../stores/multiplayerStore';
 export default function MultiplayerPage() {
   const navigate = useNavigate();
   const { tokens, user } = useAuthStore();
-  const { connect, createRoom, joinRoom, error, clearError } = useMultiplayerStore();
+  const { connect, connected, createRoom, joinRoom, error, clearError } = useMultiplayerStore();
   const [joinCode, setJoinCode] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (tokens?.accessToken && user) {
-      connect(tokens.accessToken, user.id);
+      void connect(user.username);
     }
   }, [tokens?.accessToken, user, connect]);
 
   if (!tokens || !user) {
     return <Navigate to="/login" replace />;
   }
+
+  const busy = loading || !connected;
 
   const handleCreate = async (mode: MultiplayerMode) => {
     setLoading(true);
@@ -51,24 +52,9 @@ export default function MultiplayerPage() {
 
           <h1 className="page-title mt-4">Multiplayer</h1>
           <p className="page-subtitle">
-            Race opponents on the same seeded board. Highest score wins. Each match costs{' '}
-            {MULTIPLAYER_ENTRY_COST} Solitaire Tokens.
+            Race opponents on the same seeded board. Highest score wins. Share a 6-letter room code to
+            play.
           </p>
-
-          <div className="mt-4 flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-            <div>
-              <p className="text-xs text-white/50">Your tokens</p>
-              <p className="text-xl font-bold text-[var(--color-neon)]">
-                {user.tokenBalance} ST
-              </p>
-            </div>
-            <Link
-              to="/tokens"
-              className="text-sm font-medium text-[var(--color-neon)] hover:underline"
-            >
-              Buy tokens →
-            </Link>
-          </div>
 
           {error && (
             <div className="mt-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm text-red-300">
@@ -76,12 +62,16 @@ export default function MultiplayerPage() {
             </div>
           )}
 
+          {!connected && !error && (
+            <p className="mt-4 text-sm text-white/50">Connecting to PvP…</p>
+          )}
+
           <div className="mt-8 space-y-4">
             <h2 className="text-lg font-semibold text-white">Create Room</h2>
             <div className="grid gap-3 sm:grid-cols-2">
               <button
                 type="button"
-                disabled={loading}
+                disabled={busy}
                 onClick={() => handleCreate('casual')}
                 className="mode-tile text-left disabled:opacity-50"
               >
@@ -93,7 +83,7 @@ export default function MultiplayerPage() {
               </button>
               <button
                 type="button"
-                disabled={loading}
+                disabled={busy}
                 onClick={() => handleCreate('ranked')}
                 className="mode-tile text-left disabled:opacity-50"
               >
@@ -119,7 +109,7 @@ export default function MultiplayerPage() {
               />
               <GameButton
                 variant="primary"
-                disabled={loading || !joinCode.trim()}
+                disabled={busy || !joinCode.trim()}
                 onClick={handleJoin}
               >
                 Join

@@ -1,0 +1,37 @@
+{
+  "rules": {
+    "rooms": {
+      "$code": {
+        ".read": "auth != null",
+        ".write": "auth != null && ((!data.exists() && newData.child('hostId').val() === auth.uid && newData.child('code').val() === $code) || (data.exists() && data.child('hostId').val() === auth.uid && !newData.exists()))",
+
+        "status": {
+          ".write": "auth != null && data.parent().child('players').child(auth.uid).exists() && (data.parent().child('hostId').val() === auth.uid || newData.val() === 'finished')",
+          ".validate": "newData.isString() && (newData.val() === 'waiting' || newData.val() === 'playing' || newData.val() === 'finished')"
+        },
+        "seed": {
+          ".write": "auth != null && data.parent().child('hostId').val() === auth.uid",
+          ".validate": "newData.isNumber() && newData.val() >= 1"
+        },
+        "startedAt": {
+          ".write": "auth != null && data.parent().child('hostId').val() === auth.uid",
+          ".validate": "newData.isString()"
+        },
+        "finishedAt": {
+          ".write": "auth != null && data.parent().child('players').child(auth.uid).exists()",
+          ".validate": "newData.isString()"
+        },
+        "rankings": {
+          ".write": "auth != null && data.parent().child('players').child(auth.uid).exists()"
+        },
+
+        "players": {
+          "$uid": {
+            ".write": "auth != null && $uid === auth.uid && ((!data.exists() && root.child('rooms').child($code).child('status').val() === 'waiting') || data.exists())",
+            ".validate": "newData.hasChildren(['userId', 'username', 'ready', 'score', 'status', 'elapsedMs', 'combo']) && newData.child('userId').val() === $uid"
+          }
+        }
+      }
+    }
+  }
+}
