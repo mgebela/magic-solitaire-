@@ -12,6 +12,7 @@ import {
   createStockGraphic,
   createWasteSlotGraphic,
   setCardHighlight,
+  setStockAlert,
   setStockCount,
 } from './card-display';
 import { ScoreEffectManager } from './score-effects';
@@ -25,6 +26,7 @@ import {
   STOCK_POSITION,
   TABLEAU_POSITIONS,
   WASTE_POSITION,
+  WASTE_SCALE,
   type CardPosition,
 } from './layout-positions';
 
@@ -213,7 +215,13 @@ export class GameRenderer {
     this.root.addChildAt(orbs, 1);
 
     const wasteSlot = createWasteSlotGraphic();
-    this.place(wasteSlot, WASTE_POSITION);
+    wasteSlot.pivot.set(CARD_WIDTH / 2, CARD_HEIGHT / 2);
+    wasteSlot.scale.set(WASTE_SCALE);
+    wasteSlot.position.set(
+      WASTE_POSITION.x + CARD_WIDTH / 2,
+      WASTE_POSITION.y + CARD_HEIGHT / 2,
+    );
+    wasteSlot.zIndex = WASTE_POSITION.layer;
     this.pilesLayer.addChild(wasteSlot);
   }
 
@@ -383,6 +391,7 @@ export class GameRenderer {
     }
 
     this.place(entry.container, WASTE_POSITION);
+    entry.motion.scale.set(WASTE_SCALE);
   }
 
   private syncStock(state: GameState): void {
@@ -420,6 +429,11 @@ export class GameRenderer {
     const art = artOf(entry);
     if (art) {
       setStockCount(art, state.stock.length);
+      const stuck =
+        state.status === 'playing' &&
+        state.waste !== null &&
+        getPlayableCards(state.tableau, state.uncovered, state.waste).length === 0;
+      setStockAlert(art, stuck);
     }
   }
 
@@ -520,7 +534,7 @@ export class GameRenderer {
     const to = { x: WASTE_POSITION.x, y: WASTE_POSITION.y };
     const spin = from.x < to.x ? 0.18 : -0.18;
 
-    this.animateArc(entry, from, to, 340, spin, 1.08, () => {
+    this.animateArc(entry, from, to, 340, spin, WASTE_SCALE, () => {
       if (this.wasteFlyer !== container) {
         if (isLive(container)) container.destroy({ children: true });
         return;
@@ -571,7 +585,7 @@ export class GameRenderer {
       return;
     }
     entry.motion.rotation = 0;
-    entry.motion.scale.set(1);
+    entry.motion.scale.set(WASTE_SCALE);
     this.pilesLayer.addChild(container);
     this.place(container, WASTE_POSITION);
     entry.cardId = cardId;
@@ -584,11 +598,12 @@ export class GameRenderer {
         140,
         (t) => {
           if (!isLive(entry.motion)) return;
-          const squash = 1 + Math.sin(t * Math.PI) * 0.06;
-          entry.motion.scale.set(1 + (1 - t) * 0.04, squash);
+          const base = WASTE_SCALE;
+          const squash = base + Math.sin(t * Math.PI) * 0.06;
+          entry.motion.scale.set(base + (1 - t) * 0.04, squash);
         },
         () => {
-          if (isLive(entry.motion)) entry.motion.scale.set(1);
+          if (isLive(entry.motion)) entry.motion.scale.set(WASTE_SCALE);
         },
         easeOutBack,
       ),
@@ -624,10 +639,7 @@ export class GameRenderer {
           container.y = mt * mt * from.y + 2 * mt * t * control.y + t * t * to.y;
           motion.rotation = Math.sin(t * Math.PI) * spin;
           if (peakScale != null) {
-            const scale =
-              t < 0.45
-                ? 1 + (peakScale - 1) * (t / 0.45)
-                : peakScale - (peakScale - 1) * ((t - 0.45) / 0.55);
+            const scale = t < 0.55 ? 1 + (peakScale - 1) * (t / 0.55) : peakScale;
             motion.scale.set(scale);
           }
         },

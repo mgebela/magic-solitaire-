@@ -73,9 +73,12 @@ export const TABLEAU_POSITIONS = buildTableauPositions();
 /** Stock and waste sit on the limestone slab, not on the moss above it. */
 const PANEL_CARD_Y = STONE_PANEL_TOP + 32;
 
+/** Waste is the match target, so it draws larger than the peak cards. */
+export const WASTE_SCALE = 1.26;
+
 export const STOCK_POSITION: CardPosition = { x: 138, y: PANEL_CARD_Y, layer: 20 };
 export const WASTE_POSITION: CardPosition = {
-  x: 138 + CARD_WIDTH + 14,
+  x: 138 + CARD_WIDTH + 36,
   y: PANEL_CARD_Y,
   layer: 21,
 };
@@ -98,6 +101,16 @@ export const STOCK_HIT_STYLE = {
   top: pct(STOCK_POSITION.y, BOARD_HEIGHT),
   width: pct(CARD_WIDTH, BOARD_WIDTH),
   height: pct(CARD_HEIGHT, BOARD_HEIGHT),
+} as const;
+
+const wasteVisualLeft =
+  WASTE_POSITION.x + CARD_WIDTH / 2 - (CARD_WIDTH * WASTE_SCALE) / 2;
+const wasteVisualTop =
+  WASTE_POSITION.y + CARD_HEIGHT / 2 - (CARD_HEIGHT * WASTE_SCALE) / 2;
+
+export const WASTE_BADGE_STYLE = {
+  left: pct(wasteVisualLeft + CARD_WIDTH * WASTE_SCALE - 6, BOARD_WIDTH),
+  top: pct(wasteVisualTop + 8, BOARD_HEIGHT),
 } as const;
 
 export const STONE_PANEL_STYLE = {

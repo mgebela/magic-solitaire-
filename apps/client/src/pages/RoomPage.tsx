@@ -179,31 +179,17 @@ export default function RoomPage() {
         <GameCanvas
           state={myState}
           immersive
-          roundLabel="Room"
-          roundValue={room.code}
+          race={room.players.map((player) => ({
+            name: player.userId === myId ? 'You' : player.username,
+            score: player.userId === myId ? myState.score : player.score,
+            you: player.userId === myId,
+          }))}
           onCardClick={playCard}
           onDraw={() => drawCard()}
           exitTo="/multiplayer"
           onExit={leaveRoom}
           className="magic-play-screen__canvas"
         />
-
-        <aside className="play-rivals" aria-label="Players">
-          <p className="play-rivals__title">Rivals</p>
-          <ul>
-            {room.players.map((player) => {
-              const score = player.userId === myId ? (myState.score ?? player.score) : player.score;
-              return (
-                <li key={player.userId}>
-                  <span className={player.userId === myId ? 'text-[var(--color-gold)]' : undefined}>
-                    {player.username}
-                  </span>
-                  <span>{score}</span>
-                </li>
-              );
-            })}
-          </ul>
-        </aside>
 
         {resultsOverlay}
       </GuestPlayShell>

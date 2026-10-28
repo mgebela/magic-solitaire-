@@ -1,8 +1,24 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { TRIPEAKS_TABLEAU_CARD_COUNT, type GameState } from '@three-towers/shared';
+import { cardPointsForCombo, getPlayableCards } from '@three-towers/game-engine';
 import { sound } from '../../lib/sound';
-import { BOARD_ASPECT, STOCK_HIT_STYLE } from '../../renderer/layout-positions';
+import { BOARD_ASPECT, STOCK_HIT_STYLE, WASTE_BADGE_STYLE } from '../../renderer/layout-positions';
+
+const RANK_FACE = ['', 'A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+
+export interface RaceLane {
+  name: string;
+  score: number;
+  cleared?: number;
+  you?: boolean;
+}
+
+function matchRanks(value: number): string {
+  const lower = value === 1 ? 13 : value - 1;
+  const upper = value === 13 ? 1 : value + 1;
+  return `${RANK_FACE[lower]} or ${RANK_FACE[upper]}`;
+}
 
 interface MagicGameHudProps {
   state: GameState;
@@ -17,6 +33,7 @@ interface MagicGameHudProps {
   roundTotal?: number;
   roundLabel?: string;
   roundValue?: string;
+  race?: RaceLane[];
   exitTo?: string;
   onExit?: () => void;
 }
@@ -34,6 +51,7 @@ export function MagicGameHud({
   roundTotal = 1,
   roundLabel = 'Round',
   roundValue,
+  race,
   exitTo = '/',
   onExit,
 }: MagicGameHudProps) {
@@ -63,9 +81,48 @@ export function MagicGameHud({
   }, [combo]);
 
   const comboHeat = combo >= 5 ? 'blaze' : combo >= 3 ? 'hot' : combo >= 2 ? 'warm' : '';
+  const stuck =
+    state.status === 'playing' &&
+    state.waste !== null &&
+    state.stock.length > 0 &&
+    getPlayableCards(state.tableau, state.uncovered, state.waste).length === 0;
+  const nextPoints = cardPointsForCombo(combo + 1);
 
   return (
     <div className="stone-hud" style={{ aspectRatio: String(BOARD_ASPECT) }}>
+      {race && race.length > 0 && (
+        <div className="stone-hud__race" aria-label="Race">
+          {race.map((lane, index) => (
+            <span
+              key={`${lane.name}-${index}`}
+              className={lane.you ? 'stone-hud__race-lane is-you' : 'stone-hud__race-lane'}
+            >
+              <b>{lane.name}</b>
+              <em>{lane.score}</em>
+              {lane.cleared != null && (
+                <small>
+                  {lane.cleared}/{TRIPEAKS_TABLEAU_CARD_COUNT}
+                </small>
+              )}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {state.waste && state.status === 'playing' && (
+        <div
+          className={`stone-hud__waste-badge ${comboHeat ? `stone-hud__waste-badge--${comboHeat}` : ''}`}
+          style={WASTE_BADGE_STYLE}
+        >
+          {combo >= 1 && (
+            <span key={comboPop} className="stone-hud__waste-chain">
+              ×{combo}
+              <small>+{nextPoints}</small>
+            </span>
+          )}
+          <span className="stone-hud__waste-ranks">{matchRanks(state.waste.value)}</span>
+        </div>
+      )}
       <div className="stone-hud__bar-actions">
         {allowUndo && onUndo && (
           <button
@@ -119,15 +176,6 @@ export function MagicGameHud({
       </div>
 
       <div className="stone-hud__center">
-        {combo >= 2 && (
-          <div
-            key={comboPop}
-            className={`stone-hud__combo-ring ${comboHeat ? `stone-hud__combo-ring--${comboHeat}` : ''}`}
-          >
-            <span className="stone-hud__combo-label">COMBOS</span>
-            <span className="stone-hud__combo-value">{combo}x</span>
-          </div>
-        )}
         <div className="stone-hud__timer">
           <span className="stone-hud__timer-icon" aria-hidden>
             ⏱
@@ -145,7 +193,8 @@ export function MagicGameHud({
         EXIT
       </Link>
 
-      {hintDraw && <p className="stone-hud__hint">Draw from the stock pile</p>}
+      {stuck && <p className="stone-hud__hint">No move — draw</p>}
+      {!stuck && hintDraw && <p className="stone-hud__hint">Draw from the stock pile</p>}
       {!state.waste && state.status === 'playing' && (
         <p className="stone-hud__hint stone-hud__hint--start">
           Tap any open card to start the waste pile

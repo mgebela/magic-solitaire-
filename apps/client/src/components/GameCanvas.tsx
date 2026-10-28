@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import type { GameState } from '@three-towers/shared';
 import { GameRenderer } from '../renderer';
-import { MagicGameHud } from './game/MagicGameHud';
+import { MagicGameHud, type RaceLane } from './game/MagicGameHud';
 
 /** Serialize Pixi inits so React StrictMode cannot attach two Applications to one canvas. */
 let canvasInitQueue: Promise<void> = Promise.resolve();
@@ -28,6 +28,7 @@ interface GameCanvasProps {
   roundTotal?: number;
   roundLabel?: string;
   roundValue?: string;
+  race?: RaceLane[];
   exitTo?: string;
   onExit?: () => void;
   className?: string;
@@ -48,6 +49,7 @@ export function GameCanvas({
   roundTotal,
   roundLabel,
   roundValue,
+  race,
   exitTo,
   onExit,
   className,
@@ -150,6 +152,7 @@ export function GameCanvas({
             roundTotal={roundTotal}
             roundLabel={roundLabel}
             roundValue={roundValue}
+            race={race}
             exitTo={exitTo}
             onExit={onExit}
           />

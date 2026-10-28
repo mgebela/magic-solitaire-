@@ -155,6 +155,20 @@ export function setCardHighlight(
   container.addChildAt(glow, 0);
 }
 
+/** Gold outline on the stock when the tableau has no legal play. */
+export function setStockAlert(container: Container, alert: boolean): void {
+  if (container.destroyed) return;
+  const existing = container.children.find((c) => c.label === 'highlight');
+  if (existing) existing.destroy();
+  if (!alert) return;
+
+  const glow = new Graphics();
+  glow.label = 'highlight';
+  glow.roundRect(-8, -8, CARD_WIDTH + 16, CARD_HEIGHT + 16, CARD_RADIUS + 6);
+  glow.stroke({ color: 0xd6ef4a, width: 4, alpha: 0.95 });
+  container.addChild(glow);
+}
+
 /** Stock count badge centered on face-down pile. */
 export function setStockCount(container: Container, count: number): void {
   if (container.destroyed) return;

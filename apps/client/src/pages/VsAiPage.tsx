@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import type { VsAiResult } from '@three-towers/shared';
+import { TRIPEAKS_TABLEAU_CARD_COUNT, type VsAiResult } from '@three-towers/shared';
 import { GuestPlayShell } from '../components/ads/GuestAdSlot';
 import { GameCanvas } from '../components/GameCanvas';
 import { AiDifficultySelect } from '../components/AiDifficultySelect';
@@ -79,8 +79,25 @@ export default function VsAiPage() {
       <GameCanvas
         state={playerState}
         immersive
-        roundLabel="AI"
-        roundValue={String(aiState?.score ?? 0)}
+        race={
+          playerState
+            ? [
+                {
+                  name: 'You',
+                  score: playerState.score,
+                  cleared: TRIPEAKS_TABLEAU_CARD_COUNT - playerState.tableau.filter(Boolean).length,
+                  you: true,
+                },
+                {
+                  name: 'AI',
+                  score: aiState?.score ?? 0,
+                  cleared: aiState
+                    ? TRIPEAKS_TABLEAU_CARD_COUNT - aiState.tableau.filter(Boolean).length
+                    : 0,
+                },
+              ]
+            : undefined
+        }
         onCardClick={playCard}
         onDraw={() => drawCard()}
         className="magic-play-screen__canvas"
