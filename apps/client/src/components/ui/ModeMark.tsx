@@ -11,13 +11,10 @@ export type ModeMarkName =
   | 'casual'
   | 'ranked';
 
-const STROKE = {
-  fill: 'none',
-  stroke: 'currentColor',
-  strokeWidth: 1.8,
-  strokeLinecap: 'round' as const,
-  strokeLinejoin: 'round' as const,
-};
+const LIMESTONE = ['#8d8d88', '#5a5a58', '#323230', '#161614'] as const;
+const MOSS = ['#3f9a52', '#1f6a34', '#124826', '#0a2414'] as const;
+const ORB = '#20ee52';
+const GOLD = '#d6ef4a';
 
 function Mark({ children }: { children: ReactNode }) {
   return (
@@ -27,13 +24,108 @@ function Mark({ children }: { children: ReactNode }) {
   );
 }
 
+function Orb({
+  cx,
+  cy,
+  r,
+  color = ORB,
+}: {
+  cx: number;
+  cy: number;
+  r: number;
+  color?: string;
+}) {
+  return (
+    <g>
+      <circle cx={cx} cy={cy} r={r * 1.7} fill={color} opacity="0.28" />
+      <circle cx={cx} cy={cy} r={r} fill={color} />
+      <circle cx={cx - r * 0.3} cy={cy - r * 0.32} r={r * 0.34} fill="#f4ffe8" />
+    </g>
+  );
+}
+
+/**
+ * Top-down ziggurat, the same stepped stone and neon well as the peaks.
+ */
+function Tower({
+  cx,
+  cy,
+  size,
+  stones = LIMESTONE,
+  orb = ORB,
+}: {
+  cx: number;
+  cy: number;
+  size: number;
+  stones?: readonly [string, string, string, string];
+  orb?: string;
+}) {
+  const scales = [1, 0.72, 0.48, 0.28];
+  return (
+    <g>
+      {scales.map((scale, index) => {
+        const w = size * scale;
+        return (
+          <rect
+            key={stones[index]}
+            x={cx - w / 2}
+            y={cy - w / 2}
+            width={w}
+            height={w}
+            rx={Math.max(0.8, w * 0.08)}
+            fill={stones[index]}
+            stroke="#141412"
+            strokeWidth={0.6}
+          />
+        );
+      })}
+      <ellipse
+        cx={cx - size * 0.54}
+        cy={cy + size * 0.36}
+        rx={size * 0.055}
+        ry={size * 0.12}
+        fill={orb}
+      />
+      <ellipse
+        cx={cx + size * 0.54}
+        cy={cy + size * 0.36}
+        rx={size * 0.055}
+        ry={size * 0.12}
+        fill={orb}
+      />
+      <Orb cx={cx} cy={cy} r={size * 0.16} color={orb} />
+    </g>
+  );
+}
+
+function CardFace({
+  x,
+  y,
+  rotate,
+  suit,
+}: {
+  x: number;
+  y: number;
+  rotate: number;
+  suit: string;
+}) {
+  return (
+    <g transform={`rotate(${rotate} ${x + 6} ${y + 8})`}>
+      <rect x={x} y={y} width="12" height="16" rx="1.5" fill="#fffdf8" />
+      <rect x={x + 0.6} y={y + 0.6} width="10.8" height="14.8" rx="1.1" fill="none" stroke="#e4dece" strokeWidth="0.6" />
+      <path d={suit} fill="#1c1c1c" transform={`translate(${x + 3.1} ${y + 4.2})`} />
+    </g>
+  );
+}
+
+const SPADE =
+  'M2.9 0.4c1.6 1.5 2.9 3.2 2.9 4.6 0 1.5-1.1 2.4-2.5 2.4-.4 0-.7 0-1 .1.3.7.7 1.2 1.5 1.2h.2v.8H1.6v-.8h.2c.8 0 1.2-.5 1.5-1.2-.3-.1-.6-.1-1-.1C1.1 7.4 0 6.5 0 5 0 3.6 1.3 1.9 2.9.4z';
+
 export function ModeMark({ name }: { name: ModeMarkName }) {
   if (name === 'timed') {
     return (
       <Mark>
-        <circle cx="16" cy="17" r="8.2" {...STROKE} />
-        <path d="M16 12.4V17l3.2 2" {...STROKE} />
-        <path d="M13.2 6.4h5.6M16 6.4V8.2" {...STROKE} />
+        <Tower cx={16} cy={16} size={22} orb={GOLD} />
       </Mark>
     );
   }
@@ -41,11 +133,7 @@ export function ModeMark({ name }: { name: ModeMarkName }) {
   if (name === 'relaxed') {
     return (
       <Mark>
-        <path
-          d="M16 25.4c0 0-7.4-4.8-7.4-11.6C8.6 9.2 12 7.2 16 10.2c4-3 7.4-1 7.4 3.6 0 6.8-7.4 11.6-7.4 11.6z"
-          {...STROKE}
-        />
-        <path d="M16 23.6V12.2M16 18.2l-3.6-2.4M16 15.4l3.4-2.2" {...STROKE} />
+        <Tower cx={16} cy={16} size={22} stones={MOSS} />
       </Mark>
     );
   }
@@ -53,10 +141,9 @@ export function ModeMark({ name }: { name: ModeMarkName }) {
   if (name === 'classic') {
     return (
       <Mark>
-        <path d="M6 23.5 11.2 13 16.4 23.5M12.8 23.5 16 12.2 19.2 23.5M15.6 23.5 21 13 26.2 23.5" {...STROKE} />
-        <circle cx="11.2" cy="16.2" r="1.15" fill="currentColor" />
-        <circle cx="16" cy="15.4" r="1.15" fill="currentColor" />
-        <circle cx="21" cy="16.2" r="1.15" fill="currentColor" />
+        <Tower cx={7.6} cy={19.2} size={9} />
+        <Tower cx={24.4} cy={19.2} size={9} />
+        <Tower cx={16} cy={15.4} size={11.4} />
       </Mark>
     );
   }
@@ -64,11 +151,7 @@ export function ModeMark({ name }: { name: ModeMarkName }) {
   if (name === 'daily') {
     return (
       <Mark>
-        <circle cx="16" cy="16" r="4.2" {...STROKE} />
-        <path
-          d="M16 5.8v2.6M16 23.6v2.6M5.8 16h2.6M23.6 16h2.6M8.7 8.7l1.8 1.8M21.5 21.5l1.8 1.8M23.3 8.7l-1.8 1.8M10.5 21.5l-1.8 1.8"
-          {...STROKE}
-        />
+        <Tower cx={16} cy={16} size={24} />
       </Mark>
     );
   }
@@ -76,9 +159,9 @@ export function ModeMark({ name }: { name: ModeMarkName }) {
   if (name === 'race') {
     return (
       <Mark>
-        <circle cx="8.5" cy="16" r="2.3" {...STROKE} />
-        <circle cx="15.2" cy="16" r="2.3" {...STROKE} />
-        <path d="M20 16h7.2M23.6 12.4 27.4 16l-3.8 3.6" {...STROKE} />
+        <rect x="3" y="20.6" width="26" height="3.2" rx="1" fill="#3a3a38" />
+        <Tower cx={9} cy={16.2} size={9.2} />
+        <Tower cx={23} cy={15.2} size={10.4} orb={GOLD} />
       </Mark>
     );
   }
@@ -86,8 +169,8 @@ export function ModeMark({ name }: { name: ModeMarkName }) {
   if (name === 'duel') {
     return (
       <Mark>
-        <path d="M5.5 16h8.2M9.6 12.2 5.5 16l4.1 3.8" {...STROKE} />
-        <path d="M26.5 16h-8.2M22.4 12.2 26.5 16l-4.1 3.8" {...STROKE} />
+        <Tower cx={9} cy={16.2} size={14} />
+        <Tower cx={23} cy={16.2} size={14} orb={GOLD} />
       </Mark>
     );
   }
@@ -95,7 +178,12 @@ export function ModeMark({ name }: { name: ModeMarkName }) {
   if (name === 'puzzles') {
     return (
       <Mark>
-        <path d="M16 6.2 18.4 13.2 25.8 16 18.4 18.8 16 25.8 13.6 18.8 6.2 16 13.6 13.2Z" {...STROKE} />
+        <path
+          fill="#6a6a68"
+          d="M7 11.5h5.2a2.4 2.4 0 1 1 4.8 0H25v5.4a2.4 2.4 0 1 1 0 4.8V25H7V11.5z"
+        />
+        <path fill="#9a9a94" opacity="0.4" d="M8.2 12.6h8" />
+        <Orb cx={14.2} cy={19.4} r={2.3} />
       </Mark>
     );
   }
@@ -103,16 +191,17 @@ export function ModeMark({ name }: { name: ModeMarkName }) {
   if (name === 'casual') {
     return (
       <Mark>
-        <rect x="7" y="8.5" width="12" height="16" rx="2" {...STROKE} />
-        <path d="M13 8.5V7.2A2 2 0 0 1 15 5.2h8.2A2 2 0 0 1 25.2 7.2V21a2 2 0 0 1-2 2H21" {...STROKE} />
+        <CardFace x={4.2} y={8} rotate={-16} suit={SPADE} />
+        <CardFace x={14.6} y={7.2} rotate={8} suit={SPADE} />
       </Mark>
     );
   }
 
   return (
     <Mark>
-      <path d="M8 22.5 16 7.5l8 15" {...STROKE} />
-      <path d="M11.2 17.2h9.6" {...STROKE} />
+      <rect x="4" y="21" width="7.2" height="6" rx="0.8" fill="#454543" />
+      <rect x="20.8" y="18.2" width="7.2" height="8.8" rx="0.8" fill="#5c5c5a" />
+      <Tower cx={16} cy={15.6} size={12} orb={GOLD} />
     </Mark>
   );
 }
