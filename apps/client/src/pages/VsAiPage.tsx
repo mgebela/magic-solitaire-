@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import type { VsAiResult } from '@three-towers/shared';
+import { GuestPlayShell } from '../components/ads/GuestAdSlot';
 import { GameCanvas } from '../components/GameCanvas';
 import { AiDifficultySelect } from '../components/AiDifficultySelect';
 import { VsAiResultModal } from '../components/VsAiResultModal';
@@ -65,7 +66,7 @@ export default function VsAiPage() {
   }
 
   return (
-    <div className="magic-play-screen">
+    <GuestPlayShell>
       {error && (
         <div className="magic-play-screen__error">
           <span>{error}</span>
@@ -92,6 +93,6 @@ export default function VsAiPage() {
           onChangeDifficulty={() => reset()}
         />
       )}
-    </div>
+    </GuestPlayShell>
   );
 }

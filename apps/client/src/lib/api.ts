@@ -1,5 +1,18 @@
 const API_URL = import.meta.env.VITE_API_URL ?? '';
 
+export const API_OFFLINE_MESSAGE =
+  'Saved accounts are offline right now. You can still play as a guest.';
+
+function playerFacingMessage(message: string, status: number, looksLikeHtml: boolean): string {
+  if (looksLikeHtml || status === 502 || status === 503) {
+    return API_OFFLINE_MESSAGE;
+  }
+  if (/API_ORIGIN|NestJS|game server is offline/i.test(message)) {
+    return API_OFFLINE_MESSAGE;
+  }
+  return message;
+}
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -39,11 +52,12 @@ export async function apiFetch<T>(
   }
 
   if (!response.ok) {
-    const message =
+    const rawMessage =
       (body as { message?: string | string[] })?.message ??
       `Request failed with status ${response.status}`;
+    const joined = Array.isArray(rawMessage) ? rawMessage.join(', ') : rawMessage;
     throw new ApiError(
-      Array.isArray(message) ? message.join(', ') : message,
+      playerFacingMessage(joined, response.status, /^\s*</.test(rawText)),
       response.status,
       body,
     );
@@ -53,7 +67,7 @@ export async function apiFetch<T>(
     const looksLikeHtml = /^\s*</.test(rawText);
     throw new ApiError(
       looksLikeHtml
-        ? 'Game server is offline. Wallet sign-in needs the API connected.'
+        ? API_OFFLINE_MESSAGE
         : 'Invalid response from server (expected JSON).',
       response.status,
       { url, contentType, preview: rawText.slice(0, 200) },

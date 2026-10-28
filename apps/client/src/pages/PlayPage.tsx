@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { GuestPlayShell } from '../components/ads/GuestAdSlot';
 import { GameCanvas } from '../components/GameCanvas';
 import { GameResultModal } from '../components/GameResultModal';
 import { ModeSelect } from '../components/ModeSelect';
@@ -72,7 +73,7 @@ export default function PlayPage() {
   }
 
   return (
-    <div className="magic-play-screen">
+    <GuestPlayShell>
       {error && (
         <div className="magic-play-screen__error">
           <span>{error}</span>
@@ -109,6 +110,6 @@ export default function PlayPage() {
           onChangeMode={resetToModeSelect}
         />
       )}
-    </div>
+    </GuestPlayShell>
   );
 }

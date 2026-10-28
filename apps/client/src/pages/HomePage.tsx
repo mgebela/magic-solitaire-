@@ -1,64 +1,70 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import type { SinglePlayerMode } from '@three-towers/shared';
 import { HowToPlay } from '../components/HowToPlay';
 import { AppBackground } from '../components/layout/AppBackground';
 import { LeaderboardPanel } from '../components/LeaderboardPanel';
-import { GameButton, GameLink } from '../components/ui/GameButton';
+import { GameButton } from '../components/ui/GameButton';
 import { ModeTile } from '../components/ui/ModeTile';
 import { useAuthStore } from '../stores/authStore';
+import { useGameStore } from '../stores/gameStore';
 
-const MODES = [
-  {
-    to: '/play',
-    title: 'Classic',
-    description: 'Timed or relaxed',
-    icon: '🃏',
-    featured: true,
-  },
+const OTHER_MODES = [
   {
     to: '/daily',
     title: 'Daily',
     description: 'One shared deal',
     icon: '☀️',
+    needsAccount: true,
   },
   {
     to: '/multiplayer',
     title: 'Race',
     description: 'Same-seed PvP',
     icon: '👥',
+    needsAccount: true,
   },
   {
     to: '/vs-ai',
     title: 'Duel',
     description: 'Race the AI',
     icon: '🤖',
+    needsAccount: false,
   },
   {
     to: '/puzzles',
     title: 'Puzzles',
     description: 'Stars & limits',
     icon: '⭐',
+    needsAccount: false,
   },
 ] as const;
 
-const FEATURES = [
-  { title: 'Solo & Multiplayer', detail: 'Play alone or race a room' },
-  { title: 'Daily Challenge', detail: 'A new shared board each day' },
-  { title: 'Tower Duel', detail: 'Same deal against the AI' },
-  { title: 'Ace wraps King', detail: 'Classic TriPeaks ranks' },
-  { title: 'One-pass stock', detail: 'No reshuffles when stuck' },
-  { title: 'Puzzle Towers', detail: 'Stars for tight solutions' },
-] as const;
-
 export default function HomePage() {
+  const navigate = useNavigate();
   const { user, tokens, logout, fetchProfile } = useAuthStore();
+  const startGame = useGameStore((s) => s.startGame);
   const [showHowto, setShowHowto] = useState(false);
+  const [dealing, setDealing] = useState<SinglePlayerMode | null>(null);
+  const [dealError, setDealError] = useState<string | null>(null);
 
   useEffect(() => {
     if (tokens && !user) {
       fetchProfile();
     }
   }, [tokens, user, fetchProfile]);
+
+  const deal = async (mode: SinglePlayerMode) => {
+    setDealError(null);
+    setDealing(mode);
+    try {
+      await startGame(mode, tokens?.accessToken);
+      navigate('/play');
+    } catch (err) {
+      setDealError(err instanceof Error ? err.message : 'Could not deal a game');
+      setDealing(null);
+    }
+  };
 
   return (
     <AppBackground variant="home">
@@ -74,27 +80,22 @@ export default function HomePage() {
               <Link to="/profile" className="home-nav__user">
                 {user.username}
               </Link>
-              <GameLink to="/play" variant="primary">
-                Play
-              </GameLink>
+              <GameButton variant="primary" disabled={dealing !== null} onClick={() => deal('relaxed')}>
+                {dealing === 'relaxed' ? 'Dealing…' : 'Play'}
+              </GameButton>
               <GameButton variant="ghost" onClick={() => logout()}>
                 Sign out
               </GameButton>
             </>
           ) : (
-            <>
-              <GameLink to="/play" variant="ghost" className="home-nav__guest">
-                Play as Guest
-              </GameLink>
-              <GameLink to="/login" variant="primary">
-                Get Started
-              </GameLink>
-            </>
+            <GameButton variant="primary" onClick={() => navigate('/login')}>
+              Get Started
+            </GameButton>
           )}
         </div>
       </nav>
 
-      <div className="lobby">
+      <div className="home-tower">
         <header className="lobby-hero">
           <div className="lobby-hero__lockup">
             <h1 className="lobby-hero__title">
@@ -105,57 +106,90 @@ export default function HomePage() {
           </div>
         </header>
 
-        <p className="home-kicker">Race the three peaks — same deal, highest score wins</p>
+        <div className="home-tower__stack">
+          <p className="home-kicker">Race the three peaks — same deal, highest score wins</p>
 
-        <div className="home-stats" aria-label="Game facts">
-          <div className="home-stat">
-            <p className="home-stat__value">3</p>
-            <p className="home-stat__label">Towers</p>
+          <div className="home-stats" aria-label="Game facts">
+            <div className="home-stat">
+              <p className="home-stat__value">3</p>
+              <p className="home-stat__label">Towers</p>
+            </div>
+            <div className="home-stat">
+              <p className="home-stat__value">28</p>
+              <p className="home-stat__label">Cards</p>
+            </div>
+            <div className="home-stat">
+              <p className="home-stat__value">1</p>
+              <p className="home-stat__label">Shared seed</p>
+            </div>
           </div>
-          <div className="home-stat">
-            <p className="home-stat__value">28</p>
-            <p className="home-stat__label">Cards</p>
-          </div>
-          <div className="home-stat">
-            <p className="home-stat__value">1</p>
-            <p className="home-stat__label">Shared seed</p>
-          </div>
-        </div>
 
-        <div className="home-modes">
-          {MODES.map((mode) => (
-            <ModeTile key={mode.to} {...mode} />
-          ))}
-        </div>
-
-        <section className="home-features" aria-labelledby="home-features-title">
-          <h2 id="home-features-title" className="home-features__title">
-            Everything you need to know
-          </h2>
-          <ul className="home-features__grid">
-            {FEATURES.map((feature) => (
-              <li key={feature.title} className="home-feature">
-                <p className="home-feature__title">{feature.title}</p>
-                <p className="home-feature__detail">{feature.detail}</p>
-              </li>
+          <div className="home-modes">
+            <article className="mode-tile mode-tile--featured home-classic">
+              <span className="mode-tile__icon" aria-hidden>
+                🃏
+              </span>
+              <div>
+                <h3 className="mode-tile__title">Classic</h3>
+                <div className="home-classic__actions">
+                  <GameButton
+                    variant="primary"
+                    className="home-classic__deal"
+                    disabled={dealing !== null}
+                    onClick={() => deal('timed')}
+                  >
+                    {dealing === 'timed' ? 'Dealing…' : 'Timed'}
+                  </GameButton>
+                  <GameButton
+                    variant="secondary"
+                    className="home-classic__deal"
+                    disabled={dealing !== null}
+                    onClick={() => deal('relaxed')}
+                  >
+                    {dealing === 'relaxed' ? 'Dealing…' : 'Relaxed'}
+                  </GameButton>
+                </div>
+              </div>
+            </article>
+            {OTHER_MODES.map((mode) => (
+              <ModeTile
+                key={mode.to}
+                to={mode.needsAccount && !user ? `/login?next=${mode.to}` : mode.to}
+                title={mode.title}
+                icon={mode.icon}
+                description={
+                  mode.needsAccount && !user
+                    ? mode.to === '/daily'
+                      ? 'Sign in to play'
+                      : 'Sign in to race'
+                    : mode.description
+                }
+              />
             ))}
-          </ul>
-        </section>
+          </div>
 
-        <div className="home-cta">
-          <GameLink to="/play" variant="primary" className="home-cta__play">
-            {user ? 'Start Playing' : 'Start Playing Free'}
-          </GameLink>
-          <GameButton variant="ghost" onClick={() => setShowHowto(true)}>
-            How to play
-          </GameButton>
-        </div>
+          {dealError && <p className="home-deal-error">{dealError}</p>}
 
-        <div className="home-board">
+          <p className="home-rule">Ace wraps King. One pass through the stock.</p>
+
+          <div className="home-cta">
+            <GameButton
+              variant="primary"
+              className="home-cta__play"
+              disabled={dealing !== null}
+              onClick={() => deal('relaxed')}
+            >
+              {dealing === 'relaxed' ? 'Dealing…' : user ? 'Play' : 'Play free'}
+            </GameButton>
+            <GameButton variant="ghost" onClick={() => setShowHowto(true)}>
+              How to play
+            </GameButton>
+          </div>
+
           <LeaderboardPanel mode="timed" />
-        </div>
 
-        <footer className="home-footer">© 2026 Space Towers Solitaire</footer>
+          <footer className="home-footer">© 2026 Space Towers Solitaire</footer>
+        </div>
       </div>
     </AppBackground>
   );

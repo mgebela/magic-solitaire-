@@ -66,18 +66,11 @@ export function MagicGameHud({
 
   return (
     <div className="stone-hud" style={{ aspectRatio: String(BOARD_ASPECT) }}>
-      <div className="stone-hud__top-left">
-        <span>SCORE {state.score}</span>
-        <span>
-          {roundLabel.toUpperCase()} {roundValue ?? `${roundCurrent} / ${roundTotal}`}
-        </span>
-      </div>
-
-      <div className="stone-hud__top-actions">
+      <div className="stone-hud__bar-actions">
         {allowUndo && onUndo && (
           <button
             type="button"
-            className="stone-hud__undo"
+            className="stone-hud__bar-btn"
             onClick={onUndo}
             disabled={!canUndo}
           >
@@ -85,17 +78,17 @@ export function MagicGameHud({
           </button>
         )}
         {onHint && (
-          <button type="button" className="stone-hud__extra-btn" onClick={onHint}>
+          <button type="button" className="stone-hud__bar-btn" onClick={onHint}>
             Hint
           </button>
         )}
         <button
           type="button"
-          className="stone-hud__extra-btn"
+          className="stone-hud__bar-btn"
           onClick={() => setMuted(sound.toggleMuted())}
           aria-pressed={muted}
         >
-          {muted ? 'Sound off' : 'Sound on'}
+          {muted ? 'Sound off' : 'Sound'}
         </button>
       </div>
 
@@ -126,13 +119,15 @@ export function MagicGameHud({
       </div>
 
       <div className="stone-hud__center">
-        <div
-          key={comboPop}
-          className={`stone-hud__combo-ring ${comboHeat ? `stone-hud__combo-ring--${comboHeat}` : ''}`}
-        >
-          <span className="stone-hud__combo-label">COMBOS</span>
-          <span className="stone-hud__combo-value">{combo}x</span>
-        </div>
+        {combo >= 2 && (
+          <div
+            key={comboPop}
+            className={`stone-hud__combo-ring ${comboHeat ? `stone-hud__combo-ring--${comboHeat}` : ''}`}
+          >
+            <span className="stone-hud__combo-label">COMBOS</span>
+            <span className="stone-hud__combo-value">{combo}x</span>
+          </div>
+        )}
         <div className="stone-hud__timer">
           <span className="stone-hud__timer-icon" aria-hidden>
             ⏱

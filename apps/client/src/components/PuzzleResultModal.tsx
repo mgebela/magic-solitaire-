@@ -1,4 +1,5 @@
 import type { PuzzleResult } from '@three-towers/shared';
+import { GuestAdSlot } from './ads/GuestAdSlot';
 import { StarRating } from './StarRating';
 
 interface PuzzleResultModalProps {
@@ -39,6 +40,8 @@ export function PuzzleResultModal({ result, title, onRetry, onBack }: PuzzleResu
             </dd>
           </div>
         </dl>
+
+        <GuestAdSlot slot="result" className="mt-5" />
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
           <button

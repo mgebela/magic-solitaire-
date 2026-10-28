@@ -1,10 +1,11 @@
 export default async (request: Request) => {
   const origin = getApiOrigin();
   if (!origin) {
+    // Operators: set Netlify env API_ORIGIN to the NestJS origin to enable accounts.
     return json(
       {
         message:
-          'Game server is offline. Wallet sign-in needs the NestJS API — set API_ORIGIN on Netlify to your API origin.',
+          'Saved accounts are offline right now. You can still play as a guest.',
       },
       503,
     );

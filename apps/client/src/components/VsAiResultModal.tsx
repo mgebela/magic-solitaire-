@@ -1,4 +1,5 @@
 import type { VsAiResult } from '@three-towers/shared';
+import { GuestAdSlot } from './ads/GuestAdSlot';
 import { formatElapsed } from '../lib/format-time';
 
 interface VsAiResultModalProps {
@@ -50,6 +51,8 @@ export function VsAiResultModal({
             highlight={!playerAhead}
           />
         </div>
+
+        <GuestAdSlot slot="result" className="mt-5" />
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
           <button

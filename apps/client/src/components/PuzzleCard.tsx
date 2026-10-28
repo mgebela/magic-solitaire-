@@ -15,7 +15,7 @@ const DIFFICULTY_COLORS: Record<PuzzleDefinition['difficulty'], string> = {
 
 export function PuzzleCard({ puzzle, progress }: PuzzleCardProps) {
   return (
-    <Link to={`/puzzles/${puzzle.id}`} className="mode-tile block">
+    <Link to={`/puzzles/${puzzle.id}`} className="mode-tile mode-tile--stack">
       <div className="mb-3 flex items-start justify-between gap-3">
         <div>
           <h3 className="mode-tile__title">{puzzle.title}</h3>
@@ -26,9 +26,9 @@ export function PuzzleCard({ puzzle, progress }: PuzzleCardProps) {
         <StarRating stars={progress?.bestStars ?? 0} size="sm" />
       </div>
 
-      <p className="mb-4 text-sm leading-relaxed text-white/60">{puzzle.description}</p>
+      <p className="mb-4 text-sm leading-relaxed text-white/85">{puzzle.description}</p>
 
-      <div className="flex items-center justify-between text-xs text-white/40">
+      <div className="flex items-center justify-between text-sm text-white/75">
         <span>{puzzle.moveLimit} moves max</span>
         <span>
           ★★★ ≤{puzzle.starThresholds.three} · ★★ ≤{puzzle.starThresholds.two}

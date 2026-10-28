@@ -29,7 +29,7 @@ const MODES: Array<{
 export function ModeSelect({ onSelect, isLoading }: ModeSelectProps) {
   return (
     <div className="mx-auto flex max-w-2xl flex-col items-center gap-8 py-8">
-      <div className="text-center">
+      <div className="solid-copy">
         <h2 className="page-title">Choose Your Game</h2>
         <p className="page-subtitle">Pick a mode to deal the towers</p>
       </div>
@@ -52,7 +52,7 @@ export function ModeSelect({ onSelect, isLoading }: ModeSelectProps) {
         ))}
       </div>
 
-      <p className="text-center text-xs text-white/40">
+      <p className="solid-note">
         Playing as a guest? Hints and undo are available. Sign in to save scores.
       </p>
     </div>

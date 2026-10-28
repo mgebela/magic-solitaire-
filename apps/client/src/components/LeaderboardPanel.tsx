@@ -35,21 +35,15 @@ export function LeaderboardPanel({ mode = 'timed' }: LeaderboardPanelProps) {
     };
   }, [mode]);
 
+  if (loading || error || entries.length === 0) return null;
+
   return (
-    <div className="lobby-panel">
+    <div className="lobby-panel home-board">
       <h3 className="mb-4 font-[family-name:var(--font-display)] text-lg capitalize text-[var(--color-neon)]">
         {mode} Leaderboard
       </h3>
 
-      {loading && <p className="text-sm text-white/50">Loading…</p>}
-      {error && <p className="text-sm text-red-300">{error}</p>}
-
-      {!loading && !error && entries.length === 0 && (
-        <p className="text-sm text-white/50">No wins yet — be the first!</p>
-      )}
-
-      {entries.length > 0 && (
-        <ol className="space-y-2">
+      <ol className="space-y-2">
           {entries.map((entry) => (
             <li
               key={`${entry.userId}-${entry.finishedAt}`}
@@ -68,7 +62,6 @@ export function LeaderboardPanel({ mode = 'timed' }: LeaderboardPanelProps) {
             </li>
           ))}
         </ol>
-      )}
     </div>
   );
 }

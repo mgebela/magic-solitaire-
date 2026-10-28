@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { WalletNonceResponse } from '@three-towers/shared';
 import { apiFetch } from '../lib/api';
+import { returnPath } from '../lib/return-path';
 import {
   connectSolanaWallet,
   getWalletInstallUrl,
@@ -94,7 +95,11 @@ export function WalletSignInButton({ onSuccess, className }: WalletSignInButtonP
         signature,
         chain: 'solana',
       });
-      onSuccess?.() ?? navigate('/');
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        navigate(returnPath(new URLSearchParams(window.location.search).get('next')));
+      }
     } catch (err) {
       useAuthStore.setState({
         error: err instanceof Error ? err.message : `${wallet.name} sign-in failed`,

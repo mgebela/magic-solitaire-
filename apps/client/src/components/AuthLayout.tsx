@@ -37,7 +37,7 @@ export function AuthInput({
 }: React.InputHTMLAttributes<HTMLInputElement> & { label: string }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-sm text-white/70">{label}</span>
+      <span className="mb-1.5 block text-sm font-semibold text-white/90">{label}</span>
       <input
         className="stone-input px-4 py-3 placeholder-white/30 transition"
         {...props}
@@ -64,9 +64,18 @@ export function AuthButton({
 
 export function AuthError({ message }: { message: string | null }) {
   if (!message) return null;
+  const offerGuest = /play as a guest|offline/i.test(message);
   return (
     <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-      {message}
+      <p>{message}</p>
+      {offerGuest && (
+        <Link
+          to="/play"
+          className="mt-2 inline-block font-semibold text-[var(--color-gold)] hover:underline"
+        >
+          Play as guest →
+        </Link>
+      )}
     </div>
   );
 }

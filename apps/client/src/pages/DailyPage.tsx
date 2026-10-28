@@ -43,7 +43,7 @@ export default function DailyPage() {
   }, [state?.status, tickTimer]);
 
   if (!tokens || !user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login?next=/daily" replace />;
   }
 
   const hasFinishedAttempt = challenge?.attempt && challenge.attempt.status !== 'playing';

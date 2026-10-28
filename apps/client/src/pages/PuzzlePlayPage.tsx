@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { getPuzzleById, movesRemaining } from '@three-towers/shared';
+import { GuestPlayShell } from '../components/ads/GuestAdSlot';
 import { GameCanvas } from '../components/GameCanvas';
 import { PuzzleResultModal } from '../components/PuzzleResultModal';
 import { usePuzzleStore } from '../stores/puzzleStore';
@@ -39,7 +40,7 @@ export default function PuzzlePlayPage() {
     : puzzle.moveLimit;
 
   return (
-    <div className="magic-play-screen">
+    <GuestPlayShell>
       {error && (
         <div className="magic-play-screen__error">
           <span>{error}</span>
@@ -68,6 +69,6 @@ export default function PuzzlePlayPage() {
           onBack={() => navigate('/puzzles')}
         />
       )}
-    </div>
+    </GuestPlayShell>
   );
 }

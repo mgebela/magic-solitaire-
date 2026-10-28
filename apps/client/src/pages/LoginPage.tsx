@@ -1,11 +1,15 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { AuthButton, AuthError, AuthInput, AuthLayout } from '../components/AuthLayout';
 import { WalletSignInButton } from '../components/WalletSignInButton';
+import { returnPath, returnPathNote } from '../lib/return-path';
 import { useAuthStore } from '../stores/authStore';
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const next = returnPath(params.get('next'));
+  const nextNote = returnPathNote(next);
   const { login, isLoading, error, clearError } = useAuthStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -15,14 +19,17 @@ export default function LoginPage() {
     clearError();
     try {
       await login({ email, password });
-      navigate('/');
+      navigate(next);
     } catch {
       // error stored in zustand
     }
   };
 
   return (
-    <AuthLayout title="Sign in" subtitle="Welcome back to Space Towers">
+    <AuthLayout
+      title="Sign in"
+      subtitle={nextNote ?? 'Welcome back to Space Towers'}
+    >
       <form onSubmit={handleSubmit} className="space-y-4">
         <AuthError message={error} />
         <AuthInput
@@ -52,9 +59,14 @@ export default function LoginPage() {
         <div className="h-px flex-1 bg-white/10" />
       </div>
 
-      <WalletSignInButton />
+      <WalletSignInButton onSuccess={() => navigate(next)} />
 
       <div className="mt-6 space-y-2 text-center text-sm text-white/60">
+        <p>
+          <Link to="/play" className="text-[var(--color-gold)] hover:underline">
+            Play as guest
+          </Link>
+        </p>
         <p>
           <Link to="/forgot-password" className="text-[var(--color-neon)] hover:underline">
             Forgot password?
@@ -62,7 +74,10 @@ export default function LoginPage() {
         </p>
         <p>
           No account?{' '}
-          <Link to="/register" className="text-[var(--color-neon)] hover:underline">
+          <Link
+            to={next === '/' ? '/register' : `/register?next=${encodeURIComponent(next)}`}
+            className="text-[var(--color-neon)] hover:underline"
+          >
             Create one
           </Link>
         </p>

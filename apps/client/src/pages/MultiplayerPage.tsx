@@ -20,7 +20,7 @@ export default function MultiplayerPage() {
   }, [tokens?.accessToken, user, connect]);
 
   if (!tokens || !user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login?next=/multiplayer" replace />;
   }
 
   const busy = loading || !connected;

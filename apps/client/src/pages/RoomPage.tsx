@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
+import { GuestPlayShell } from '../components/ads/GuestAdSlot';
 import { GameCanvas } from '../components/GameCanvas';
 import { AppBackground } from '../components/layout/AppBackground';
 import { GameButton } from '../components/ui/GameButton';
@@ -54,7 +55,7 @@ export default function RoomPage() {
   }, [myState?.status, tickTimer]);
 
   if (!tokens || !user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login?next=/multiplayer" replace />;
   }
 
   const leave = () => {
@@ -165,7 +166,7 @@ export default function RoomPage() {
 
   if (room.status === 'playing' && myState) {
     return (
-      <div className="magic-play-screen">
+      <GuestPlayShell>
         {error && (
           <div className="magic-play-screen__error">
             <span>{error}</span>
@@ -205,7 +206,7 @@ export default function RoomPage() {
         </aside>
 
         {resultsOverlay}
-      </div>
+      </GuestPlayShell>
     );
   }
 

@@ -1,4 +1,5 @@
 import type { GameStats, ScoreBreakdown } from '@three-towers/shared';
+import { GuestAdSlot } from './ads/GuestAdSlot';
 import { formatElapsed, formatMode } from '../lib/format-time';
 
 interface GameResultModalProps {
@@ -48,6 +49,8 @@ export function GameResultModal({
         {stats.scoreBreakdown && won && (
           <ScoreBreakdownPanel breakdown={stats.scoreBreakdown} />
         )}
+
+        <GuestAdSlot slot="result" className="mt-5" />
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
           <button
