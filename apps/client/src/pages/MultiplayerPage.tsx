@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 import type { MultiplayerMode } from '@three-towers/shared';
 import { AppBackground } from '../components/layout/AppBackground';
 import { GameButton } from '../components/ui/GameButton';
+import { ModeMark } from '../components/ui/ModeMark';
 import { useAuthStore } from '../stores/authStore';
 import { useMultiplayerStore } from '../stores/multiplayerStore';
 
@@ -75,7 +76,9 @@ export default function MultiplayerPage() {
                 onClick={() => handleCreate('casual')}
                 className="mode-tile text-left disabled:opacity-50"
               >
-                <span className="mode-tile__icon">🎲</span>
+                <span className="mode-tile__icon">
+                  <ModeMark name="casual" />
+                </span>
                 <div>
                   <div className="mode-tile__title">Casual</div>
                   <p className="mode-tile__desc">Up to 4 players, friendly race</p>
@@ -87,7 +90,9 @@ export default function MultiplayerPage() {
                 onClick={() => handleCreate('ranked')}
                 className="mode-tile text-left disabled:opacity-50"
               >
-                <span className="mode-tile__icon">⚔️</span>
+                <span className="mode-tile__icon">
+                  <ModeMark name="ranked" />
+                </span>
                 <div>
                   <div className="mode-tile__title">Ranked</div>
                   <p className="mode-tile__desc">Competitive same-seed match</p>

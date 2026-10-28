@@ -5,6 +5,7 @@ import { HowToPlay } from '../components/HowToPlay';
 import { AppBackground } from '../components/layout/AppBackground';
 import { LeaderboardPanel } from '../components/LeaderboardPanel';
 import { GameButton } from '../components/ui/GameButton';
+import { ModeMark } from '../components/ui/ModeMark';
 import { ModeTile } from '../components/ui/ModeTile';
 import { useAuthStore } from '../stores/authStore';
 import { useGameStore } from '../stores/gameStore';
@@ -14,28 +15,28 @@ const OTHER_MODES = [
     to: '/daily',
     title: 'Daily',
     description: 'One shared deal',
-    icon: '☀️',
+    mark: 'daily',
     needsAccount: true,
   },
   {
     to: '/multiplayer',
     title: 'Race',
     description: 'Same-seed PvP',
-    icon: '👥',
+    mark: 'race',
     needsAccount: true,
   },
   {
     to: '/vs-ai',
     title: 'Duel',
     description: 'Race the AI',
-    icon: '🤖',
+    mark: 'duel',
     needsAccount: false,
   },
   {
     to: '/puzzles',
     title: 'Puzzles',
     description: 'Stars & limits',
-    icon: '⭐',
+    mark: 'puzzles',
     needsAccount: false,
   },
 ] as const;
@@ -126,8 +127,8 @@ export default function HomePage() {
 
           <div className="home-modes">
             <article className="mode-tile mode-tile--featured home-classic">
-              <span className="mode-tile__icon" aria-hidden>
-                🃏
+              <span className="mode-tile__icon">
+                <ModeMark name="classic" />
               </span>
               <div>
                 <h3 className="mode-tile__title">Classic</h3>
@@ -156,7 +157,7 @@ export default function HomePage() {
                 key={mode.to}
                 to={mode.needsAccount && !user ? `/login?next=${mode.to}` : mode.to}
                 title={mode.title}
-                icon={mode.icon}
+                mark={mode.mark}
                 description={
                   mode.needsAccount && !user
                     ? mode.to === '/daily'

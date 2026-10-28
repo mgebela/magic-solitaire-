@@ -1,5 +1,6 @@
 import type { SinglePlayerMode } from '@three-towers/shared';
 import { formatMode } from '../lib/format-time';
+import { ModeMark, type ModeMarkName } from './ui/ModeMark';
 
 interface ModeSelectProps {
   onSelect: (mode: SinglePlayerMode) => void;
@@ -8,20 +9,17 @@ interface ModeSelectProps {
 
 const MODES: Array<{
   id: SinglePlayerMode;
-  title: string;
   description: string;
-  icon: string;
+  mark: ModeMarkName;
 }> = [
   {
     id: 'timed',
-    title: 'Timed',
-    icon: '⏱️',
+    mark: 'timed',
     description: 'Beat the clock — time bonuses reward fast clears.',
   },
   {
     id: 'relaxed',
-    title: 'Relaxed',
-    icon: '🌿',
+    mark: 'relaxed',
     description: 'No pressure. Same rules, your own pace.',
   },
 ];
@@ -34,16 +32,18 @@ export function ModeSelect({ onSelect, isLoading }: ModeSelectProps) {
         <p className="page-subtitle">Pick a mode to deal the towers</p>
       </div>
 
-      <div className="grid w-full gap-4 sm:grid-cols-2">
+      <div className="mode-choices">
         {MODES.map((mode) => (
           <button
             key={mode.id}
             type="button"
             disabled={isLoading}
             onClick={() => onSelect(mode.id)}
-            className="mode-tile text-left disabled:cursor-not-allowed disabled:opacity-50"
+            className="mode-tile mode-choice text-left disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <span className="mode-tile__icon">{mode.icon}</span>
+            <span className="mode-tile__icon">
+              <ModeMark name={mode.mark} />
+            </span>
             <div>
               <h3 className="mode-tile__title">{formatMode(mode.id)}</h3>
               <p className="mode-tile__desc">{mode.description}</p>
