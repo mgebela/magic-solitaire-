@@ -5,6 +5,7 @@ import { GameCanvas } from '../components/GameCanvas';
 import { AppBackground } from '../components/layout/AppBackground';
 import { GameButton } from '../components/ui/GameButton';
 import { formatElapsed } from '../lib/format-time';
+import { useResultReveal } from '../lib/use-result-reveal';
 import { useAuthStore } from '../stores/authStore';
 import { useMultiplayerStore } from '../stores/multiplayerStore';
 
@@ -53,6 +54,8 @@ export default function RoomPage() {
     const interval = window.setInterval(() => tickTimer(), 50);
     return () => window.clearInterval(interval);
   }, [myState?.status, tickTimer]);
+
+  const revealResults = useResultReveal(Boolean(results), myState?.status === 'won');
 
   if (!tokens || !user) {
     return <Navigate to="/login?next=/multiplayer" replace />;
@@ -134,10 +137,10 @@ export default function RoomPage() {
     </div>
   );
 
-  const resultsOverlay = results ? (
-    <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className="lobby-panel w-full max-w-md p-8">
-        <h2 className="page-title mb-6 text-center !text-3xl">Match Results</h2>
+  const resultsOverlay = revealResults && results ? (
+    <div className="result-shade absolute inset-0 z-20 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+      <div className={`result-panel lobby-panel w-full max-w-md p-8 ${myState?.status === 'won' ? 'result-panel--win' : ''}`}>
+        <h2 className="result-title page-title mb-6 text-center !text-3xl">Match Results</h2>
         <ol className="space-y-3">
           {results.rankings.map((entry) => (
             <li

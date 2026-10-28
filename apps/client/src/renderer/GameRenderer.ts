@@ -16,6 +16,7 @@ import {
   setStockCount,
 } from './card-display';
 import { ScoreEffectManager } from './score-effects';
+import { WinCelebration } from './win-celebration';
 import { drawMagicTableBackground } from './table-background';
 import { drawTowerOrbs } from './tower-orbs';
 import { CARD_HEIGHT, CARD_WIDTH } from './constants';
@@ -80,6 +81,7 @@ export class GameRenderer {
   private sprites = new Map<string, CardSpriteEntry>();
   private tweens = new TweenManager();
   private scoreEffects = new ScoreEffectManager();
+  private winCelebration = new WinCelebration();
   private state: GameState | null = null;
   private hintCardId: CardId | null = null;
   private onCardClick: CardClickHandler | null = null;
@@ -148,6 +150,7 @@ export class GameRenderer {
     this.wasteFlyer = null;
     this.tweens.clear();
     this.scoreEffects.clear();
+    this.winCelebration.clear();
     this.sprites.clear();
     if (this.initFinished && this.app) {
       this.app.destroy(false, { children: true });
@@ -195,8 +198,15 @@ export class GameRenderer {
         if (lastMove.type === 'play') sound.playCard(state.combo);
         if (lastMove.type === 'draw') sound.draw();
       }
-      if (prev.status === 'playing' && state.status === 'won') sound.win();
+      if (prev.status === 'playing' && state.status === 'won') {
+        sound.win();
+        this.winCelebration.play(this.overlayLayer, this.tweens);
+      }
       if (prev.status === 'playing' && state.status === 'lost') sound.lose();
+    }
+
+    if (state.status === 'playing' && prev?.status !== 'playing') {
+      this.winCelebration.clear();
     }
 
     this.syncTableau(state, prev, animate);

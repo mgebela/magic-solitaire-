@@ -26,10 +26,10 @@ export function VsAiResultModal({
   const headlineClass = playerAhead ? 'text-[var(--color-gold)]' : 'text-red-400';
 
   return (
-    <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className="lobby-panel w-full max-w-md p-8 shadow-2xl">
+    <div className="result-shade absolute inset-0 z-20 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+      <div className={`result-panel lobby-panel w-full max-w-md p-8 shadow-2xl ${playerAhead ? 'result-panel--win' : ''}`}>
         <div className="mb-6 text-center">
-          <div className={`font-[family-name:var(--font-display)] text-4xl ${headlineClass}`}>{headline}</div>
+          <div className={`result-title font-[family-name:var(--font-display)] text-4xl ${headlineClass}`}>{headline}</div>
           <p className="mt-2 text-sm capitalize text-white/60">
             vs {result.difficulty} AI · same seed race
           </p>

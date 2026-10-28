@@ -6,6 +6,7 @@ import { AppBackground } from '../components/layout/AppBackground';
 import { GameButton } from '../components/ui/GameButton';
 import { formatElapsed } from '../lib/format-time';
 import { computeGameStats } from '../lib/game-stats';
+import { useResultReveal } from '../lib/use-result-reveal';
 import { useAuthStore } from '../stores/authStore';
 import { useDailyStore } from '../stores/dailyStore';
 
@@ -42,13 +43,14 @@ export default function DailyPage() {
     return () => window.clearInterval(interval);
   }, [state?.status, tickTimer]);
 
+  const justFinished = Boolean(state && state.status !== 'playing' && challenge?.canPlay === false);
+  const revealResult = useResultReveal(justFinished, state?.status === 'won');
+
   if (!tokens || !user) {
     return <Navigate to="/login?next=/daily" replace />;
   }
 
   const hasFinishedAttempt = challenge?.attempt && challenge.attempt.status !== 'playing';
-  const isPlaying = state?.status === 'playing';
-  const justFinished = Boolean(state && !isPlaying && challenge?.canPlay === false);
   const stats = state ? computeGameStats(state) : null;
   const streak = challenge?.streak;
   const displayStreak =
@@ -170,11 +172,13 @@ export default function DailyPage() {
         </aside>
       )}
 
-      {justFinished && stats && (
-        <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <div className="lobby-panel w-full max-w-md p-8 text-center shadow-2xl">
+      {revealResult && stats && (
+        <div className="result-shade absolute inset-0 z-20 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div
+            className={`result-panel lobby-panel w-full max-w-md p-8 text-center shadow-2xl ${stats.status === 'won' ? 'result-panel--win' : ''}`}
+          >
             <div
-              className={`font-[family-name:var(--font-display)] text-4xl ${
+              className={`result-title font-[family-name:var(--font-display)] text-4xl ${
                 stats.status === 'won' ? 'text-[var(--color-gold)]' : 'text-red-400'
               }`}
             >

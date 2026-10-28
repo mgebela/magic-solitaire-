@@ -63,8 +63,21 @@ export function MagicGameHud({
   const [muted, setMuted] = useState(sound.isMuted());
   const [scorePop, setScorePop] = useState(0);
   const [comboPop, setComboPop] = useState(0);
+  const [showWin, setShowWin] = useState(false);
   const prevScore = useRef(state.score);
   const prevCombo = useRef(combo);
+  const prevStatus = useRef(state.status);
+
+  useEffect(() => {
+    if (prevStatus.current === 'playing' && state.status === 'won') {
+      setShowWin(true);
+      const timer = window.setTimeout(() => setShowWin(false), 2200);
+      prevStatus.current = state.status;
+      return () => window.clearTimeout(timer);
+    }
+    if (state.status === 'playing') setShowWin(false);
+    prevStatus.current = state.status;
+  }, [state.status]);
 
   useEffect(() => {
     if (state.score > prevScore.current) {
@@ -90,6 +103,12 @@ export function MagicGameHud({
 
   return (
     <div className="stone-hud" style={{ aspectRatio: String(BOARD_ASPECT) }}>
+      {showWin && (
+        <div className="win-banner" role="status">
+          <p>YOU WIN</p>
+          <strong>{state.score}</strong>
+        </div>
+      )}
       {race && race.length > 0 && (
         <div className="stone-hud__race" aria-label="Race">
           {race.map((lane, index) => (

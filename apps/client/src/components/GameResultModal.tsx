@@ -18,11 +18,13 @@ export function GameResultModal({
   const won = stats.status === 'won';
 
   return (
-    <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className="max-h-[90vh] w-full max-w-md overflow-y-auto lobby-panel p-8 shadow-2xl">
+    <div className="result-shade absolute inset-0 z-20 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+      <div
+        className={`result-panel max-h-[90vh] w-full max-w-md overflow-y-auto lobby-panel p-8 shadow-2xl ${won ? 'result-panel--win' : ''}`}
+      >
         <div className="mb-6 text-center">
           <div
-            className={`text-4xl font-bold ${won ? 'text-[var(--color-gold)]' : 'text-red-400'}`}
+            className={`result-title text-4xl font-bold ${won ? 'text-[var(--color-gold)]' : 'text-red-400'}`}
           >
             {won ? 'You Win!' : 'Game Over'}
           </div>

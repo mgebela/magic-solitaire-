@@ -6,6 +6,7 @@ import { GameResultModal } from '../components/GameResultModal';
 import { ModeSelect } from '../components/ModeSelect';
 import { AppBackground } from '../components/layout/AppBackground';
 import { computeGameStats } from '../lib/game-stats';
+import { useResultReveal } from '../lib/use-result-reveal';
 import { getPersonalBest } from '../lib/leaderboard-api';
 import { useAuthStore } from '../stores/authStore';
 import { useGameStore } from '../stores/gameStore';
@@ -58,6 +59,7 @@ export default function PlayPage() {
   const stats = state
     ? computeGameStats(state, { isPersonalBest: isPersonalBest && state.status === 'won' })
     : null;
+  const revealResult = useResultReveal(Boolean(showResult && stats), state?.status === 'won');
 
   if (showModeSelect) {
     return (
@@ -102,7 +104,7 @@ export default function PlayPage() {
 
       {isSyncing && <div className="magic-play-screen__saving">Saving…</div>}
 
-      {showResult && stats && (
+      {revealResult && stats && (
         <GameResultModal
           stats={stats}
           persisted={persisted}

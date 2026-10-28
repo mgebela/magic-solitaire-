@@ -6,6 +6,7 @@ import { GameCanvas } from '../components/GameCanvas';
 import { AiDifficultySelect } from '../components/AiDifficultySelect';
 import { VsAiResultModal } from '../components/VsAiResultModal';
 import { AppBackground } from '../components/layout/AppBackground';
+import { useResultReveal } from '../lib/use-result-reveal';
 import { useAiGameStore } from '../stores/aiGameStore';
 
 export default function VsAiPage() {
@@ -51,6 +52,7 @@ export default function VsAiPage() {
           difficulty,
         }
       : null;
+  const revealResult = useResultReveal(Boolean(result), Boolean(result?.playerWon));
 
   if (showSelect) {
     return (
@@ -103,7 +105,7 @@ export default function VsAiPage() {
         className="magic-play-screen__canvas"
       />
 
-      {result && (
+      {revealResult && result && (
         <VsAiResultModal
           result={result}
           onPlayAgain={() => difficulty && startGame(difficulty)}

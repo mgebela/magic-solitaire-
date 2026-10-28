@@ -4,6 +4,7 @@ import { getPuzzleById, movesRemaining } from '@three-towers/shared';
 import { GuestPlayShell } from '../components/ads/GuestAdSlot';
 import { GameCanvas } from '../components/GameCanvas';
 import { PuzzleResultModal } from '../components/PuzzleResultModal';
+import { useResultReveal } from '../lib/use-result-reveal';
 import { usePuzzleStore } from '../stores/puzzleStore';
 
 export default function PuzzlePlayPage() {
@@ -35,6 +36,8 @@ export default function PuzzlePlayPage() {
     return <Navigate to="/puzzles" replace />;
   }
 
+  const revealResult = useResultReveal(Boolean(lastResult), Boolean(lastResult?.won));
+
   const movesLeft = state?.moveLimit
     ? movesRemaining(state.moveLimit, state.moves.length)
     : puzzle.moveLimit;
@@ -61,7 +64,7 @@ export default function PuzzlePlayPage() {
         className="magic-play-screen__canvas"
       />
 
-      {lastResult && (
+      {revealResult && lastResult && (
         <PuzzleResultModal
           result={lastResult}
           title={puzzle.title}

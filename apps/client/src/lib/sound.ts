@@ -69,9 +69,11 @@ export const sound = {
     tone(148, 0.14, 'triangle', 0.03, 0.04);
   },
   win(): void {
-    tone(523, 0.14, 'triangle', 0.07);
-    tone(659, 0.16, 'triangle', 0.06, 0.12);
-    tone(784, 0.28, 'sine', 0.07, 0.24);
+    tone(523, 0.16, 'triangle', 0.08);
+    tone(659, 0.16, 'triangle', 0.07, 0.1);
+    tone(784, 0.18, 'triangle', 0.07, 0.2);
+    tone(1046, 0.32, 'sine', 0.06, 0.32);
+    tone(1318, 0.4, 'sine', 0.045, 0.46);
   },
   lose(): void {
     tone(330, 0.16, 'sawtooth', 0.04);
