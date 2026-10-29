@@ -122,7 +122,7 @@ export function applyWideLayout(boardHeight: number): void {
   layoutStoneTop = stoneTop;
   layoutWasteScale = stoneHeight >= 156 ? WASTE_SCALE : 1.08;
 
-  const sideMargin = 16;
+  const sideMargin = 58;
   const hStep = (BOARD_WIDTH - sideMargin * 2 - CARD_WIDTH) / 9;
   const bottomY = stoneTop - CARD_HEIGHT - gap;
   const vStep = Math.min(58, Math.max(18, (bottomY - topPad) / 3));

@@ -1341,9 +1341,14 @@ a {
  */
 @media (orientation: landscape) and (max-height: 560px) {
   .magic-play-screen {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
     height: 100dvh;
     max-height: 100dvh;
     min-height: 0;
+    padding-left: max(28px, env(safe-area-inset-left, 0px));
+    padding-right: max(28px, env(safe-area-inset-right, 0px));
   }
 
   .magic-play-screen__canvas,
@@ -2149,11 +2154,11 @@ a {
 /* Landscape phone HUD. Kept last so it wins over the desktop stone rules. */
 @media (orientation: landscape) and (max-height: 560px) {
   .chain-pillar {
-    left: 0.6%;
+    left: 0.35rem;
     top: 1%;
-    height: 22%;
+    height: 16%;
     gap: 0.2rem;
-    padding: 0.2rem 0.28rem;
+    padding: 0.15rem 0.22rem;
   }
 
   .chain-pillar__marks {
@@ -2163,8 +2168,9 @@ a {
   .stone-hud__hint {
     top: auto;
     left: auto;
-    right: 2.2%;
+    right: 16%;
     bottom: 30%;
+    max-width: 46%;
     transform: none;
     padding: 0.18rem 0.55rem;
     font-size: 0.72rem;
@@ -2197,6 +2203,7 @@ a {
   }
 
   .stone-hud__exit {
+    right: 3.2%;
     min-width: 0;
     bottom: 3.2%;
     padding: 0.26rem 0.5rem;
@@ -2204,6 +2211,7 @@ a {
   }
 
   .stone-hud__bar-actions {
+    right: 4%;
     bottom: 18%;
     gap: 0.25rem;
   }
