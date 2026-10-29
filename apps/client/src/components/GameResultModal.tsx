@@ -1,11 +1,13 @@
 import type { GameStats, ScoreBreakdown } from '@three-towers/shared';
 import { GuestAdSlot } from './ads/GuestAdSlot';
 import { formatElapsed, formatMode } from '../lib/format-time';
+import { MAX_RANK, rankFromRelics, useCareerStore } from '../stores/careerStore';
 
 interface GameResultModalProps {
   stats: GameStats;
   persisted: boolean;
   onPlayAgain: () => void;
+  onReplay?: () => void;
   onChangeMode: () => void;
 }
 
@@ -13,9 +15,13 @@ export function GameResultModal({
   stats,
   persisted,
   onPlayAgain,
+  onReplay,
   onChangeMode,
 }: GameResultModalProps) {
   const won = stats.status === 'won';
+  const relics = useCareerStore((s) => s.relics);
+  const rank = rankFromRelics(relics);
+  const peaks = stats.peaksCleared ?? 0;
 
   return (
     <div className="result-shade absolute inset-0 z-20 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
@@ -46,7 +52,14 @@ export function GameResultModal({
           <Stat label="Cards cleared" value={`${stats.cardsCleared} / 28`} />
           <Stat label="Best combo" value={`×${stats.maxCombo || 1}`} />
           <Stat label="Stock left" value={stats.stockRemaining} />
+          <Stat label="Relics" value={`+${peaks}`} />
+          <Stat label="Rank" value={`${rank} / ${MAX_RANK}`} />
         </dl>
+        {won && stats.stockRemaining > 0 && (
+          <p className="mt-3 text-center text-sm text-white/70">
+            Each stock card left is +100.
+          </p>
+        )}
 
         {stats.scoreBreakdown && won && (
           <ScoreBreakdownPanel breakdown={stats.scoreBreakdown} />
@@ -62,6 +75,15 @@ export function GameResultModal({
           >
             Play Again
           </button>
+          {onReplay && (
+            <button
+              type="button"
+              onClick={onReplay}
+              className="game-btn game-btn--secondary flex-1 py-3"
+            >
+              Replay this deal
+            </button>
+          )}
           <button
             type="button"
             onClick={onChangeMode}

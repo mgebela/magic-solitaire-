@@ -18,7 +18,7 @@ import {
 import { ScoreEffectManager } from './score-effects';
 import { WinCelebration } from './win-celebration';
 import { drawMagicTableBackground } from './table-background';
-import { drawTowerOrbs } from './tower-orbs';
+import { createPeakLights, type PeakLights } from './tower-orbs';
 import { CARD_HEIGHT, CARD_WIDTH } from './constants';
 import { sound } from '../lib/sound';
 import {
@@ -82,6 +82,7 @@ export class GameRenderer {
   private tweens = new TweenManager();
   private scoreEffects = new ScoreEffectManager();
   private winCelebration = new WinCelebration();
+  private peakLights: PeakLights | null = null;
   private state: GameState | null = null;
   private hintCardId: CardId | null = null;
   private onCardClick: CardClickHandler | null = null;
@@ -205,6 +206,11 @@ export class GameRenderer {
       if (prev.status === 'playing' && state.status === 'lost') sound.lose();
     }
 
+    this.peakLights?.sync(
+      [0, 1, 2].map((index) => state.tableau[index] === null),
+      state.status === 'lost',
+    );
+
     if (state.status === 'playing' && prev?.status !== 'playing') {
       this.winCelebration.clear();
     }
@@ -220,9 +226,9 @@ export class GameRenderer {
       bg.destroy({ children: true });
       return;
     }
-    const orbs = drawTowerOrbs();
+    this.peakLights = createPeakLights();
     this.root.addChildAt(bg, 0);
-    this.root.addChildAt(orbs, 1);
+    this.root.addChildAt(this.peakLights.root, 1);
 
     const wasteSlot = createWasteSlotGraphic();
     wasteSlot.pivot.set(CARD_WIDTH / 2, CARD_HEIGHT / 2);

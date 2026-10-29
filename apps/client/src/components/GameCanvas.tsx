@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import type { GameState } from '@three-towers/shared';
 import { GameRenderer } from '../renderer';
+import { useCareerStore } from '../stores/careerStore';
 import { MagicGameHud, type RaceLane } from './game/MagicGameHud';
 
 /** Serialize Pixi inits so React StrictMode cannot attach two Applications to one canvas. */
@@ -32,6 +33,10 @@ interface GameCanvasProps {
   exitTo?: string;
   onExit?: () => void;
   className?: string;
+  wildArmed?: boolean;
+  onArmWild?: () => void;
+  onKeepWild?: () => void;
+  onDiscardWild?: () => void;
 }
 
 export function GameCanvas({
@@ -53,6 +58,10 @@ export function GameCanvas({
   exitTo,
   onExit,
   className,
+  wildArmed,
+  onArmWild,
+  onKeepWild,
+  onDiscardWild,
 }: GameCanvasProps) {
   const stageRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
@@ -60,6 +69,9 @@ export function GameCanvas({
   const rendererRef = useRef<GameRenderer | null>(null);
   const prevStateRef = useRef<GameState | null>(null);
   const boardKeyRef = useRef<string>('');
+  const comboRef = useRef(0);
+  const creditGame = useCareerStore((s) => s.creditGame);
+  const noteChain = useCareerStore((s) => s.noteChain);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -125,6 +137,13 @@ export function GameCanvas({
   }, [hintCardId]);
 
   useEffect(() => {
+    if (!state) return;
+    if (state.combo >= 5 && comboRef.current < 5) noteChain(state);
+    comboRef.current = state.combo;
+    if (state.status === 'won' || state.status === 'lost') creditGame(state);
+  }, [state, creditGame, noteChain]);
+
+  useEffect(() => {
     if (!state || !rendererRef.current) return;
     const key = boardSignature(state);
     if (key === boardKeyRef.current) return;
@@ -155,6 +174,10 @@ export function GameCanvas({
             race={race}
             exitTo={exitTo}
             onExit={onExit}
+            wildArmed={wildArmed}
+            onArmWild={onArmWild}
+            onKeepWild={onKeepWild}
+            onDiscardWild={onDiscardWild}
           />
         )}
       </div>

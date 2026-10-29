@@ -16,8 +16,11 @@ interface GameStore {
   timerStartedAt: number | null;
   hintCardId: string | null;
   hintDraw: boolean;
-  startGame: (mode: SinglePlayerMode, accessToken?: string) => Promise<void>;
+  startGame: (mode: SinglePlayerMode, accessToken?: string, seed?: number) => Promise<void>;
   playCard: (cardId: string, accessToken?: string) => Promise<void>;
+  playWild: (cardId: string, accessToken?: string) => Promise<void>;
+  keepWild: (accessToken?: string) => Promise<void>;
+  discardWild: (accessToken?: string) => Promise<void>;
   drawCard: (accessToken?: string) => Promise<void>;
   undoMove: () => void;
   requestHint: () => void;
@@ -30,6 +33,59 @@ interface GameStore {
 function syncElapsed(engine: GameEngine, startedAt: number): GameState {
   const elapsedMs = Date.now() - startedAt;
   return engine.setElapsedMs(elapsedMs);
+}
+
+async function commitMove(
+  set: (partial: Partial<GameStore>) => void,
+  get: () => GameStore,
+  move: Move,
+  accessToken?: string,
+) {
+  const { engine, gameId, timerStartedAt } = get();
+  if (!engine || !timerStartedAt) return;
+
+  const elapsedMs = Date.now() - timerStartedAt;
+
+  try {
+    engine.applyMove(move);
+    engine.setElapsedMs(elapsedMs);
+    set({ state: engine.getState(), error: null, hintCardId: null, hintDraw: false });
+
+    if (gameId && accessToken) {
+      set({ isSyncing: true });
+      try {
+        const response = await gameApi.submitMove(accessToken, gameId, move, elapsedMs);
+        if (!response.accepted || response.state) {
+          const syncedState = response.state ?? (await gameApi.getGame(accessToken, gameId)).state;
+          if (!response.accepted) {
+            set({
+              engine: createEngineForState(
+                syncedState,
+                get().mode ?? (syncedState.mode as SinglePlayerMode),
+                false,
+              ),
+              state: syncedState,
+              error: response.error ?? 'Move rejected by server',
+            });
+          } else if (response.state) {
+            set({
+              engine: createEngineForState(
+                response.state,
+                get().mode ?? (response.state.mode as SinglePlayerMode),
+                false,
+              ),
+              state: response.state,
+            });
+          }
+        }
+      } finally {
+        set({ isSyncing: false });
+      }
+    }
+  } catch (err) {
+    const message = err instanceof InvalidMoveError ? err.message : 'Invalid move';
+    set({ error: message });
+  }
 }
 
 function createEngineForState(
@@ -82,12 +138,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ state: nextState });
   },
 
-  startGame: async (mode, accessToken) => {
+  startGame: async (mode, accessToken, seed) => {
     set({ isStarting: true, error: null, mode, hintCardId: null, hintDraw: false });
 
     try {
       if (accessToken) {
-        const session = await gameApi.createGame(accessToken, { mode });
+        const session = await gameApi.createGame(accessToken, { mode, seed });
         const state = { ...session.state, mode };
         const engine = createEngineForState(state, mode, false);
 
@@ -103,7 +159,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         return;
       }
 
-      const engine = new GameEngine({ mode, allowUndo: true });
+      const engine = new GameEngine({ mode, allowUndo: true, seed });
       const state = engine.init();
 
       set({
@@ -176,6 +232,18 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const message = err instanceof InvalidMoveError ? err.message : 'Invalid move';
       set({ error: message });
     }
+  },
+
+  playWild: async (cardId, accessToken) => {
+    await commitMove(set, get, { type: 'play', cardId: `~wild:${cardId}`, timestamp: Date.now() }, accessToken);
+  },
+
+  keepWild: async (accessToken) => {
+    await commitMove(set, get, { type: 'play', cardId: '~wild-keep', timestamp: Date.now() }, accessToken);
+  },
+
+  discardWild: async (accessToken) => {
+    await commitMove(set, get, { type: 'play', cardId: '~wild-discard', timestamp: Date.now() }, accessToken);
   },
 
   drawCard: async (accessToken) => {
@@ -255,11 +323,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return;
     }
 
-    if (hint.type === 'draw') {
-      set({ hintCardId: null, hintDraw: true });
+    if (hint.type === 'play') {
+      set({ hintCardId: hint.cardId, hintDraw: false });
       return;
     }
 
-    set({ hintCardId: hint.cardId, hintDraw: false });
+    set({ hintCardId: null, hintDraw: hint.type === 'draw' });
   },
 }));

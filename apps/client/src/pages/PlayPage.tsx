@@ -15,6 +15,7 @@ export default function PlayPage() {
   const { tokens } = useAuthStore();
   const accessToken = tokens?.accessToken;
   const [isPersonalBest, setIsPersonalBest] = useState(false);
+  const [wildArmed, setWildArmed] = useState(false);
 
   const {
     state,
@@ -29,6 +30,9 @@ export default function PlayPage() {
     hintDraw,
     startGame,
     playCard,
+    playWild,
+    keepWild,
+    discardWild,
     drawCard,
     undoMove,
     requestHint,
@@ -37,6 +41,10 @@ export default function PlayPage() {
     resetToModeSelect,
     clearError,
   } = useGameStore();
+
+  useEffect(() => {
+    if (!state?.wildHeld) setWildArmed(false);
+  }, [state?.wildHeld]);
 
   useEffect(() => {
     if (!state || state.status !== 'playing') return;
@@ -90,7 +98,21 @@ export default function PlayPage() {
         immersive
         onCardClick={(cardId) => {
           clearHint();
-          playCard(cardId, accessToken);
+          if (wildArmed && state?.wildHeld) {
+            setWildArmed(false);
+            void playWild(cardId, accessToken);
+            return;
+          }
+          void playCard(cardId, accessToken);
+        }}
+        wildArmed={wildArmed}
+        onArmWild={() => setWildArmed((armed) => !armed)}
+        onKeepWild={() => {
+          void keepWild(accessToken);
+        }}
+        onDiscardWild={() => {
+          setWildArmed(false);
+          void discardWild(accessToken);
         }}
         onDraw={() => drawCard(accessToken)}
         hintCardId={hintCardId}
@@ -109,6 +131,11 @@ export default function PlayPage() {
           stats={stats}
           persisted={persisted}
           onPlayAgain={() => mode && startGame(mode, accessToken)}
+          onReplay={
+            mode && state
+              ? () => startGame(mode, accessToken, state.seed)
+              : undefined
+          }
           onChangeMode={resetToModeSelect}
         />
       )}

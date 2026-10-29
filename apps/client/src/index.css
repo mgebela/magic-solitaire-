@@ -420,6 +420,120 @@ a {
   color: #e3efc0;
 }
 
+.goal-row {
+  margin: 0 0 1.6rem;
+}
+
+.goal-row__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0 0 0.7rem;
+}
+
+.goal-row__head h2 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #e3efc0;
+}
+
+.goal-row__head p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.92rem;
+}
+
+.goal-row__head span {
+  margin-left: 0.45rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.goal-row__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.goal-card {
+  padding: 0.85rem 0.9rem 0.75rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(8, 10, 8, 0.72);
+}
+
+.goal-card header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  align-items: baseline;
+}
+
+.goal-card h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: #fff;
+}
+
+.goal-card header span,
+.goal-card p,
+.goal-card strong {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.82rem;
+}
+
+.goal-card p {
+  margin-top: 0.25rem;
+}
+
+.goal-card strong {
+  display: block;
+  margin-top: 0.4rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.goal-card.is-earned h3,
+.goal-card.is-earned p,
+.goal-card.is-earned strong {
+  color: var(--color-gold);
+}
+
+.goal-card__track {
+  height: 0.35rem;
+  margin-top: 0.55rem;
+  border-radius: 999px;
+  background: #161614;
+  overflow: hidden;
+}
+
+.goal-card__track div {
+  height: 100%;
+  background: #20ee52;
+}
+
+.rank-steps {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.rank-steps span {
+  flex: 1;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: #161614;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.rank-steps span.is-on {
+  background: #d6ef4a;
+  border-color: #d6ef4a;
+}
+
 .home-footer {
   margin: 2.25rem 0 0;
   text-align: center;
@@ -458,7 +572,8 @@ a {
     gap: 1.5rem;
   }
 
-  .home-modes {
+  .home-modes,
+  .goal-row__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -1516,6 +1631,117 @@ a {
 
 .stone-hud__hint--start {
   color: #fff;
+}
+
+.chain-pillar {
+  position: absolute;
+  left: 3.4%;
+  top: 11%;
+  height: 34%;
+  display: flex;
+  align-items: stretch;
+  gap: 0.35rem;
+  z-index: 4;
+  padding: 0.45rem 0.4rem 0.45rem 0.45rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(8, 12, 8, 0.88);
+  pointer-events: none;
+}
+
+.chain-pillar.is-dim {
+  opacity: 0.28;
+}
+
+.chain-pillar__track {
+  width: 0.7rem;
+  border-radius: 999px;
+  background: #161614;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.chain-pillar__fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #20ee52;
+}
+
+.chain-pillar__marks {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-family: var(--font-logo);
+  font-size: 0.95rem;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.chain-pillar__marks span.is-on {
+  color: #d6ef4a;
+}
+
+.wild-banner {
+  position: absolute;
+  top: 18%;
+  left: 50%;
+  z-index: 8;
+  width: min(22rem, 70%);
+  transform: translateX(-50%);
+  padding: 0.9rem 1rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(214, 239, 74, 0.45);
+  background: rgba(8, 12, 8, 0.94);
+  pointer-events: auto;
+  text-align: center;
+}
+
+.wild-banner p {
+  margin: 0;
+  font-family: var(--font-logo);
+  font-size: 1.35rem;
+  color: #d6ef4a;
+}
+
+.wild-banner span {
+  display: block;
+  margin: 0.35rem 0 0.75rem;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.92rem;
+}
+
+.wild-banner div {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.wild-banner button {
+  flex: 1;
+}
+
+.wild-token {
+  position: absolute;
+  left: 14.2%;
+  top: 66%;
+  z-index: 7;
+  pointer-events: auto;
+  padding: 0.35rem 0.7rem;
+  border-radius: 0.7rem;
+  border: 1px solid rgba(214, 239, 74, 0.55);
+  background: #121410;
+  color: #d6ef4a;
+  font-family: var(--font-logo);
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.wild-token.is-armed {
+  background: #20ee52;
+  color: #10140f;
+  border-color: #20ee52;
 }
 
 .stone-hud__waste-badge {

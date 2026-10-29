@@ -58,3 +58,18 @@ export function getPlayableCards(
 export function hasAnyPlay(tableau: Tableau, uncovered: CardId[], waste: Card | null): boolean {
   return getPlayableCards(tableau, uncovered, waste).length > 0;
 }
+
+/** Peak tops. A peak is clear once its top card is gone — the cards under it are already gone. */
+export const PEAK_TOP_INDICES = [0, 1, 2] as const;
+
+export function clearedPeaks(tableau: Tableau): [boolean, boolean, boolean] {
+  return [
+    tableau[0] === null,
+    tableau[1] === null,
+    tableau[2] === null,
+  ];
+}
+
+export function clearedPeakCount(tableau: Tableau): number {
+  return clearedPeaks(tableau).filter(Boolean).length;
+}

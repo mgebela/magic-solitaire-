@@ -2,23 +2,39 @@ import { Container, Graphics } from 'pixi.js';
 import { PEAK_INDICES, TABLEAU_POSITIONS } from './layout-positions';
 import { CARD_WIDTH } from './constants';
 
+export interface PeakLights {
+  root: Container;
+  sync(cleared: readonly boolean[], lost: boolean): void;
+}
+
 /**
- * Top-down square ziggurat with a recessed neon orb — Space Towers peaks.
+ * Stone ziggurats over the three peaks. The neon well stays dim until that peak clears.
  */
-export function drawTowerOrbs(): Container {
-  const orbs = new Container();
+export function createPeakLights(): PeakLights {
+  const root = new Container();
+  const glows: Container[] = [];
 
   for (const index of PEAK_INDICES) {
     const pos = TABLEAU_POSITIONS[index];
-    const cx = pos.x + CARD_WIDTH / 2;
-    orbs.addChild(drawZiggurat(cx, pos.y));
+    const built = drawZiggurat(pos.x + CARD_WIDTH / 2, pos.y);
+    root.addChild(built.root);
+    glows.push(built.glow);
   }
 
-  return orbs;
+  return {
+    root,
+    sync(cleared, lost) {
+      glows.forEach((glow, index) => {
+        const lit = Boolean(cleared[index]) && !lost;
+        glow.alpha = lost ? 0.08 : lit ? 1 : 0.28;
+      });
+    },
+  };
 }
 
-function drawZiggurat(cx: number, peakY: number): Container {
+function drawZiggurat(cx: number, peakY: number): { root: Container; glow: Container } {
   const root = new Container();
+  const glow = new Container();
   const size = 90;
   const gap = 7;
   const pyramidBottom = peakY - gap;
@@ -29,14 +45,14 @@ function drawZiggurat(cx: number, peakY: number): Container {
   bloom.fill({ color: 0x2cff55, alpha: 0.15 });
   bloom.circle(cx, cy, 26);
   bloom.fill({ color: 0x6dff45, alpha: 0.2 });
-  root.addChild(bloom);
+  glow.addChild(bloom);
 
   const sideGlow = new Graphics();
   sideGlow.ellipse(cx - size / 2 - 1, pyramidBottom + 5, 4, 10);
   sideGlow.fill({ color: 0x3dff66, alpha: 0.9 });
   sideGlow.ellipse(cx + size / 2 + 1, pyramidBottom + 5, 4, 10);
   sideGlow.fill({ color: 0x3dff66, alpha: 0.9 });
-  root.addChild(sideGlow);
+  glow.addChild(sideGlow);
 
   addStoneSlab(root, cx - 52, peakY - 3, 104, 24);
 
@@ -63,16 +79,18 @@ function drawZiggurat(cx: number, peakY: number): Container {
   const orbGlow = new Graphics();
   orbGlow.circle(cx, cy, 15);
   orbGlow.fill({ color: 0x33ff66, alpha: 0.42 });
-  root.addChild(orbGlow);
+  glow.addChild(orbGlow);
 
   const orb = new Graphics();
   orb.circle(cx, cy, 8.2);
   orb.fill({ color: 0x20ee52 });
   orb.circle(cx - 1.6, cy - 2, 3);
   orb.fill({ color: 0xf4ffe8, alpha: 0.96 });
-  root.addChild(orb);
+  glow.addChild(orb);
+  glow.alpha = 0.28;
+  root.addChild(glow);
 
-  return root;
+  return { root, glow };
 }
 
 function addStoneSlab(parent: Container, x: number, y: number, w: number, h: number): void {

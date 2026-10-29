@@ -7,6 +7,7 @@ import { LeaderboardPanel } from '../components/LeaderboardPanel';
 import { GameButton } from '../components/ui/GameButton';
 import { ModeMark } from '../components/ui/ModeMark';
 import { ModeTile } from '../components/ui/ModeTile';
+import { WeeklyGoals } from '../components/WeeklyGoals';
 import { useAuthStore } from '../stores/authStore';
 import { useGameStore } from '../stores/gameStore';
 
@@ -170,6 +171,8 @@ export default function HomePage() {
           </div>
 
           {dealError && <p className="home-deal-error">{dealError}</p>}
+
+          <WeeklyGoals />
 
           <p className="home-rule">Ace wraps King. One pass through the stock.</p>
 

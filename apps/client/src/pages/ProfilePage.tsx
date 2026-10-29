@@ -7,7 +7,9 @@ import { StatsCard } from '../components/StatsCard';
 import { AppBackground } from '../components/layout/AppBackground';
 import { formatDuration, formatWinRate } from '../lib/format-time';
 import { getPlayerStatistics } from '../lib/profile-api';
+import { RankSteps } from '../components/RankSteps';
 import { useAuthStore } from '../stores/authStore';
+import { MAX_RANK, rankFromRelics, useCareerStore } from '../stores/careerStore';
 
 export default function ProfilePage() {
   const { user, tokens } = useAuthStore();
@@ -16,6 +18,9 @@ export default function ProfilePage() {
   const [stats, setStats] = useState<PlayerStatisticsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const relics = useCareerStore((s) => s.relics);
+  const badges = useCareerStore((s) => s.badges);
+  const rank = rankFromRelics(relics);
 
   useEffect(() => {
     if (!accessToken) {
@@ -54,6 +59,17 @@ export default function ProfilePage() {
           <p className="page-subtitle">{user.email}</p>
           <p className="mt-2 text-sm text-white/40">Member since {memberSince}</p>
         </header>
+
+        <section className="lobby-panel mb-8">
+          <h2 className="mb-2 text-lg font-semibold text-white">Stone rank</h2>
+          <p className="mb-4 text-sm text-white/60">
+            Rank {rank} of {MAX_RANK} · {relics} relics. One relic for each peak you clear.
+          </p>
+          <RankSteps rank={rank} />
+          {badges.length > 0 && (
+            <p className="mt-4 text-sm text-[var(--color-gold)]">{badges.join(' · ')}</p>
+          )}
+        </section>
 
         {loading && <p className="text-center text-white/50">Loading statistics…</p>}
 

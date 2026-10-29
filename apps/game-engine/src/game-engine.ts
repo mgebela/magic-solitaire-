@@ -17,6 +17,7 @@ import {
   canPlayCard,
   computeUncovered,
   countRemainingTableauCards,
+  clearedPeakCount,
   findTableauIndex,
   getPlayableCards,
   hasAnyPlay,
@@ -29,6 +30,41 @@ import {
 import { computePuzzleStars } from './puzzle';
 
 export const ENGINE_VERSION = '1.0.0';
+
+/** Encoded into a normal play so saved games can replay a wild without a new move type. */
+export const WILD_KEEP_CARD = '~wild-keep';
+export const WILD_DISCARD_CARD = '~wild-discard';
+export const WILD_PLAY_PREFIX = '~wild:';
+
+export function normalizeMove(move: Move): Move {
+  if (move.type !== 'play' || !move.cardId) return move;
+  if (move.cardId === WILD_KEEP_CARD) {
+    return { type: 'keep-wild', timestamp: move.timestamp };
+  }
+  if (move.cardId === WILD_DISCARD_CARD) {
+    return { type: 'discard-wild', timestamp: move.timestamp };
+  }
+  if (move.cardId.startsWith(WILD_PLAY_PREFIX)) {
+    return {
+      type: 'play',
+      cardId: move.cardId.slice(WILD_PLAY_PREFIX.length),
+      timestamp: move.timestamp,
+      wild: true,
+    };
+  }
+  return move;
+}
+
+/** A cleared peak in Relaxed is offering one wild the player has not taken or left. */
+export function wildOfferOpen(state: GameState): boolean {
+  return (
+    state.status === 'playing' &&
+    state.mode === 'relaxed' &&
+    !state.wildHeld &&
+    !state.wildDeclined &&
+    clearedPeakCount(state.tableau) > 0
+  );
+}
 
 /**
  * Pure TypeScript TriPeaks game engine.
@@ -59,12 +95,17 @@ export class GameEngine {
 
   applyMove(move: Move): GameState {
     this.assertGameActive();
+    const normalized = normalizeMove(move);
     this.pushHistory();
 
-    if (move.type === 'play') {
-      this.applyPlayMove(move.cardId, move.timestamp);
+    if (normalized.type === 'play') {
+      this.applyPlayMove(normalized.cardId, normalized.timestamp, Boolean(normalized.wild));
+    } else if (normalized.type === 'draw') {
+      this.applyDrawMove(normalized.timestamp);
+    } else if (normalized.type === 'keep-wild') {
+      this.applyKeepWild(normalized.timestamp);
     } else {
-      this.applyDrawMove(move.timestamp);
+      this.applyDiscardWild(normalized.timestamp);
     }
 
     this.resolveEndState();
@@ -161,6 +202,8 @@ export class GameEngine {
       moveLimit: this.config.moveLimit,
       puzzleId: this.config.puzzleId,
       undoUsed: false,
+      wildHeld: false,
+      wildDeclined: false,
     };
 
     return state;
@@ -181,8 +224,10 @@ export class GameEngine {
     return card;
   }
 
-  private applyPlayMove(cardId: CardId, timestamp: number): void {
-    if (!this.canPlay(cardId)) {
+  private applyPlayMove(cardId: CardId, timestamp: number, wild = false): void {
+    if (wild) {
+      this.assertWildPlay(cardId);
+    } else if (!this.canPlay(cardId)) {
       throw new InvalidMoveError(`Cannot play card: ${cardId}`);
     }
 
@@ -203,7 +248,49 @@ export class GameEngine {
       uncovered: computeUncovered(tableau),
       combo,
       score: this.state.score + scoreDelta,
-      moves: [...this.state.moves, { type: 'play', cardId, timestamp }],
+      moves: [...this.state.moves, { type: 'play', cardId, timestamp, ...(wild ? { wild: true } : {}) }],
+      ...(wild ? { wildHeld: false, wildDeclined: true } : {}),
+    };
+  }
+
+  private assertWildPlay(cardId: CardId): void {
+    if (this.state.mode !== 'relaxed') {
+      throw new InvalidMoveError('Wilds are only in Relaxed');
+    }
+    if (this.state.wildDeclined) {
+      throw new InvalidMoveError('The wild is already gone');
+    }
+    if (!this.state.wildHeld && clearedPeakCount(this.state.tableau) === 0) {
+      throw new InvalidMoveError('Clear a peak to earn a wild');
+    }
+    if (!this.state.uncovered.includes(cardId)) {
+      throw new InvalidMoveError(`Cannot play card: ${cardId}`);
+    }
+  }
+
+  private applyKeepWild(timestamp: number): void {
+    if (!wildOfferOpen(this.state)) {
+      throw new InvalidMoveError('No wild to keep');
+    }
+    this.state = {
+      ...this.state,
+      wildHeld: true,
+      moves: [...this.state.moves, { type: 'keep-wild', timestamp }],
+    };
+  }
+
+  private applyDiscardWild(timestamp: number): void {
+    if (this.state.mode !== 'relaxed' || this.state.wildDeclined) {
+      throw new InvalidMoveError('No wild to leave');
+    }
+    if (!this.state.wildHeld && clearedPeakCount(this.state.tableau) === 0) {
+      throw new InvalidMoveError('No wild to leave');
+    }
+    this.state = {
+      ...this.state,
+      wildHeld: false,
+      wildDeclined: true,
+      moves: [...this.state.moves, { type: 'discard-wild', timestamp }],
     };
   }
 
@@ -236,9 +323,13 @@ export class GameEngine {
       return;
     }
 
+    const wildCanSave =
+      Boolean(this.state.wildHeld) && this.state.uncovered.length > 0;
     if (
       this.state.stock.length === 0 &&
-      !hasAnyPlay(this.state.tableau, this.state.uncovered, this.state.waste)
+      !hasAnyPlay(this.state.tableau, this.state.uncovered, this.state.waste) &&
+      !wildCanSave &&
+      !wildOfferOpen(this.state)
     ) {
       this.state = { ...this.state, status: 'lost' };
       this.finalizeScoring();
@@ -327,6 +418,8 @@ export {
   canPlayCard,
   computeUncovered,
   countRemainingTableauCards,
+  clearedPeakCount,
+  clearedPeaks,
   findTableauIndex,
   getPlayableCards,
   hasAnyPlay,

@@ -31,6 +31,7 @@ export function computeCardScoreParts(moves: Move[]): {
   let comboBonus = 0;
 
   for (const move of moves) {
+    if (move.type === 'keep-wild' || move.type === 'discard-wild') continue;
     if (move.type !== 'play') {
       combo = 0;
       continue;
@@ -53,6 +54,7 @@ export function computeFastMoveBonus(moves: Move[]): number {
   let lastPlayTimestamp: number | null = null;
 
   for (const move of moves) {
+    if (move.type === 'keep-wild' || move.type === 'discard-wild') continue;
     if (move.type !== 'play') {
       lastPlayTimestamp = null;
       continue;

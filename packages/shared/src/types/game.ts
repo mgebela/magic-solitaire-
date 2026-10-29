@@ -19,6 +19,8 @@ export interface PlayMove {
   type: 'play';
   cardId: CardId;
   timestamp: number;
+  /** Relaxed only. Plays any open card and spends the saved wild. */
+  wild?: boolean;
 }
 
 export interface DrawMove {
@@ -26,7 +28,17 @@ export interface DrawMove {
   timestamp: number;
 }
 
-export type Move = PlayMove | DrawMove;
+export interface KeepWildMove {
+  type: 'keep-wild';
+  timestamp: number;
+}
+
+export interface DiscardWildMove {
+  type: 'discard-wild';
+  timestamp: number;
+}
+
+export type Move = PlayMove | DrawMove | KeepWildMove | DiscardWildMove;
 
 /**
  * TriPeaks tableau: 28 positions (indices 0–27) in LAYOUT_VERSION 2 (3–6–9–10).
@@ -73,6 +85,10 @@ export interface GameState {
   starsEarned?: 0 | 1 | 2 | 3;
   /** True after the player uses undo (forfeits no-undo bonus). */
   undoUsed?: boolean;
+  /** Relaxed: a wild from a cleared peak is saved and not yet played. */
+  wildHeld?: boolean;
+  /** Relaxed: the wild was left behind or already played. */
+  wildDeclined?: boolean;
 }
 
 export interface ScoreBreakdown {

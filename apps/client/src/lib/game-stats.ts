@@ -1,6 +1,6 @@
 import type { GameState, GameStats } from '@three-towers/shared';
 import { TRIPEAKS_TABLEAU_CARD_COUNT } from '@three-towers/shared';
-import { computeScoreBreakdown } from '@three-towers/game-engine';
+import { clearedPeakCount, computeScoreBreakdown } from '@three-towers/game-engine';
 
 export function computeGameStats(
   state: GameState,
@@ -13,7 +13,7 @@ export function computeGameStats(
     let combo = 1;
     for (let i = index - 1; i >= 0; i--) {
       if (moves[i].type === 'play') combo++;
-      else break;
+      else if (moves[i].type === 'draw') break;
     }
 
     return Math.max(max, combo);
@@ -36,6 +36,8 @@ export function computeGameStats(
     mode: state.mode,
     scoreBreakdown,
     isPersonalBest: options?.isPersonalBest,
+    seed: state.seed,
+    peaksCleared: clearedPeakCount(state.tableau),
   };
 }
 

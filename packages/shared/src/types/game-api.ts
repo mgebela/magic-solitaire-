@@ -41,6 +41,9 @@ export interface GameStats {
   mode: GameMode;
   scoreBreakdown?: ScoreBreakdown;
   isPersonalBest?: boolean;
+  seed?: number;
+  /** Peak tops removed this deal. Each one is a relic. */
+  peaksCleared?: number;
 }
 
 export interface LeaderboardEntry {
