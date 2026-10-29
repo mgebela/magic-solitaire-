@@ -71,15 +71,15 @@ export function buildTableauPositions(): CardPosition[] {
 export const TABLEAU_POSITIONS = buildTableauPositions();
 
 const DESKTOP_TABLEAU = TABLEAU_POSITIONS.map((pos) => ({ ...pos }));
-const DESKTOP_STOCK = { x: 138, y: STONE_PANEL_TOP + 32, layer: 20 };
+const DESKTOP_STOCK = { x: 138, y: STONE_PANEL_TOP, layer: 20 };
 const DESKTOP_WASTE = {
   x: 138 + CARD_WIDTH + 36,
-  y: STONE_PANEL_TOP + 32,
+  y: STONE_PANEL_TOP,
   layer: 21,
 };
 const DESKTOP_FOUNDATION = {
   x: 138 + (CARD_WIDTH + 14) * 2,
-  y: STONE_PANEL_TOP + 32,
+  y: STONE_PANEL_TOP,
   layer: 20,
 };
 
@@ -166,8 +166,8 @@ export function applyWideLayout(boardHeight: number): void {
   });
 }
 
-/** Stock and waste sit on the limestone slab, not on the moss above it. */
-const PANEL_CARD_Y = STONE_PANEL_TOP + 32;
+/** Stock and waste sit on the limestone, with room under the larger waste card. */
+const PANEL_CARD_Y = STONE_PANEL_TOP;
 
 /** Waste is the match target, so it draws larger than the peak cards. */
 export const WASTE_SCALE = 1.26;
