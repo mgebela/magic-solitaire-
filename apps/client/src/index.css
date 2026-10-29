@@ -1017,8 +1017,9 @@ a {
   width: 100%;
   border-radius: 0.8rem;
   border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(0, 0, 0, 0.72);
+  background: #121410;
   color: #fff;
+  color-scheme: dark;
   outline: none;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
@@ -1028,6 +1029,30 @@ a {
   box-shadow:
     0 0 0 3px rgba(109, 255, 69, 0.16),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.stone-input:-webkit-autofill,
+.stone-input:-webkit-autofill:hover,
+.stone-input:-webkit-autofill:active {
+  -webkit-text-fill-color: #fff;
+  caret-color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 0 0 1000px #121410 inset;
+  transition: background-color 99999s ease-out;
+}
+
+.stone-input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #fff;
+  caret-color: #fff;
+  border-color: rgba(109, 255, 69, 0.55);
+  box-shadow:
+    0 0 0 3px rgba(109, 255, 69, 0.16),
+    0 0 0 1000px #121410 inset;
+}
+
+.stone-input:autofill {
+  -webkit-text-fill-color: #fff;
+  box-shadow: 0 0 0 1000px #121410 inset;
 }
 
 .stat-cell {
