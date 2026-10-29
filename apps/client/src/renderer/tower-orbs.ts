@@ -14,9 +14,19 @@ export function createPeakLights(): PeakLights {
   const root = new Container();
   const glows: Container[] = [];
 
+  root.sortableChildren = true;
+
   for (const index of PEAK_INDICES) {
     const pos = TABLEAU_POSITIONS[index];
-    const built = drawZiggurat(pos.x + CARD_WIDTH / 2, pos.y);
+    const cx = pos.x + CARD_WIDTH / 2;
+    const built = drawZiggurat(cx, pos.y);
+    // A landscape board starts the peaks at the top edge, so shrink the orb onto the peak.
+    if (pos.y < 80) {
+      built.root.pivot.set(cx, pos.y);
+      built.root.position.set(cx, 48);
+      built.root.scale.set(0.42);
+      built.root.zIndex = 2;
+    }
     root.addChild(built.root);
     glows.push(built.glow);
   }

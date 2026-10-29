@@ -2,6 +2,7 @@ import {
   Application,
   Container,
   Rectangle,
+  Sprite,
   type FederatedPointerEvent,
 } from 'pixi.js';
 import type { Card, CardId, GameState } from '@three-towers/shared';
@@ -22,12 +23,18 @@ import { createPeakLights, type PeakLights } from './tower-orbs';
 import { CARD_HEIGHT, CARD_WIDTH } from './constants';
 import { sound } from '../lib/sound';
 import {
+  applyDesktopLayout,
+  applyWideLayout,
+  BOARD_ASPECT,
   BOARD_HEIGHT,
   BOARD_WIDTH,
+  layoutStoneTop,
+  layoutWasteScale,
+  overlayPercents,
   STOCK_POSITION,
+  STONE_PANEL_TOP,
   TABLEAU_POSITIONS,
   WASTE_POSITION,
-  WASTE_SCALE,
   type CardPosition,
 } from './layout-positions';
 
@@ -83,6 +90,10 @@ export class GameRenderer {
   private scoreEffects = new ScoreEffectManager();
   private winCelebration = new WinCelebration();
   private peakLights: PeakLights | null = null;
+  private tableSprite: Sprite | null = null;
+  private wasteSlot: Container | null = null;
+  private layoutWide = false;
+  private fitH = BOARD_HEIGHT;
   private state: GameState | null = null;
   private hintCardId: CardId | null = null;
   private onCardClick: CardClickHandler | null = null;
@@ -123,7 +134,9 @@ export class GameRenderer {
     this.tableauLayer.sortableChildren = true;
     this.pilesLayer.sortableChildren = true;
     this.overlayLayer.sortableChildren = true;
-    this.root.addChild(this.tableauLayer, this.pilesLayer, this.overlayLayer);
+    this.root.addChild(this.tableauLayer);
+    if (this.peakLights) this.root.addChild(this.peakLights.root);
+    this.root.addChild(this.pilesLayer, this.overlayLayer);
     this.app.stage.addChild(this.root);
 
     this.app.ticker.add(() => {
@@ -175,12 +188,35 @@ export class GameRenderer {
   }
 
   resize(width: number, height: number): void {
-    if (!this.app || this.destroyed || !this.ready) return;
-    const scale = Math.min(width / BOARD_WIDTH, height / BOARD_HEIGHT);
-    this.root.scale.set(scale);
-    this.root.x = (width - BOARD_WIDTH * scale) / 2;
-    this.root.y = (height - BOARD_HEIGHT * scale) / 2;
+    if (!this.app || this.destroyed || !this.ready || width < 2 || height < 2) return;
+    const wide = width / height > BOARD_ASPECT + 0.05;
+    if (wide) {
+      const fitH = (height / width) * BOARD_WIDTH;
+      if (!this.layoutWide || Math.abs(this.fitH - fitH) > 3) {
+        applyWideLayout(fitH);
+        this.fitH = fitH;
+        this.rebuildPeaks();
+      }
+      this.layoutWide = true;
+      const scale = width / BOARD_WIDTH;
+      this.root.scale.set(scale);
+      this.root.position.set(0, 0);
+    } else {
+      if (this.layoutWide) {
+        applyDesktopLayout();
+        this.fitH = BOARD_HEIGHT;
+        this.rebuildPeaks();
+      }
+      this.layoutWide = false;
+      const scale = Math.min(width / BOARD_WIDTH, height / BOARD_HEIGHT);
+      this.root.scale.set(scale);
+      this.root.x = (width - BOARD_WIDTH * scale) / 2;
+      this.root.y = (height - BOARD_HEIGHT * scale) / 2;
+    }
+    this.placeTable();
+    this.repositionPieces();
     this.app.renderer.resize(width, height);
+    this.publishOverlay();
   }
 
   /** Full sync from a new GameState snapshot. */
@@ -226,19 +262,76 @@ export class GameRenderer {
       bg.destroy({ children: true });
       return;
     }
+    const sprite = bg.children[0];
+    this.tableSprite = sprite instanceof Sprite ? sprite : null;
     this.peakLights = createPeakLights();
     this.root.addChildAt(bg, 0);
     this.root.addChildAt(this.peakLights.root, 1);
 
     const wasteSlot = createWasteSlotGraphic();
     wasteSlot.pivot.set(CARD_WIDTH / 2, CARD_HEIGHT / 2);
-    wasteSlot.scale.set(WASTE_SCALE);
+    wasteSlot.scale.set(layoutWasteScale);
     wasteSlot.position.set(
       WASTE_POSITION.x + CARD_WIDTH / 2,
       WASTE_POSITION.y + CARD_HEIGHT / 2,
     );
     wasteSlot.zIndex = WASTE_POSITION.layer;
+    this.wasteSlot = wasteSlot;
     this.pilesLayer.addChild(wasteSlot);
+  }
+
+  /** Shift the photo so its limestone lip stays under the cards. */
+  private placeTable(): void {
+    if (!this.tableSprite) return;
+    this.tableSprite.y = layoutStoneTop - STONE_PANEL_TOP;
+  }
+
+  private rebuildPeaks(): void {
+    if (this.peakLights) {
+      this.root.removeChild(this.peakLights.root);
+      this.peakLights.root.destroy({ children: true });
+    }
+    this.peakLights = createPeakLights();
+    const pilesIndex = this.root.getChildIndex(this.pilesLayer);
+    this.root.addChildAt(this.peakLights.root, pilesIndex);
+    if (!this.state) return;
+    this.peakLights.sync(
+      [0, 1, 2].map((index) => this.state?.tableau[index] === null),
+      this.state.status === 'lost',
+    );
+  }
+
+  private repositionPieces(): void {
+    for (const entry of this.sprites.values()) {
+      if (!isLive(entry.container)) continue;
+      if (entry.slot === 'tableau' && entry.tableauIndex != null) {
+        this.place(entry.container, TABLEAU_POSITIONS[entry.tableauIndex]);
+      } else if (entry.slot === 'stock') {
+        this.place(entry.container, STOCK_POSITION);
+      } else if (entry.slot === 'waste') {
+        this.place(entry.container, WASTE_POSITION);
+        entry.motion.scale.set(layoutWasteScale);
+      }
+    }
+    if (this.wasteSlot && isLive(this.wasteSlot)) {
+      this.wasteSlot.scale.set(layoutWasteScale);
+      this.wasteSlot.position.set(
+        WASTE_POSITION.x + CARD_WIDTH / 2,
+        WASTE_POSITION.y + CARD_HEIGHT / 2,
+      );
+    }
+  }
+
+  private publishOverlay(): void {
+    const frame = this.app?.canvas.parentElement;
+    if (!frame) return;
+    const metrics = overlayPercents();
+    frame.style.setProperty('--stock-left', metrics.stockLeft);
+    frame.style.setProperty('--stock-top', metrics.stockTop);
+    frame.style.setProperty('--stock-w', metrics.stockW);
+    frame.style.setProperty('--stock-h', metrics.stockH);
+    frame.style.setProperty('--waste-badge-left', metrics.wasteLeft);
+    frame.style.setProperty('--waste-badge-top', metrics.wasteTop);
   }
 
   private place(container: Container, pos: CardPosition): void {
@@ -407,7 +500,7 @@ export class GameRenderer {
     }
 
     this.place(entry.container, WASTE_POSITION);
-    entry.motion.scale.set(WASTE_SCALE);
+    entry.motion.scale.set(layoutWasteScale);
   }
 
   private syncStock(state: GameState): void {
@@ -550,7 +643,7 @@ export class GameRenderer {
     const to = { x: WASTE_POSITION.x, y: WASTE_POSITION.y };
     const spin = from.x < to.x ? 0.18 : -0.18;
 
-    this.animateArc(entry, from, to, 340, spin, WASTE_SCALE, () => {
+    this.animateArc(entry, from, to, 340, spin, layoutWasteScale, () => {
       if (this.wasteFlyer !== container) {
         if (isLive(container)) container.destroy({ children: true });
         return;
@@ -601,7 +694,7 @@ export class GameRenderer {
       return;
     }
     entry.motion.rotation = 0;
-    entry.motion.scale.set(WASTE_SCALE);
+    entry.motion.scale.set(layoutWasteScale);
     this.pilesLayer.addChild(container);
     this.place(container, WASTE_POSITION);
     entry.cardId = cardId;
@@ -614,12 +707,12 @@ export class GameRenderer {
         140,
         (t) => {
           if (!isLive(entry.motion)) return;
-          const base = WASTE_SCALE;
+          const base = layoutWasteScale;
           const squash = base + Math.sin(t * Math.PI) * 0.06;
           entry.motion.scale.set(base + (1 - t) * 0.04, squash);
         },
         () => {
-          if (isLive(entry.motion)) entry.motion.scale.set(WASTE_SCALE);
+          if (isLive(entry.motion)) entry.motion.scale.set(layoutWasteScale);
         },
         easeOutBack,
       ),

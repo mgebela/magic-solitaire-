@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { TRIPEAKS_TABLEAU_CARD_COUNT, type GameState } from '@three-towers/shared';
 import { cardPointsForCombo, getPlayableCards, wildOfferOpen } from '@three-towers/game-engine';
 import { sound } from '../../lib/sound';
-import { BOARD_ASPECT, STOCK_HIT_STYLE, WASTE_BADGE_STYLE } from '../../renderer/layout-positions';
 
 const RANK_FACE = ['', 'A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
 
@@ -116,7 +115,7 @@ export function MagicGameHud({
   const chainMarks = [5, 4, 3, 2];
 
   return (
-    <div className="stone-hud" style={{ aspectRatio: String(BOARD_ASPECT) }}>
+    <div className="stone-hud">
       {showWin && (
         <div className="win-banner" role="status">
           <p>YOU WIN</p>
@@ -187,7 +186,6 @@ export function MagicGameHud({
       {state.waste && state.status === 'playing' && (
         <div
           className={`stone-hud__waste-badge ${comboHeat ? `stone-hud__waste-badge--${comboHeat}` : ''}`}
-          style={WASTE_BADGE_STYLE}
         >
           {combo >= 1 && (
             <span key={comboPop} className="stone-hud__waste-chain">
@@ -227,7 +225,6 @@ export function MagicGameHud({
       <button
         type="button"
         className="stone-hud__draw-hit"
-        style={STOCK_HIT_STYLE}
         onClick={onDraw}
         disabled={drawDisabled}
         aria-label={`Draw card, ${state.stock.length} remaining`}
