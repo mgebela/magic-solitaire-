@@ -78,7 +78,7 @@ export default function DailyPage() {
       <AppBackground variant="lobby">
         <div className="lobby">
           <Link to="/" className="page-back">
-            ← Lobby
+            Lobby
           </Link>
           {errorBanner}
 

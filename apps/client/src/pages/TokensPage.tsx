@@ -52,7 +52,7 @@ export default function TokensPage() {
     <AppBackground variant="lobby">
       <div className="flex min-h-screen flex-col items-center p-8">
         <div className="lobby-panel w-full max-w-2xl">
-          <Link to="/" className="page-back">← Lobby</Link>
+          <Link to="/" className="page-back">Lobby</Link>
           <h1 className="page-title mt-4">Solitaire Tokens</h1>
           <p className="page-subtitle">
             Buy tokens with SOL to enter multiplayer matches. Each game costs{' '}

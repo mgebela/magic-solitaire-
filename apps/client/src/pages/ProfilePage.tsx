@@ -51,7 +51,7 @@ export default function ProfilePage() {
     <AppBackground variant="lobby">
       <div className="lobby mx-auto max-w-4xl">
         <Link to="/" className="page-back">
-          ← Lobby
+          Lobby
         </Link>
 
         <header className="mt-4 mb-8">

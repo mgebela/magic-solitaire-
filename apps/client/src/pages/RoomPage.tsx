@@ -203,7 +203,7 @@ export default function RoomPage() {
     <AppBackground variant="lobby">
       <div className="lobby relative">
         <Link to="/multiplayer" className="page-back" onClick={leaveRoom}>
-          ← Multiplayer
+          Multiplayer
         </Link>
         {errorBanner}
 

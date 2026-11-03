@@ -22,7 +22,7 @@ export function GameShell({
       <div className="flex min-h-screen flex-col">
         <header className="game-header">
           <Link to={backTo} className="game-header__back">
-            ← {backLabel}
+            {backLabel}
           </Link>
 
           <Link to="/" className="game-header__brand">

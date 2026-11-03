@@ -94,7 +94,7 @@ export default function PlayPage() {
       <AppBackground variant="lobby">
         <div className="lobby">
           <Link to="/" className="page-back">
-            ← Lobby
+            Lobby
           </Link>
           <ModeSelect isLoading={isStarting} onSelect={(m) => startGame(m, accessToken)} />
         </div>

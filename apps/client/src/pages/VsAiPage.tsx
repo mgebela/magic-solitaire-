@@ -59,7 +59,7 @@ export default function VsAiPage() {
       <AppBackground variant="lobby">
         <div className="lobby">
           <Link to="/" className="page-back">
-            ← Lobby
+            Lobby
           </Link>
           <AiDifficultySelect onSelect={(d) => startGame(d)} />
         </div>

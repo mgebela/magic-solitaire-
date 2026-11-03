@@ -21,7 +21,7 @@ export default function PuzzlesPage() {
     <AppBackground variant="lobby">
       <div className="lobby mx-auto max-w-3xl">
         <Link to="/" className="page-back">
-          ← Lobby
+          Lobby
         </Link>
 
         <header className="solid-copy mt-4 mb-8">

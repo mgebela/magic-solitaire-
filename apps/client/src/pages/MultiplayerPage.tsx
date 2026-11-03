@@ -48,7 +48,7 @@ export default function MultiplayerPage() {
       <div className="flex min-h-screen flex-col items-center justify-center p-8">
         <div className="lobby-panel w-full max-w-lg">
           <Link to="/" className="page-back">
-            ← Lobby
+            Lobby
           </Link>
 
           <h1 className="page-title mt-4">Multiplayer</h1>
