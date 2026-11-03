@@ -24,10 +24,6 @@ interface DailyStore {
   reset: () => void;
 }
 
-function syncElapsed(engine: GameEngine, startedAt: number): GameState {
-  return engine.setElapsedMs(Date.now() - startedAt);
-}
-
 function createEngineForState(state: GameState): GameEngine {
   return new GameEngine({ mode: 'daily', allowUndo: false, seed: state.seed }, state);
 }
@@ -233,6 +229,8 @@ export const useDailyStore = create<DailyStore>((set, get) => ({
   tickTimer: () => {
     const { engine, timerStartedAt, state } = get();
     if (!engine || !timerStartedAt || !state || state.status !== 'playing') return;
-    set({ state: syncElapsed(engine, timerStartedAt) });
+    const elapsedMs = Date.now() - timerStartedAt;
+    if (Math.floor(elapsedMs / 1000) === Math.floor(state.elapsedMs / 1000)) return;
+    set({ state: engine.setElapsedMs(elapsedMs) });
   },
 }));

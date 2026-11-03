@@ -7,7 +7,7 @@ import {
 } from 'pixi.js';
 import type { Card, CardId, GameState } from '@three-towers/shared';
 import { getPlayableCards, cardPointsForCombo } from '@three-towers/game-engine';
-import { TweenManager, easeInOutCubic, easeOutBack, easeOutQuart, tween } from './animations';
+import { TweenManager, easeInOutCubic, easeOutBack, easeOutCubic, tween } from './animations';
 import {
   createCardGraphic,
   createStockGraphic,
@@ -114,7 +114,7 @@ export class GameRenderer {
       height: BOARD_HEIGHT,
       backgroundAlpha: 0,
       antialias: true,
-      resolution: window.devicePixelRatio || 1,
+      resolution: Math.min(window.devicePixelRatio || 1, 2),
       autoDensity: true,
     });
 
@@ -139,6 +139,7 @@ export class GameRenderer {
     this.root.addChild(this.pilesLayer, this.overlayLayer);
     this.app.stage.addChild(this.root);
 
+    this.app.ticker.maxFPS = 60;
     this.app.ticker.add(() => {
       if (this.destroyed || !this.ready) return;
       const now = performance.now();
@@ -602,7 +603,7 @@ export class GameRenderer {
     entry.flipping = true;
     this.tweens.add(
       tween(
-        220,
+        120,
         (_t, raw) => {
           if (!isLive(motion)) return;
           const squash = raw < 0.5 ? 1 - raw * 2 : (raw - 0.5) * 2;
@@ -644,7 +645,7 @@ export class GameRenderer {
     const to = { x: WASTE_POSITION.x, y: WASTE_POSITION.y };
     const spin = from.x < to.x ? 0.18 : -0.18;
 
-    this.animateArc(entry, from, to, 340, spin, layoutWasteScale, () => {
+    this.animateArc(entry, from, to, 160, spin, layoutWasteScale, () => {
       if (this.wasteFlyer !== container) {
         if (isLive(container)) container.destroy({ children: true });
         return;
@@ -662,7 +663,7 @@ export class GameRenderer {
     const to = { x: WASTE_POSITION.x, y: WASTE_POSITION.y };
     let flipped = false;
 
-    this.animateArc(entry, from, to, 300, 0.12, null, () => {
+    this.animateArc(entry, from, to, 150, 0.12, null, () => {
       if (this.wasteFlyer !== container) {
         if (isLive(container)) container.destroy({ children: true });
         return;
@@ -671,7 +672,7 @@ export class GameRenderer {
     });
 
     this.tweens.add(
-      tween(300, (_t, raw) => {
+      tween(150, (_t, raw) => {
         if (!isLive(entry.motion)) return;
         if (raw >= 0.42 && !flipped) {
           flipped = true;
@@ -705,7 +706,7 @@ export class GameRenderer {
 
     this.tweens.add(
       tween(
-        140,
+        80,
         (t) => {
           if (!isLive(entry.motion)) return;
           const base = layoutWasteScale;
@@ -737,7 +738,7 @@ export class GameRenderer {
     }
     const control = {
       x: (from.x + to.x) / 2 + (to.x - from.x) * 0.08,
-      y: Math.min(from.y, to.y) - 78,
+      y: Math.min(from.y, to.y) - 36,
     };
     this.tweens.add(
       tween(
@@ -754,7 +755,7 @@ export class GameRenderer {
           }
         },
         onComplete,
-        easeOutQuart,
+        easeOutCubic,
       ),
     );
   }

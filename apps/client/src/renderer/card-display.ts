@@ -109,14 +109,14 @@ function drawStoneBack(container: Container): void {
   brick.fill({ color: 0x3d3d3d, alpha: 0.55 });
   container.addChild(brick);
 
+  const specks = new Graphics();
   for (let i = 0; i < 22; i++) {
     const sx = 12 + ((i * 17) % (CARD_WIDTH - 24));
     const sy = 12 + ((i * 23) % (CARD_HEIGHT - 24));
-    const speck = new Graphics();
-    speck.circle(sx, sy, 1 + (i % 2));
-    speck.fill({ color: i % 3 === 0 ? 0x8a8a8a : 0x3a3a3a, alpha: 0.45 });
-    container.addChild(speck);
+    specks.circle(sx, sy, 1 + (i % 2));
+    specks.fill({ color: i % 3 === 0 ? 0x8a8a8a : 0x3a3a3a, alpha: 0.45 });
   }
+  container.addChild(specks);
 
   const emblem = new Graphics();
   const cx = CARD_WIDTH / 2;
@@ -138,12 +138,17 @@ export function setCardHighlight(
 ): void {
   if (container.destroyed) return;
   const existing = container.children.find((c) => c.label === 'highlight');
-  if (existing) existing.destroy();
+  const mode = hint ? 'hint' : playable ? 'play' : '';
+  if (existing) {
+    if ((existing as Graphics & { highlightMode?: string }).highlightMode === mode) return;
+    existing.destroy();
+  }
 
-  if (!playable && !hint) return;
+  if (!mode) return;
 
   const glow = new Graphics();
   glow.label = 'highlight';
+  (glow as Graphics & { highlightMode?: string }).highlightMode = mode;
   glow.roundRect(-3, -3, CARD_WIDTH + 6, CARD_HEIGHT + 6, CARD_RADIUS + 3);
 
   if (hint) {

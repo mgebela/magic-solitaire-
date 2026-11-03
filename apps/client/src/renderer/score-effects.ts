@@ -81,7 +81,7 @@ export class ScoreEffectManager {
 
     const effect = { root };
     this.effects.push(effect);
-    const duration = combo >= 3 ? 1150 : 900;
+    const duration = combo >= 3 ? 640 : 480;
     const rise = combo >= 3 ? 92 : 72;
 
     tweens.add(

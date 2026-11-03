@@ -30,9 +30,41 @@ interface GameStore {
   clearError: () => void;
 }
 
-function syncElapsed(engine: GameEngine, startedAt: number): GameState {
-  const elapsedMs = Date.now() - startedAt;
-  return engine.setElapsedMs(elapsedMs);
+let moveSyncToken = 0;
+
+/** Save the move without replacing the board the player already sees. */
+function persistMove(
+  set: (partial: Partial<GameStore>) => void,
+  get: () => GameStore,
+  move: Move,
+  elapsedMs: number,
+  accessToken?: string,
+) {
+  const { gameId } = get();
+  if (!gameId || !accessToken) return;
+
+  const token = ++moveSyncToken;
+  void gameApi
+    .submitMove(accessToken, gameId, move, elapsedMs)
+    .then(async (response) => {
+      if (token !== moveSyncToken || response.accepted) return;
+      const session = await gameApi.getGame(accessToken, gameId);
+      if (token !== moveSyncToken) return;
+      const syncedState = session.state;
+      set({
+        engine: createEngineForState(
+          syncedState,
+          get().mode ?? (syncedState.mode as SinglePlayerMode),
+          false,
+        ),
+        state: syncedState,
+        error: response.error ?? 'Move rejected by server',
+      });
+    })
+    .catch(() => {
+      if (token !== moveSyncToken) return;
+      set({ error: 'Could not save that move' });
+    });
 }
 
 async function commitMove(
@@ -41,7 +73,7 @@ async function commitMove(
   move: Move,
   accessToken?: string,
 ) {
-  const { engine, gameId, timerStartedAt } = get();
+  const { engine, timerStartedAt } = get();
   if (!engine || !timerStartedAt) return;
 
   const elapsedMs = Date.now() - timerStartedAt;
@@ -50,38 +82,7 @@ async function commitMove(
     engine.applyMove(move);
     engine.setElapsedMs(elapsedMs);
     set({ state: engine.getState(), error: null, hintCardId: null, hintDraw: false });
-
-    if (gameId && accessToken) {
-      set({ isSyncing: true });
-      try {
-        const response = await gameApi.submitMove(accessToken, gameId, move, elapsedMs);
-        if (!response.accepted || response.state) {
-          const syncedState = response.state ?? (await gameApi.getGame(accessToken, gameId)).state;
-          if (!response.accepted) {
-            set({
-              engine: createEngineForState(
-                syncedState,
-                get().mode ?? (syncedState.mode as SinglePlayerMode),
-                false,
-              ),
-              state: syncedState,
-              error: response.error ?? 'Move rejected by server',
-            });
-          } else if (response.state) {
-            set({
-              engine: createEngineForState(
-                response.state,
-                get().mode ?? (response.state.mode as SinglePlayerMode),
-                false,
-              ),
-              state: response.state,
-            });
-          }
-        }
-      } finally {
-        set({ isSyncing: false });
-      }
-    }
+    persistMove(set, get, move, elapsedMs, accessToken);
   } catch (err) {
     const message = err instanceof InvalidMoveError ? err.message : 'Invalid move';
     set({ error: message });
@@ -134,8 +135,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const { engine, timerStartedAt, state } = get();
     if (!engine || !timerStartedAt || !state || state.status !== 'playing') return;
 
-    const nextState = syncElapsed(engine, timerStartedAt);
-    set({ state: nextState });
+    const elapsedMs = Date.now() - timerStartedAt;
+    if (Math.floor(elapsedMs / 1000) === Math.floor(state.elapsedMs / 1000)) return;
+    set({ state: engine.setElapsedMs(elapsedMs) });
   },
 
   startGame: async (mode, accessToken, seed) => {
@@ -181,7 +183,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   playCard: async (cardId, accessToken) => {
-    const { engine, gameId, timerStartedAt } = get();
+    const { engine, timerStartedAt } = get();
     if (!engine || !timerStartedAt) return;
 
     const timestamp = Date.now();
@@ -191,43 +193,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const state = engine.applyMove({ type: 'play', cardId, timestamp });
       engine.setElapsedMs(elapsedMs);
       set({ state, error: null, hintCardId: null, hintDraw: false });
-
-      if (gameId && accessToken) {
-        set({ isSyncing: true });
-        try {
-          const response = await gameApi.submitMove(accessToken, gameId, {
-            type: 'play',
-            cardId,
-            timestamp,
-          }, elapsedMs);
-
-          if (!response.accepted) {
-            const session = await gameApi.getGame(accessToken, gameId);
-            const syncedState = session.state;
-            set({
-              engine: createEngineForState(
-                syncedState,
-                get().mode ?? (syncedState.mode as SinglePlayerMode),
-                false,
-              ),
-              state: syncedState,
-              error: response.error ?? 'Move rejected by server',
-            });
-          } else if (response.state) {
-            const syncedState = response.state;
-            set({
-              engine: createEngineForState(
-                syncedState,
-                get().mode ?? (syncedState.mode as SinglePlayerMode),
-                false,
-              ),
-              state: syncedState,
-            });
-          }
-        } finally {
-          set({ isSyncing: false });
-        }
-      }
+      persistMove(
+        set,
+        get,
+        { type: 'play', cardId, timestamp },
+        elapsedMs,
+        accessToken,
+      );
     } catch (err) {
       const message = err instanceof InvalidMoveError ? err.message : 'Invalid move';
       set({ error: message });
@@ -247,7 +219,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   drawCard: async (accessToken) => {
-    const { engine, gameId, timerStartedAt } = get();
+    const { engine, timerStartedAt } = get();
     if (!engine || !timerStartedAt) return;
 
     const timestamp = Date.now();
@@ -257,42 +229,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const state = engine.applyMove({ type: 'draw', timestamp });
       engine.setElapsedMs(elapsedMs);
       set({ state, error: null, hintCardId: null, hintDraw: false });
-
-      if (gameId && accessToken) {
-        set({ isSyncing: true });
-        try {
-          const response = await gameApi.submitMove(accessToken, gameId, {
-            type: 'draw',
-            timestamp,
-          }, elapsedMs);
-
-          if (!response.accepted) {
-            const session = await gameApi.getGame(accessToken, gameId);
-            const syncedState = session.state;
-            set({
-              engine: createEngineForState(
-                syncedState,
-                get().mode ?? (syncedState.mode as SinglePlayerMode),
-                false,
-              ),
-              state: syncedState,
-              error: response.error ?? 'Move rejected by server',
-            });
-          } else if (response.state) {
-            const syncedState = response.state;
-            set({
-              engine: createEngineForState(
-                syncedState,
-                get().mode ?? (syncedState.mode as SinglePlayerMode),
-                false,
-              ),
-              state: syncedState,
-            });
-          }
-        } finally {
-          set({ isSyncing: false });
-        }
-      }
+      persistMove(set, get, { type: 'draw', timestamp }, elapsedMs, accessToken);
     } catch (err) {
       const message = err instanceof InvalidMoveError ? err.message : 'Cannot draw';
       set({ error: message });

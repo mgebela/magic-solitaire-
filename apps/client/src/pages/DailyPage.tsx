@@ -39,7 +39,7 @@ export default function DailyPage() {
 
   useEffect(() => {
     if (!state || state.status !== 'playing') return;
-    const interval = window.setInterval(() => tickTimer(), 50);
+    const interval = window.setInterval(() => tickTimer(), 250);
     return () => window.clearInterval(interval);
   }, [state?.status, tickTimer]);
 

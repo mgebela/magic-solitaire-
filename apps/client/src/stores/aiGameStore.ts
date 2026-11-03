@@ -28,10 +28,6 @@ interface AiGameStore {
   clearError: () => void;
 }
 
-function syncElapsed(engine: GameEngine, startedAt: number): GameState {
-  return engine.setElapsedMs(Date.now() - startedAt);
-}
-
 export const useAiGameStore = create<AiGameStore>((set, get) => ({
   playerState: null,
   playerEngine: null,
@@ -169,6 +165,8 @@ export const useAiGameStore = create<AiGameStore>((set, get) => ({
       return;
     }
 
-    set({ playerState: syncElapsed(playerEngine, playerTimerStartedAt) });
+    const elapsedMs = Date.now() - playerTimerStartedAt;
+    if (Math.floor(elapsedMs / 1000) === Math.floor(playerState.elapsedMs / 1000)) return;
+    set({ playerState: playerEngine.setElapsedMs(elapsedMs) });
   },
 }));

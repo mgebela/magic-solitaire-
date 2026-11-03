@@ -285,6 +285,7 @@ export const useMultiplayerStore = create<MultiplayerStore>((set, get) => {
       if (!engine || !timerStartedAt || !myState || myState.status !== 'playing' || !room) return;
 
       const elapsedMs = Date.now() - timerStartedAt;
+      if (Math.floor(elapsedMs / 1000) === Math.floor(myState.elapsedMs / 1000)) return;
       const state = engine.setElapsedMs(elapsedMs);
       set({ myState: state });
       writeHud(false);

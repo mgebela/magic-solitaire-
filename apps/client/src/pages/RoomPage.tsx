@@ -51,7 +51,7 @@ export default function RoomPage() {
 
   useEffect(() => {
     if (!myState || myState.status !== 'playing') return;
-    const interval = window.setInterval(() => tickTimer(), 50);
+    const interval = window.setInterval(() => tickTimer(), 250);
     return () => window.clearInterval(interval);
   }, [myState?.status, tickTimer]);
 

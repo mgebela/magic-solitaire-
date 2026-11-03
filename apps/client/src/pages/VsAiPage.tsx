@@ -27,7 +27,7 @@ export default function VsAiPage() {
   useEffect(() => {
     if (!playerState || playerState.status !== 'playing') return;
 
-    const interval = window.setInterval(() => tickPlayerTimer(), 50);
+    const interval = window.setInterval(() => tickPlayerTimer(), 250);
     return () => window.clearInterval(interval);
   }, [playerState?.status, tickPlayerTimer]);
 
