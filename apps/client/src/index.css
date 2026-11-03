@@ -222,84 +222,42 @@ a {
   padding: 0 0 3.5rem;
 }
 
-.home-daily {
-  display: block;
-  width: fit-content;
-  margin: -0.35rem auto 1.15rem;
-  color: var(--color-gold);
-  font-size: clamp(1.05rem, 2vw, 1.25rem);
-  font-weight: 700;
-  text-align: center;
-  text-decoration: none;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.85);
-}
-
-.home-daily:hover {
-  color: var(--color-neon);
-}
-
-.home-kicker {
-  margin: 0 0 0.85rem;
-  text-align: center;
-  color: rgba(255, 255, 255, 0.88);
-  font-size: clamp(1.15rem, 2.4vw, 1.55rem);
-  font-weight: 500;
-  letter-spacing: 0.01em;
-  text-shadow: 0 3px 14px rgba(0, 0, 0, 0.85);
-}
-
-.home-stats {
+.home-plays {
+  position: absolute;
+  z-index: 4;
+  top: 22vw;
+  left: 0;
+  right: 0;
+  transform: translateY(-50%);
   display: flex;
-  justify-content: center;
-  gap: clamp(2rem, 5vw, 4.2rem);
-  margin: 0 0 1.85rem;
-}
-
-.home-stat {
-  text-align: center;
-}
-
-.home-stat__value {
-  margin: 0;
-  font-family: var(--font-logo);
-  font-size: clamp(2.2rem, 5vw, 3.1rem);
-  line-height: 1;
-  color: var(--color-gold);
-  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.75);
-}
-
-.home-stat__label {
-  margin: 0.4rem 0 0;
-  font-size: clamp(0.82rem, 1.5vw, 0.98rem);
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.7);
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
-}
-
-.home-modes {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 0.85rem;
-  margin: 0 0 1.85rem;
-}
-
-.home-modes .mode-tile {
-  flex-direction: column;
+  justify-content: space-between;
   align-items: center;
-  text-align: center;
-  gap: 0.7rem;
-  min-height: 12.4rem;
-  padding: 1.4rem 0.7rem 1.25rem;
-  border-radius: 1.45rem;
+  /* Cage art sits from 35vw to 70vw. Park the cards in the green just outside it. */
+  padding-left: max(0.75rem, calc(35vw - 12.25rem));
+  padding-right: max(0.75rem, calc(30vw - 12.25rem));
+  pointer-events: none;
 }
 
-.home-modes .mode-tile:hover {
+.home-plays__col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  width: min(11.5rem, 30vw);
+  pointer-events: auto;
+}
+
+.home-plays .mode-tile {
+  min-height: 0;
+  gap: 0.45rem;
+  padding: 0.42rem 0.55rem;
+  border-radius: 0.8rem;
+}
+
+.home-plays .mode-tile:hover {
   border-color: rgba(168, 196, 110, 0.42);
 }
 
-.home-modes .mode-tile--featured {
+.home-plays .mode-tile--featured {
   border-color: rgba(168, 196, 110, 0.38);
   box-shadow:
     0 0 0 1px rgba(168, 196, 110, 0.1),
@@ -307,23 +265,38 @@ a {
     inset 0 0 18px rgba(109, 160, 70, 0.05);
 }
 
-.home-modes .mode-tile__icon {
-  width: 3.5rem;
-  height: 3.5rem;
-  flex-basis: 3.5rem;
+.home-plays .mode-tile__icon {
+  width: 1.7rem;
+  height: 1.7rem;
+  flex: 0 0 1.7rem;
 }
 
-.home-modes .mode-tile__title {
-  margin: 0 0 0.28rem;
-  font-size: clamp(1.18rem, 2.1vw, 1.38rem);
+.home-plays .mode-mark {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.home-plays .mode-tile__title {
+  margin: 0;
+  font-size: 0.88rem;
   color: #eef6d0;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
 }
 
-.home-modes .mode-tile__desc {
-  font-size: clamp(0.95rem, 1.5vw, 1.05rem);
-  line-height: 1.35;
+.home-plays .mode-tile__desc {
+  font-size: 0.7rem;
+  line-height: 1.2;
   color: rgba(255, 255, 255, 0.82);
+}
+
+.home-plays .home-classic__actions {
+  gap: 0.25rem;
+  margin-top: 0.2rem;
+}
+
+.home-plays .home-classic__deal {
+  padding: 0.28rem 0.4rem;
+  font-size: 0.72rem;
 }
 
 .home-features {
@@ -713,11 +686,25 @@ a {
   color: rgba(255, 255, 255, 0.4);
 }
 
-@media (max-width: 900px) {
-  .home-modes {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+@media (max-width: 720px) {
+  .home-plays {
+    position: static;
+    top: auto;
+    transform: none;
+    display: grid;
+    grid-template-columns: 1fr;
+    width: min(22rem, 92vw);
+    margin: 0.4rem auto 0;
+    padding: 0;
+    pointer-events: auto;
   }
 
+  .home-plays__col {
+    width: auto;
+  }
+}
+
+@media (max-width: 900px) {
   .home-features__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -740,17 +727,8 @@ a {
     margin-top: 0.2rem;
   }
 
-  .home-stats {
-    gap: 1.5rem;
-  }
-
-  .home-modes,
   .goal-row__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .home-modes .mode-tile {
-    min-height: 10.2rem;
   }
 
   .home-features__grid {
@@ -913,7 +891,7 @@ a {
   width: 100%;
 }
 
-.home-modes .home-classic > div {
+.home-plays .home-classic > div {
   width: 100%;
 }
 

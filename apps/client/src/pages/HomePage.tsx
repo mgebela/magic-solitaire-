@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { SinglePlayerMode } from '@three-towers/shared';
-import { getTodayChallenge } from '../lib/daily-api';
 import { HowToPlay } from '../components/HowToPlay';
 import { AppBackground } from '../components/layout/AppBackground';
 import { LeaderboardPanel } from '../components/LeaderboardPanel';
@@ -12,7 +11,7 @@ import { WeeklyGoals } from '../components/WeeklyGoals';
 import { useAuthStore } from '../stores/authStore';
 import { useGameStore } from '../stores/gameStore';
 
-const OTHER_MODES = [
+const LEFT_MODES = [
   {
     to: '/daily',
     title: 'Daily',
@@ -27,6 +26,9 @@ const OTHER_MODES = [
     mark: 'race',
     needsAccount: true,
   },
+] as const;
+
+const RIGHT_MODES = [
   {
     to: '/vs-ai',
     title: 'Duel',
@@ -43,44 +45,20 @@ const OTHER_MODES = [
   },
 ] as const;
 
-function dailyDoorCopy(played: boolean, day: number): string {
-  if (played) return day > 0 ? `Day ${day} — back tomorrow` : 'Played — back tomorrow';
-  return day > 0 ? `Day ${day} — today’s board is waiting` : 'Today’s board is waiting';
-}
+type HomeMode = (typeof LEFT_MODES)[number] | (typeof RIGHT_MODES)[number];
 
-function DailyDoor() {
-  const { user, tokens } = useAuthStore();
-  const accessToken = tokens?.accessToken;
-  const [copy, setCopy] = useState<string | null>(user ? null : 'Today’s board is waiting');
-
-  useEffect(() => {
-    if (!accessToken) {
-      setCopy('Today’s board is waiting');
-      return;
-    }
-    let cancelled = false;
-    getTodayChallenge(accessToken)
-      .then((challenge) => {
-        if (cancelled) return;
-        const played = Boolean(challenge.attempt && challenge.attempt.status !== 'playing');
-        setCopy(dailyDoorCopy(played, challenge.streak?.current ?? 0));
-      })
-      .catch(() => {
-        if (!cancelled) setCopy(null);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [accessToken]);
-
-  if (!copy) return null;
-
-  const to = user ? '/daily' : '/login?next=/daily';
-  return (
-    <Link to={to} className="home-daily">
-      {copy}
-    </Link>
-  );
+function modeTileProps(mode: HomeMode, signedIn: boolean) {
+  const needsSignIn = mode.needsAccount && !signedIn;
+  return {
+    to: needsSignIn ? `/login?next=${mode.to}` : mode.to,
+    title: mode.title,
+    mark: mode.mark,
+    description: needsSignIn
+      ? mode.to === '/daily'
+        ? 'Sign in to play'
+        : 'Sign in to race'
+      : mode.description,
+  };
 }
 
 export default function HomePage() {
@@ -149,27 +127,8 @@ export default function HomePage() {
           </div>
         </header>
 
-        <div className="home-tower__stack">
-          <p className="home-kicker">Race the three peaks — same deal, highest score wins</p>
-
-          <DailyDoor />
-
-          <div className="home-stats" aria-label="Game facts">
-            <div className="home-stat">
-              <p className="home-stat__value">3</p>
-              <p className="home-stat__label">Towers</p>
-            </div>
-            <div className="home-stat">
-              <p className="home-stat__value">28</p>
-              <p className="home-stat__label">Cards</p>
-            </div>
-            <div className="home-stat">
-              <p className="home-stat__value">1</p>
-              <p className="home-stat__label">Shared seed</p>
-            </div>
-          </div>
-
-          <div className="home-modes">
+        <div className="home-plays">
+          <div className="home-plays__col">
             <article className="mode-tile mode-tile--featured home-classic">
               <span className="mode-tile__icon">
                 <ModeMark name="classic" />
@@ -196,23 +155,18 @@ export default function HomePage() {
                 </div>
               </div>
             </article>
-            {OTHER_MODES.map((mode) => (
-              <ModeTile
-                key={mode.to}
-                to={mode.needsAccount && !user ? `/login?next=${mode.to}` : mode.to}
-                title={mode.title}
-                mark={mode.mark}
-                description={
-                  mode.needsAccount && !user
-                    ? mode.to === '/daily'
-                      ? 'Sign in to play'
-                      : 'Sign in to race'
-                    : mode.description
-                }
-              />
+            {LEFT_MODES.map((mode) => (
+              <ModeTile key={mode.to} {...modeTileProps(mode, Boolean(user))} />
             ))}
           </div>
+          <div className="home-plays__col">
+            {RIGHT_MODES.map((mode) => (
+              <ModeTile key={mode.to} {...modeTileProps(mode, Boolean(user))} />
+            ))}
+          </div>
+        </div>
 
+        <div className="home-tower__stack">
           {dealError && <p className="home-deal-error">{dealError}</p>}
 
           <LeaderboardPanel accessToken={tokens?.accessToken} userId={user?.id} />
