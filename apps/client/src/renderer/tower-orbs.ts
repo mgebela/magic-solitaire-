@@ -46,8 +46,11 @@ function drawZiggurat(cx: number, peakY: number): { root: Container; glow: Conta
   const root = new Container();
   const glow = new Container();
   const size = 90;
-  const gap = 7;
-  const pyramidBottom = peakY - gap;
+  // Plinth ends just above the peak. A lower slab covers the rank and suit.
+  const cardGap = 3;
+  const slabH = 22;
+  const slabTop = peakY - cardGap - slabH;
+  const pyramidBottom = slabTop + 4;
   const cy = pyramidBottom - size / 2;
 
   const bloom = new Graphics();
@@ -64,7 +67,7 @@ function drawZiggurat(cx: number, peakY: number): { root: Container; glow: Conta
   sideGlow.fill({ color: 0x3dff66, alpha: 0.9 });
   glow.addChild(sideGlow);
 
-  addStoneSlab(root, cx - 52, peakY - 3, 104, 24);
+  addStoneSlab(root, cx - 52, slabTop, 104, slabH);
 
   const bands = [
     { size: 90, fill: 0x6c6c6a, hole: 76 },
