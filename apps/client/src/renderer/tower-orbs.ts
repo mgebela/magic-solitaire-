@@ -5,6 +5,8 @@ import { CARD_WIDTH } from './constants';
 export interface PeakLights {
   root: Container;
   sync(cleared: readonly boolean[], lost: boolean): void;
+  /** The neon well for one peak, so a clear can flare it. */
+  glowAt(index: number): Container | null;
 }
 
 /**
@@ -37,7 +39,11 @@ export function createPeakLights(): PeakLights {
       glows.forEach((glow, index) => {
         const lit = Boolean(cleared[index]) && !lost;
         glow.alpha = lost ? 0.08 : lit ? 1 : 0.28;
+        if (!lit) glow.scale.set(1);
       });
+    },
+    glowAt(index) {
+      return glows[index] ?? null;
     },
   };
 }

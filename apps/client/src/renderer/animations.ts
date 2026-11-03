@@ -57,23 +57,35 @@ export function tween(
 
 export class TweenManager {
   private tweens: Tween[] = [];
+  /** Added while an update is running, so a finished flight can start the settle. */
+  private queued: Tween[] = [];
+  private updating = false;
   /** Lets the board sleep until something actually moves. */
   onAdd: (() => void) | null = null;
 
   get count(): number {
-    return this.tweens.length;
+    return this.tweens.length + this.queued.length;
   }
 
   add(tweenInstance: Tween): void {
-    this.tweens.push(tweenInstance);
+    if (this.updating) this.queued.push(tweenInstance);
+    else this.tweens.push(tweenInstance);
     this.onAdd?.();
   }
 
   update(dtMs: number): void {
+    this.updating = true;
     this.tweens = this.tweens.filter((t) => t.update(dtMs));
+    this.updating = false;
+    if (this.queued.length > 0) {
+      this.tweens.push(...this.queued);
+      this.queued = [];
+    }
   }
 
   clear(): void {
     this.tweens = [];
+    this.queued = [];
+    this.updating = false;
   }
 }

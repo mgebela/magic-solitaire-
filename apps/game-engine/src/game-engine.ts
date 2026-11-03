@@ -21,6 +21,7 @@ import {
   findTableauIndex,
   getPlayableCards,
   hasAnyPlay,
+  isSlotOpen,
 } from './moves';
 import { SeededRandom } from './prng';
 import {
@@ -136,13 +137,12 @@ export class GameEngine {
 
   canPlay(cardId: CardId): boolean {
     if (this.state.status !== 'playing') return false;
-    if (!this.state.uncovered.includes(cardId)) return false;
 
     const index = findTableauIndex(this.state.tableau, cardId);
-    if (index === -1) return false;
+    if (index === -1 || !isSlotOpen(this.state.tableau, index)) return false;
 
     const card = this.state.tableau[index];
-    return card !== null && canPlayCard(card, this.state.waste);
+    return card != null && canPlayCard(card, this.state.waste);
   }
 
   canDraw(): boolean {
@@ -263,7 +263,8 @@ export class GameEngine {
     if (!this.state.wildHeld && clearedPeakCount(this.state.tableau) === 0) {
       throw new InvalidMoveError('Clear a peak to earn a wild');
     }
-    if (!this.state.uncovered.includes(cardId)) {
+    const index = findTableauIndex(this.state.tableau, cardId);
+    if (index === -1 || !isSlotOpen(this.state.tableau, index)) {
       throw new InvalidMoveError(`Cannot play card: ${cardId}`);
     }
   }
@@ -421,6 +422,7 @@ export {
   clearedPeakCount,
   clearedPeaks,
   findTableauIndex,
+  isSlotOpen,
   getPlayableCards,
   hasAnyPlay,
   isRankAdjacent,

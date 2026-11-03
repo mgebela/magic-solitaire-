@@ -3,9 +3,11 @@ import type { Card, Tableau } from '@three-towers/shared';
 import { COVERED_BY } from './layout';
 import {
   canPlayCard,
+  clearedPeaks,
   computeUncovered,
   countRemainingTableauCards,
   isRankAdjacent,
+  isSlotOpen,
 } from './moves';
 
 function card(id: string, value: Card['value']): Card {
@@ -73,6 +75,21 @@ describe('computeUncovered', () => {
 
     const uncovered = computeUncovered(tableau);
     expect(uncovered).toContain('c0');
+  });
+});
+
+describe('tower pyramid', () => {
+  it('keeps the right tower standing while the ace under it is still there', () => {
+    const tableau: Tableau = Array.from({ length: COVERED_BY.length }, () => null);
+    tableau[15] = card('spades-ace', 1);
+
+    expect(isSlotOpen(tableau, 7)).toBe(false);
+    expect(clearedPeaks(tableau)[2]).toBe(false);
+  });
+
+  it('clears the right tower only after every card under it is gone', () => {
+    const tableau: Tableau = Array.from({ length: COVERED_BY.length }, () => null);
+    expect(clearedPeaks(tableau)[2]).toBe(true);
   });
 });
 

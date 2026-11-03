@@ -6,7 +6,7 @@ import {
   type FederatedPointerEvent,
 } from 'pixi.js';
 import type { Card, CardId, GameState } from '@three-towers/shared';
-import { getPlayableCards, cardPointsForCombo } from '@three-towers/game-engine';
+import { cardPointsForCombo, clearedPeaks, getPlayableCards } from '@three-towers/game-engine';
 import { TweenManager, easeInOutCubic, easeOutBack, easeOutCubic, tween } from './animations';
 import {
   createCardGraphic,
@@ -18,6 +18,7 @@ import {
 } from './card-display';
 import { ScoreEffectManager } from './score-effects';
 import { WinCelebration } from './win-celebration';
+import { TowerClear } from './tower-clear';
 import { drawMagicTableBackground } from './table-background';
 import { createPeakLights, type PeakLights } from './tower-orbs';
 import { CARD_HEIGHT, CARD_WIDTH } from './constants';
@@ -31,6 +32,7 @@ import {
   layoutStoneTop,
   layoutWasteScale,
   overlayPercents,
+  PEAK_INDICES,
   STOCK_POSITION,
   STONE_PANEL_TOP,
   TABLEAU_POSITIONS,
@@ -89,6 +91,7 @@ export class GameRenderer {
   private tweens = new TweenManager();
   private scoreEffects = new ScoreEffectManager();
   private winCelebration = new WinCelebration();
+  private towerClear = new TowerClear();
   private peakLights: PeakLights | null = null;
   private tableSprite: Sprite | null = null;
   private wasteSlot: Container | null = null;
@@ -142,16 +145,21 @@ export class GameRenderer {
     this.app.stage.addChild(this.root);
 
     this.tweens.onAdd = () => {
+      // The ticker sleeps between moves. A stale timestamp would skip the whole burst.
+      this.lastTime = performance.now();
       this.app?.ticker.start();
     };
     this.app.ticker.maxFPS = 60;
     this.app.ticker.add(() => {
       if (this.destroyed || !this.ready) return;
       const now = performance.now();
-      const dt = now - this.lastTime;
+      const dt = Math.min(50, Math.max(0, now - this.lastTime));
       this.lastTime = now;
       this.tweens.update(dt);
-      if (this.tweens.count === 0) this.app?.ticker.stop();
+      if (this.tweens.count === 0) {
+        this.dropStrandedFlyer();
+        this.app?.ticker.stop();
+      }
     });
     // The playable glow used to dirty the whole scene every frame. Paint only when a card moves.
     this.app.ticker.stop();
@@ -173,6 +181,7 @@ export class GameRenderer {
     this.tweens.clear();
     this.scoreEffects.clear();
     this.winCelebration.clear();
+    this.towerClear.clear();
     this.sprites.clear();
     if (this.initFinished && this.app) {
       this.app.destroy(false, { children: true });
@@ -271,15 +280,27 @@ export class GameRenderer {
         this.winCelebration.play(this.overlayLayer, this.tweens);
       }
       if (prev.status === 'playing' && state.status === 'lost') sound.lose();
+      if (state.moves.length > prev.moves.length) {
+        const cleared = clearedPeaks(state.tableau);
+        for (const index of PEAK_INDICES) {
+          if (prev.tableau[index] && cleared[index]) {
+            sound.tower();
+            this.towerClear.play(
+              this.overlayLayer,
+              this.tweens,
+              index,
+              this.peakLights?.glowAt(index) ?? null,
+            );
+          }
+        }
+      }
     }
 
-    this.peakLights?.sync(
-      [0, 1, 2].map((index) => state.tableau[index] === null),
-      state.status === 'lost',
-    );
+    this.peakLights?.sync(clearedPeaks(state.tableau), state.status === 'lost');
 
     if (state.status === 'playing' && prev?.status !== 'playing') {
       this.winCelebration.clear();
+      this.towerClear.clear();
     }
 
     this.syncTableau(state, prev, animate);
@@ -327,10 +348,7 @@ export class GameRenderer {
     const pilesIndex = this.root.getChildIndex(this.pilesLayer);
     this.root.addChildAt(this.peakLights.root, pilesIndex);
     if (!this.state) return;
-    this.peakLights.sync(
-      [0, 1, 2].map((index) => this.state?.tableau[index] === null),
-      this.state.status === 'lost',
-    );
+    this.peakLights.sync(clearedPeaks(this.state.tableau), this.state.status === 'lost');
   }
 
   private repositionPieces(): void {
@@ -668,10 +686,28 @@ export class GameRenderer {
     );
   }
 
+  /** A new flight replaces the previous one so a played card cannot stay on its old square. */
+  private replaceFlyer(next: Container): void {
+    const previous = this.wasteFlyer;
+    if (previous && previous !== next && isLive(previous)) {
+      previous.destroy({ children: true });
+    }
+    this.wasteFlyer = next;
+  }
+
+  /** The move already left the tableau. If the flight died, take the leftover card off the table. */
+  private dropStrandedFlyer(): void {
+    const flyer = this.wasteFlyer;
+    if (!flyer) return;
+    this.wasteFlyer = null;
+    if (isLive(flyer)) flyer.destroy({ children: true });
+    if (this.state) this.syncWaste(this.state, null, false);
+  }
+
   private launchToWaste(entry: CardSpriteEntry, waste: Card): void {
     const container = entry.container;
     if (!isLive(container)) return;
-    this.wasteFlyer = container;
+    this.replaceFlyer(container);
     container.eventMode = 'none';
     container.cursor = 'default';
     entry.motion.scale.set(1);
@@ -696,7 +732,7 @@ export class GameRenderer {
   private launchDraw(entry: CardSpriteEntry, waste: Card): void {
     const container = entry.container;
     if (!isLive(container)) return;
-    this.wasteFlyer = container;
+    this.replaceFlyer(container);
     container.zIndex = 80;
     const from = { x: STOCK_POSITION.x, y: STOCK_POSITION.y };
     const to = { x: WASTE_POSITION.x, y: WASTE_POSITION.y };
