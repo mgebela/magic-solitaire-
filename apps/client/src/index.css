@@ -248,9 +248,15 @@ a {
 
 .home-plays .mode-tile {
   min-height: 0;
+  justify-content: center;
   gap: 0.45rem;
   padding: 0.42rem 0.55rem;
   border-radius: 0.8rem;
+  text-align: center;
+}
+
+.home-plays .mode-tile > div {
+  width: 100%;
 }
 
 .home-plays .mode-tile:hover {

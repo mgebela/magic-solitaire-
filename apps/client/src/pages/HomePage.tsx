@@ -5,7 +5,6 @@ import { HowToPlay } from '../components/HowToPlay';
 import { AppBackground } from '../components/layout/AppBackground';
 import { LeaderboardPanel } from '../components/LeaderboardPanel';
 import { GameButton } from '../components/ui/GameButton';
-import { ModeMark } from '../components/ui/ModeMark';
 import { ModeTile } from '../components/ui/ModeTile';
 import { WeeklyGoals } from '../components/WeeklyGoals';
 import { useAuthStore } from '../stores/authStore';
@@ -16,14 +15,12 @@ const LEFT_MODES = [
     to: '/daily',
     title: 'Daily',
     description: 'One shared deal',
-    mark: 'daily',
     needsAccount: true,
   },
   {
     to: '/multiplayer',
     title: 'Race',
     description: 'Same-seed PvP',
-    mark: 'race',
     needsAccount: true,
   },
 ] as const;
@@ -33,14 +30,12 @@ const RIGHT_MODES = [
     to: '/vs-ai',
     title: 'Duel',
     description: 'Race the AI',
-    mark: 'duel',
     needsAccount: false,
   },
   {
     to: '/puzzles',
     title: 'Puzzles',
     description: 'Stars & limits',
-    mark: 'puzzles',
     needsAccount: false,
   },
 ] as const;
@@ -52,7 +47,6 @@ function modeTileProps(mode: HomeMode, signedIn: boolean) {
   return {
     to: needsSignIn ? `/login?next=${mode.to}` : mode.to,
     title: mode.title,
-    mark: mode.mark,
     description: needsSignIn
       ? mode.to === '/daily'
         ? 'Sign in to play'
@@ -130,9 +124,6 @@ export default function HomePage() {
         <div className="home-plays">
           <div className="home-plays__col">
             <article className="mode-tile mode-tile--featured home-classic">
-              <span className="mode-tile__icon">
-                <ModeMark name="classic" />
-              </span>
               <div>
                 <h3 className="mode-tile__title">Classic</h3>
                 <div className="home-classic__actions">
