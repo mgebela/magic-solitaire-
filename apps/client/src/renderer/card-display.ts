@@ -77,14 +77,14 @@ function drawFace(container: Container, card: Card): void {
     },
   });
   rank.x = 8;
-  rank.y = 4;
+  rank.y = 10;
 
   const suitCorner = new Text({
     text: symbol,
     style: { fontFamily: 'Georgia, serif', fontSize: 20, fill: color },
   });
   suitCorner.x = CARD_WIDTH - 28;
-  suitCorner.y = 8;
+  suitCorner.y = 14;
 
   const center = new Text({
     text: symbol,

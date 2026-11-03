@@ -1,7 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { GameMode as PrismaGameMode, GameStatus as PrismaGameStatus } from '@prisma/client';
-import type { LeaderboardEntry, PersonalBestResponse, SinglePlayerMode } from '@three-towers/shared';
+import type {
+  LeaderboardEntry,
+  LeaderboardPeriod,
+  PersonalBestResponse,
+  SinglePlayerMode,
+  TopScoresResponse,
+} from '@three-towers/shared';
 import { PrismaService } from '../prisma/prisma.service';
+import { bestScoresByPlayer, periodStart } from './top-scores';
 
 @Injectable()
 export class LeaderboardService {
@@ -31,6 +38,53 @@ export class LeaderboardService {
       elapsedMs: game.elapsedMs,
       finishedAt: game.finishedAt?.toISOString() ?? game.updatedAt.toISOString(),
     }));
+  }
+
+  async getTopScores(period: LeaderboardPeriod, userId?: string): Promise<TopScoresResponse> {
+    const games = await this.prisma.game.findMany({
+      where: {
+        status: PrismaGameStatus.won,
+        finishedAt: { gte: periodStart(period) },
+        mode: { in: [PrismaGameMode.timed, PrismaGameMode.relaxed, PrismaGameMode.daily] },
+      },
+      orderBy: [{ score: 'desc' }, { elapsedMs: 'asc' }],
+      select: {
+        userId: true,
+        score: true,
+        elapsedMs: true,
+        finishedAt: true,
+        user: { select: { username: true } },
+      },
+    });
+
+    const ranked = bestScoresByPlayer(
+      games.flatMap((game) =>
+        game.finishedAt
+          ? [
+              {
+                userId: game.userId,
+                username: game.user.username,
+                score: game.score,
+                elapsedMs: game.elapsedMs,
+                finishedAt: game.finishedAt.toISOString(),
+              },
+            ]
+          : [],
+      ),
+    );
+
+    const toEntry = (row: (typeof ranked)[number], rank: number): LeaderboardEntry => ({
+      rank,
+      ...row,
+    });
+
+    const youIndex = userId ? ranked.findIndex((row) => row.userId === userId) : -1;
+
+    return {
+      period,
+      entries: ranked.slice(0, 10).map((row, index) => toEntry(row, index + 1)),
+      you: youIndex >= 0 ? toEntry(ranked[youIndex], youIndex + 1) : null,
+    };
   }
 
   async getPersonalBest(

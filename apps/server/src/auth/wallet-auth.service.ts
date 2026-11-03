@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { PublicKey } from '@solana/web3.js';
+import type { PublicKey } from '@solana/web3.js';
 import bs58 from 'bs58';
 import { randomBytes } from 'crypto';
 import nacl from 'tweetnacl';
@@ -120,8 +120,13 @@ export class WalletAuthService {
 
   private parseSolanaAddress(address: string): PublicKey {
     try {
-      return new PublicKey(address);
-    } catch {
+      const { PublicKey: SolanaPublicKey } = require('@solana/web3.js') as typeof import('@solana/web3.js');
+      return new SolanaPublicKey(address);
+    } catch (err) {
+      if (err instanceof BadRequestException) throw err;
+      if (err instanceof Error && err.message.includes('Invalid')) {
+        throw new BadRequestException('Invalid Solana wallet address');
+      }
       throw new BadRequestException('Invalid Solana wallet address');
     }
   }

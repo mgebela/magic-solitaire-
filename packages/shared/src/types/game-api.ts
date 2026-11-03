@@ -44,6 +44,8 @@ export interface GameStats {
   seed?: number;
   /** Peak tops removed this deal. Each one is a relic. */
   peaksCleared?: number;
+  /** Loss panel lead. One sentence from the board. */
+  lossLead?: string;
 }
 
 export interface LeaderboardEntry {
@@ -53,6 +55,15 @@ export interface LeaderboardEntry {
   score: number;
   elapsedMs: number;
   finishedAt: string;
+}
+
+export type LeaderboardPeriod = 'today' | 'week' | 'month';
+
+export interface TopScoresResponse {
+  period: LeaderboardPeriod;
+  entries: LeaderboardEntry[];
+  /** Signed-in player's best clear in this period, even when they are outside the top 10. */
+  you: LeaderboardEntry | null;
 }
 
 export interface PersonalBestResponse {

@@ -1,5 +1,4 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
-import { PublicKey } from '@solana/web3.js';
 import type { User } from '@three-towers/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import {
@@ -41,6 +40,7 @@ export class PrismaUsersRepository implements UsersRepository {
 
   private normalizeWalletAddress(address: string): string {
     try {
+      const { PublicKey } = require('@solana/web3.js') as typeof import('@solana/web3.js');
       return new PublicKey(address).toBase58();
     } catch {
       return address;

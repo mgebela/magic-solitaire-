@@ -1,6 +1,6 @@
 import type { GameState, GameStats } from '@three-towers/shared';
 import { TRIPEAKS_TABLEAU_CARD_COUNT } from '@three-towers/shared';
-import { clearedPeakCount, computeScoreBreakdown } from '@three-towers/game-engine';
+import { clearedPeakCount, computeScoreBreakdown, lossLead } from '@three-towers/game-engine';
 
 export function computeGameStats(
   state: GameState,
@@ -38,6 +38,7 @@ export function computeGameStats(
     isPersonalBest: options?.isPersonalBest,
     seed: state.seed,
     peaksCleared: clearedPeakCount(state.tableau),
+    lossLead: state.status === 'lost' ? lossLead(state.tableau, maxCombo) : undefined,
   };
 }
 

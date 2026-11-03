@@ -337,7 +337,8 @@ export class GameRenderer {
   private place(container: Container, pos: CardPosition): void {
     if (!isLive(container)) return;
     container.position.set(pos.x, pos.y);
-    container.zIndex = pos.layer;
+    // Lower on the table paints last, so a card above cannot cover the rank.
+    container.zIndex = Math.round(pos.y * 10);
   }
 
   private pulseHighlights(now: number): void {

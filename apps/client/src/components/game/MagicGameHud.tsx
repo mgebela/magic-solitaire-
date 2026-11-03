@@ -39,6 +39,8 @@ interface MagicGameHudProps {
   onArmWild?: () => void;
   onKeepWild?: () => void;
   onDiscardWild?: () => void;
+  /** Signed-in best for this mode. Null when there is no saved win. */
+  bestScore?: number | null;
 }
 
 export function MagicGameHud({
@@ -61,6 +63,7 @@ export function MagicGameHud({
   onArmWild,
   onKeepWild,
   onDiscardWild,
+  bestScore,
 }: MagicGameHudProps) {
   const combo = state.combo || 0;
   const remainingTableau = state.tableau.filter(Boolean).length;
@@ -113,6 +116,8 @@ export function MagicGameHud({
   const nextPoints = cardPointsForCombo(combo + 1);
   const offer = wildOfferOpen(state);
   const chainMarks = [5, 4, 3, 2];
+  const cleanRun = Boolean(allowUndo && state.status === 'playing' && !state.undoUsed);
+  const beaten = bestScore != null && state.score > bestScore;
 
   return (
     <div className="stone-hud">
@@ -200,11 +205,13 @@ export function MagicGameHud({
         {allowUndo && onUndo && (
           <button
             type="button"
-            className="stone-hud__bar-btn"
+            className={cleanRun ? 'stone-hud__bar-btn is-clean' : 'stone-hud__bar-btn'}
             onClick={onUndo}
             disabled={!canUndo}
+            aria-label={cleanRun ? 'Undo, clean run still on' : 'Undo'}
           >
             Undo
+            {cleanRun && <i className="stone-hud__clean" aria-hidden />}
           </button>
         )}
         {onHint && (
@@ -230,11 +237,16 @@ export function MagicGameHud({
         aria-label={`Draw card, ${state.stock.length} remaining`}
       />
 
-      <div className={`stone-hud__pit stone-hud__pit--score ${scorePop ? 'stone-hud__pit--pop' : ''}`}>
-        <span className="stone-hud__pit-label">Score</span>
+      <div
+        className={`stone-hud__pit stone-hud__pit--score ${beaten ? 'is-record' : ''} ${scorePop ? 'stone-hud__pit--pop' : ''}`}
+      >
+        <span className="stone-hud__pit-label">{beaten ? 'New best' : 'Score'}</span>
         <span key={scorePop} className="stone-hud__pit-value">
           {state.score}
         </span>
+        {bestScore != null && !beaten && (
+          <span className="stone-hud__pit-best">Best {bestScore.toLocaleString('en-US')}</span>
+        )}
       </div>
 
       <div className="stone-hud__brand">

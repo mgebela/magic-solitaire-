@@ -90,13 +90,15 @@ export class GamesService {
       const scoreDelta = after.score - before.score;
       const nextSequence = existingMoves.length + 1;
 
+      const stored = toStoredMove(move);
+
       await this.prisma.$transaction([
         this.prisma.move.create({
           data: {
             gameId,
             userId,
-            type: move.type,
-            cardId: move.type === 'play' ? move.cardId : null,
+            type: stored.type,
+            cardId: stored.cardId,
             timestamp: new Date(move.timestamp),
             sequence: nextSequence,
           },
@@ -180,11 +182,7 @@ export class GamesService {
       timestamp: Date;
     }>,
   ): GameEngine {
-    const moves: Move[] = dbMoves.map((m) =>
-      m.type === 'play'
-        ? { type: 'play', cardId: m.cardId!, timestamp: m.timestamp.getTime() }
-        : { type: 'draw', timestamp: m.timestamp.getTime() },
-    );
+    const moves: Move[] = dbMoves.map((m) => fromStoredMove(m));
 
     return replayGame(
       {
@@ -236,4 +234,23 @@ export class GamesService {
         return 'playing';
     }
   }
+}
+
+/** Wild choices are stored on a play row so the existing move enum can keep them. */
+function toStoredMove(move: Move): { type: 'play' | 'draw'; cardId: string | null } {
+  if (move.type === 'draw') return { type: 'draw', cardId: null };
+  if (move.type === 'play') return { type: 'play', cardId: move.cardId };
+  return { type: 'play', cardId: move.type === 'keep-wild' ? '__keep-wild' : '__discard-wild' };
+}
+
+function fromStoredMove(move: {
+  type: 'play' | 'draw';
+  cardId: string | null;
+  timestamp: Date;
+}): Move {
+  const timestamp = move.timestamp.getTime();
+  if (move.cardId === '__keep-wild') return { type: 'keep-wild', timestamp };
+  if (move.cardId === '__discard-wild') return { type: 'discard-wild', timestamp };
+  if (move.type === 'play') return { type: 'play', cardId: move.cardId ?? '', timestamp };
+  return { type: 'draw', timestamp };
 }

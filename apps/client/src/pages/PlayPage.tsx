@@ -15,6 +15,7 @@ export default function PlayPage() {
   const { tokens } = useAuthStore();
   const accessToken = tokens?.accessToken;
   const [isPersonalBest, setIsPersonalBest] = useState(false);
+  const [bestScore, setBestScore] = useState<number | null>(null);
   const [wildArmed, setWildArmed] = useState(false);
 
   const {
@@ -51,6 +52,24 @@ export default function PlayPage() {
     const interval = window.setInterval(() => tickTimer(), 50);
     return () => window.clearInterval(interval);
   }, [state?.status, tickTimer]);
+
+  useEffect(() => {
+    if (!accessToken || !mode) {
+      setBestScore(null);
+      return;
+    }
+    let cancelled = false;
+    getPersonalBest(accessToken, mode)
+      .then((result) => {
+        if (!cancelled) setBestScore(result.bestScore);
+      })
+      .catch(() => {
+        if (!cancelled) setBestScore(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [accessToken, mode]);
 
   useEffect(() => {
     if (!state || state.status !== 'won' || !accessToken || !mode) {
@@ -121,6 +140,7 @@ export default function PlayPage() {
         onUndo={() => undoMove()}
         allowUndo={allowUndo}
         canUndo={engine?.canUndo() ?? false}
+        bestScore={bestScore}
         className="magic-play-screen__canvas"
       />
 

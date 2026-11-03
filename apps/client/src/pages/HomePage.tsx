@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { SinglePlayerMode } from '@three-towers/shared';
+import { getTodayChallenge } from '../lib/daily-api';
 import { HowToPlay } from '../components/HowToPlay';
 import { AppBackground } from '../components/layout/AppBackground';
 import { LeaderboardPanel } from '../components/LeaderboardPanel';
@@ -41,6 +42,46 @@ const OTHER_MODES = [
     needsAccount: false,
   },
 ] as const;
+
+function dailyDoorCopy(played: boolean, day: number): string {
+  if (played) return day > 0 ? `Day ${day} — back tomorrow` : 'Played — back tomorrow';
+  return day > 0 ? `Day ${day} — today’s board is waiting` : 'Today’s board is waiting';
+}
+
+function DailyDoor() {
+  const { user, tokens } = useAuthStore();
+  const accessToken = tokens?.accessToken;
+  const [copy, setCopy] = useState<string | null>(user ? null : 'Today’s board is waiting');
+
+  useEffect(() => {
+    if (!accessToken) {
+      setCopy('Today’s board is waiting');
+      return;
+    }
+    let cancelled = false;
+    getTodayChallenge(accessToken)
+      .then((challenge) => {
+        if (cancelled) return;
+        const played = Boolean(challenge.attempt && challenge.attempt.status !== 'playing');
+        setCopy(dailyDoorCopy(played, challenge.streak?.current ?? 0));
+      })
+      .catch(() => {
+        if (!cancelled) setCopy(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [accessToken]);
+
+  if (!copy) return null;
+
+  const to = user ? '/daily' : '/login?next=/daily';
+  return (
+    <Link to={to} className="home-daily">
+      {copy}
+    </Link>
+  );
+}
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -111,6 +152,8 @@ export default function HomePage() {
         <div className="home-tower__stack">
           <p className="home-kicker">Race the three peaks — same deal, highest score wins</p>
 
+          <DailyDoor />
+
           <div className="home-stats" aria-label="Game facts">
             <div className="home-stat">
               <p className="home-stat__value">3</p>
@@ -172,6 +215,8 @@ export default function HomePage() {
 
           {dealError && <p className="home-deal-error">{dealError}</p>}
 
+          <LeaderboardPanel accessToken={tokens?.accessToken} userId={user?.id} />
+
           <WeeklyGoals />
 
           <p className="home-rule">Ace wraps King. One pass through the stock.</p>
@@ -189,8 +234,6 @@ export default function HomePage() {
               How to play
             </GameButton>
           </div>
-
-          <LeaderboardPanel mode="timed" />
 
           <footer className="home-footer">© 2026 Space Towers Solitaire</footer>
         </div>

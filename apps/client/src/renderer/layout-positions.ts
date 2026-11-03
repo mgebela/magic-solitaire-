@@ -29,7 +29,9 @@ export function buildTableauPositions(): CardPosition[] {
   const sideMargin = 22;
   const bottomWidth = BOARD_WIDTH - sideMargin * 2;
   const hStep = (bottomWidth - CARD_WIDTH) / 9;
-  const vStep = 58;
+  // Far enough that a card cannot reach the card two rows below it.
+  // Those pairs share a column, so a shorter step slices the rank and suit.
+  const vStep = 72;
   const startX = sideMargin;
   /** Sit the 10-card row on the moss, just above the limestone lip. */
   const bottomY = STONE_PANEL_TOP - CARD_HEIGHT - 18;
@@ -125,7 +127,7 @@ export function applyWideLayout(boardHeight: number): void {
   const sideMargin = 58;
   const hStep = (BOARD_WIDTH - sideMargin * 2 - CARD_WIDTH) / 9;
   const bottomY = stoneTop - CARD_HEIGHT - gap;
-  const vStep = Math.min(58, Math.max(18, (bottomY - topPad) / 3));
+  const vStep = Math.min(72, Math.max(36, (bottomY - topPad) / 3));
 
   const slot = (col: number, row: number, layer: number): CardPosition => ({
     x: sideMargin + col * hStep,

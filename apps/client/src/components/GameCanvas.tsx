@@ -37,6 +37,7 @@ interface GameCanvasProps {
   onArmWild?: () => void;
   onKeepWild?: () => void;
   onDiscardWild?: () => void;
+  bestScore?: number | null;
 }
 
 export function GameCanvas({
@@ -62,6 +63,7 @@ export function GameCanvas({
   onArmWild,
   onKeepWild,
   onDiscardWild,
+  bestScore,
 }: GameCanvasProps) {
   const stageRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
@@ -178,6 +180,7 @@ export function GameCanvas({
             onArmWild={onArmWild}
             onKeepWild={onKeepWild}
             onDiscardWild={onDiscardWild}
+            bestScore={bestScore}
           />
         )}
       </div>

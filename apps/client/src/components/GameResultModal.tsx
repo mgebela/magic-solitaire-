@@ -30,10 +30,15 @@ export function GameResultModal({
       >
         <div className="mb-6 text-center">
           <div
-            className={`result-title text-4xl font-bold ${won ? 'text-[var(--color-gold)]' : 'text-red-400'}`}
+            className={
+              won
+                ? 'result-title text-4xl font-bold text-[var(--color-gold)]'
+                : 'result-title result-title--miss'
+            }
           >
-            {won ? 'You Win!' : 'Game Over'}
+            {won ? 'You Win!' : stats.lossLead ?? 'Game Over'}
           </div>
+          {!won && stats.lossLead && <p className="result-kicker">Game Over</p>}
           <p className="mt-2 text-sm text-white/60">
             {formatMode(stats.mode)} mode
             {persisted ? ' · Saved to your account' : ' · Guest session (not saved)'}

@@ -36,6 +36,7 @@ export {
   cardPointsForCombo,
   computeScoreBreakdown,
 } from './scoring';
+export { lossLead } from './near-miss';
 export {
   AI_DIFFICULTIES,
   AI_DELAY_MS,

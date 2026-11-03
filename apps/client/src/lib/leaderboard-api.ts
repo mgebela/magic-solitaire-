@@ -1,7 +1,8 @@
 import type {
-  LeaderboardEntry,
+  LeaderboardPeriod,
   PersonalBestResponse,
   SinglePlayerMode,
+  TopScoresResponse,
 } from '@three-towers/shared';
 import { apiFetch } from './api';
 
@@ -9,8 +10,13 @@ function authHeaders(accessToken: string): HeadersInit {
   return { Authorization: `Bearer ${accessToken}` };
 }
 
-export function getLeaderboard(mode: SinglePlayerMode = 'timed'): Promise<LeaderboardEntry[]> {
-  return apiFetch<LeaderboardEntry[]>(`/leaderboard?mode=${mode}`);
+export function getTopScores(
+  period: LeaderboardPeriod = 'today',
+  accessToken?: string,
+): Promise<TopScoresResponse> {
+  return apiFetch<TopScoresResponse>(`/leaderboard/top?period=${period}`, {
+    headers: accessToken ? authHeaders(accessToken) : undefined,
+  });
 }
 
 export function getPersonalBest(

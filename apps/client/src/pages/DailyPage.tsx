@@ -178,12 +178,15 @@ export default function DailyPage() {
             className={`result-panel lobby-panel w-full max-w-md p-8 text-center shadow-2xl ${stats.status === 'won' ? 'result-panel--win' : ''}`}
           >
             <div
-              className={`result-title font-[family-name:var(--font-display)] text-4xl ${
-                stats.status === 'won' ? 'text-[var(--color-gold)]' : 'text-red-400'
-              }`}
+              className={
+                stats.status === 'won'
+                  ? 'result-title font-[family-name:var(--font-display)] text-4xl text-[var(--color-gold)]'
+                  : 'result-title result-title--miss'
+              }
             >
-              {stats.status === 'won' ? 'Challenge Complete!' : 'Game Over'}
+              {stats.status === 'won' ? 'Challenge Complete!' : stats.lossLead ?? 'Game Over'}
             </div>
+            {stats.status === 'lost' && stats.lossLead && <p className="result-kicker">Game Over</p>}
             <p className="mt-2 text-sm text-white/60">Daily challenge · {challenge?.date}</p>
             {streakLabel && <p className="mt-2 text-sm text-[var(--color-neon)]">{streakLabel}</p>}
             <dl className="mt-6 grid grid-cols-2 gap-4 rounded-xl bg-white/5 p-4 text-sm">
