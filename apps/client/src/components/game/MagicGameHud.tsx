@@ -147,8 +147,8 @@ export function MagicGameHud({
       </div>
       {offer && onKeepWild && onDiscardWild && (
         <div className="wild-banner" role="dialog" aria-label="Wild card">
-          <p>A wild is in the chest</p>
-          <span>Keep it and play any open card. One wild this deal.</span>
+          <p>Wild in the chest</p>
+          <span>Keep it to play any open card. One wild this deal.</span>
           <div>
             <button type="button" className="game-btn game-btn--primary" onClick={onKeepWild}>
               Keep
@@ -158,16 +158,6 @@ export function MagicGameHud({
             </button>
           </div>
         </div>
-      )}
-      {state.wildHeld && onArmWild && state.status === 'playing' && (
-        <button
-          type="button"
-          className={wildArmed ? 'wild-token is-armed' : 'wild-token'}
-          onClick={onArmWild}
-          aria-pressed={wildArmed}
-        >
-          Wild
-        </button>
       )}
       {race && race.length > 0 && (
         <div className="stone-hud__race" aria-label="Race">
@@ -198,10 +188,22 @@ export function MagicGameHud({
               <small>+{nextPoints}</small>
             </span>
           )}
-          <span className="stone-hud__waste-ranks">{matchRanks(state.waste.value)}</span>
+          <span className={`stone-hud__waste-ranks ${wildArmed && state.wildHeld ? 'is-wild' : ''}`}>
+            {wildArmed && state.wildHeld ? 'Any card' : matchRanks(state.waste.value)}
+          </span>
         </div>
       )}
       <div className="stone-hud__bar-actions">
+        {state.wildHeld && onArmWild && state.status === 'playing' && (
+          <button
+            type="button"
+            className={wildArmed ? 'stone-hud__bar-btn wild-token is-armed' : 'stone-hud__bar-btn wild-token'}
+            onClick={onArmWild}
+            aria-pressed={wildArmed}
+          >
+            {wildArmed ? 'Wild on' : 'Wild'}
+          </button>
+        )}
         {allowUndo && onUndo && (
           <button
             type="button"
@@ -278,9 +280,6 @@ export function MagicGameHud({
       </Link>
 
       {stuck && <p className="stone-hud__hint">No move — draw</p>}
-      {!stuck && state.wildHeld && noRankPlay && state.status === 'playing' && (
-        <p className="stone-hud__hint">{wildArmed ? 'Tap any open card' : 'Play the wild'}</p>
-      )}
       {!stuck && hintDraw && <p className="stone-hud__hint">Draw from the stock pile</p>}
       {!state.waste && state.status === 'playing' && (
         <p className="stone-hud__hint stone-hud__hint--start">

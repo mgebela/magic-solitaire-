@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { getPlayableCards } from '@three-towers/game-engine';
 import { GuestPlayShell } from '../components/ads/GuestAdSlot';
 import { GameCanvas } from '../components/GameCanvas';
 import { GameResultModal } from '../components/GameResultModal';
@@ -118,9 +119,14 @@ export default function PlayPage() {
         onCardClick={(cardId) => {
           clearHint();
           if (wildArmed && state?.wildHeld) {
-            setWildArmed(false);
-            void playWild(cardId, accessToken);
-            return;
+            const legal = getPlayableCards(state.tableau, state.uncovered, state.waste).some(
+              (card) => card.id === cardId,
+            );
+            if (!legal) {
+              setWildArmed(false);
+              void playWild(cardId, accessToken);
+              return;
+            }
           }
           void playCard(cardId, accessToken);
         }}

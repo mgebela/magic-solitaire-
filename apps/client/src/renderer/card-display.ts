@@ -135,10 +135,11 @@ export function setCardHighlight(
   _highlighted: boolean,
   playable: boolean,
   hint = false,
+  wild = false,
 ): void {
   if (container.destroyed) return;
   const existing = container.children.find((c) => c.label === 'highlight');
-  const mode = hint ? 'hint' : playable ? 'play' : '';
+  const mode = hint ? 'hint' : wild ? 'wild' : playable ? 'play' : '';
   if (existing) {
     if ((existing as Graphics & { highlightMode?: string }).highlightMode === mode) return;
     existing.destroy();
@@ -153,6 +154,8 @@ export function setCardHighlight(
 
   if (hint) {
     glow.stroke({ color: 0xe8ff8a, width: 3.2, alpha: 0.95 });
+  } else if (wild) {
+    glow.stroke({ color: 0xd6ef4a, width: 3.2, alpha: 0.95 });
   } else {
     glow.stroke({ color: 0x8fd96a, width: 2.6, alpha: 0.82 });
   }

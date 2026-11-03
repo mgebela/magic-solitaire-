@@ -96,6 +96,7 @@ export class GameRenderer {
   private fitH = BOARD_HEIGHT;
   private state: GameState | null = null;
   private hintCardId: CardId | null = null;
+  private wildArmed = false;
   private onCardClick: CardClickHandler | null = null;
   private onDrawClick: DrawClickHandler | null = null;
   private lastTime = performance.now();
@@ -191,6 +192,15 @@ export class GameRenderer {
     this.hintCardId = cardId;
     if (this.state && this.ready) {
       this.syncTableau(this.state, this.state, false);
+    }
+  }
+
+  setWildArmed(armed: boolean): void {
+    if (this.wildArmed === armed) return;
+    this.wildArmed = armed;
+    if (this.state && this.ready) {
+      this.syncTableau(this.state, this.state, false);
+      this.syncStock(this.state);
     }
   }
 
@@ -370,6 +380,15 @@ export class GameRenderer {
     );
   }
 
+  /** An armed wild can take any open card, including one that is not one rank away. */
+  private canTapCard(cardId: CardId): boolean {
+    if (this.isPlayableId(cardId)) return true;
+    if (!this.wildArmed || !this.state || this.state.status !== 'playing' || !this.state.wildHeld) {
+      return false;
+    }
+    return this.state.uncovered.includes(cardId);
+  }
+
   private syncTableau(state: GameState, prev: GameState | null, animate: boolean): void {
     const playableCards = getPlayableCards(state.tableau, state.uncovered, state.waste);
     const validPlays = new Set(playableCards.map((c) => c.id));
@@ -386,6 +405,12 @@ export class GameRenderer {
 
       const isPlayable = validPlays.has(card.id);
       const isUncovered = state.uncovered.includes(card.id);
+      const wildTarget =
+        this.wildArmed &&
+        Boolean(state.wildHeld) &&
+        state.status === 'playing' &&
+        isUncovered &&
+        !isPlayable;
       const faceUp = isUncovered;
 
       let entry = this.sprites.get(key);
@@ -415,11 +440,12 @@ export class GameRenderer {
 
       const art = artOf(entry);
       if (art) {
-        setCardHighlight(art, isUncovered, isPlayable, card.id === this.hintCardId);
+        setCardHighlight(art, isUncovered, isPlayable, card.id === this.hintCardId, wildTarget);
       }
-      entry.container.eventMode = isPlayable ? 'static' : 'none';
-      entry.container.cursor = isPlayable ? 'pointer' : 'default';
-      if (!isPlayable && !entry.flipping) {
+      const tappable = isPlayable || wildTarget;
+      entry.container.eventMode = tappable ? 'static' : 'none';
+      entry.container.cursor = tappable ? 'pointer' : 'default';
+      if (!tappable && !entry.flipping) {
         entry.motion.scale.set(1);
       }
     });
@@ -554,6 +580,7 @@ export class GameRenderer {
       const stuck =
         state.status === 'playing' &&
         state.waste !== null &&
+        !state.wildHeld &&
         getPlayableCards(state.tableau, state.uncovered, state.waste).length === 0;
       setStockAlert(art, stuck);
     }
@@ -575,7 +602,7 @@ export class GameRenderer {
     root.eventMode = 'static';
     root.cursor = 'pointer';
     root.on('pointerover', () => {
-      if (!isLive(root) || this.wasteFlyer === root || !this.isPlayableId(entry.cardId)) return;
+      if (!isLive(root) || this.wasteFlyer === root || !this.canTapCard(entry.cardId)) return;
       motion.scale.set(1.06);
     });
     root.on('pointerout', () => {
@@ -583,11 +610,11 @@ export class GameRenderer {
       motion.scale.set(1);
     });
     root.on('pointerdown', () => {
-      if (!isLive(root) || this.wasteFlyer === root || !this.isPlayableId(entry.cardId)) return;
+      if (!isLive(root) || this.wasteFlyer === root || !this.canTapCard(entry.cardId)) return;
       motion.scale.set(0.95);
     });
     root.on('pointerup', () => {
-      if (!isLive(root) || this.wasteFlyer === root || !this.isPlayableId(entry.cardId)) return;
+      if (!isLive(root) || this.wasteFlyer === root || !this.canTapCard(entry.cardId)) return;
       motion.scale.set(1.06);
     });
     root.on('pointerupoutside', () => {
@@ -596,7 +623,7 @@ export class GameRenderer {
     });
     root.on('pointertap', (e: FederatedPointerEvent) => {
       e.stopPropagation();
-      if (!this.isPlayableId(entry.cardId)) return;
+      if (!this.canTapCard(entry.cardId)) return;
       this.onCardClick?.(entry.cardId);
     });
     return entry;
@@ -632,7 +659,8 @@ export class GameRenderer {
           const art = artOf(entry);
           if (art && this.state) {
             const playable = this.isPlayableId(entry.cardId);
-            setCardHighlight(art, true, playable, entry.cardId === this.hintCardId);
+            const wildTarget = this.canTapCard(entry.cardId) && !playable;
+            setCardHighlight(art, true, playable, entry.cardId === this.hintCardId, wildTarget);
           }
         },
         easeInOutCubic,

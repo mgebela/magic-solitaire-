@@ -139,6 +139,10 @@ export function GameCanvas({
   }, [hintCardId]);
 
   useEffect(() => {
+    rendererRef.current?.setWildArmed(Boolean(wildArmed && state?.wildHeld));
+  }, [wildArmed, state?.wildHeld]);
+
+  useEffect(() => {
     if (!state) return;
     if (state.combo >= 5 && comboRef.current < 5) noteChain(state);
     comboRef.current = state.combo;
