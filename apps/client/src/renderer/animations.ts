@@ -57,9 +57,16 @@ export function tween(
 
 export class TweenManager {
   private tweens: Tween[] = [];
+  /** Lets the board sleep until something actually moves. */
+  onAdd: (() => void) | null = null;
+
+  get count(): number {
+    return this.tweens.length;
+  }
 
   add(tweenInstance: Tween): void {
     this.tweens.push(tweenInstance);
+    this.onAdd?.();
   }
 
   update(dtMs: number): void {

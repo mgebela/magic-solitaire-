@@ -113,8 +113,9 @@ export class GameRenderer {
       width: BOARD_WIDTH,
       height: BOARD_HEIGHT,
       backgroundAlpha: 0,
-      antialias: true,
-      resolution: Math.min(window.devicePixelRatio || 1, 2),
+      // Chrome's ANGLE path multisamples the whole canvas. On Intel graphics that stalls every frame.
+      antialias: false,
+      resolution: 1,
       autoDensity: true,
     });
 
@@ -139,6 +140,9 @@ export class GameRenderer {
     this.root.addChild(this.pilesLayer, this.overlayLayer);
     this.app.stage.addChild(this.root);
 
+    this.tweens.onAdd = () => {
+      this.app?.ticker.start();
+    };
     this.app.ticker.maxFPS = 60;
     this.app.ticker.add(() => {
       if (this.destroyed || !this.ready) return;
@@ -146,8 +150,10 @@ export class GameRenderer {
       const dt = now - this.lastTime;
       this.lastTime = now;
       this.tweens.update(dt);
-      this.pulseHighlights(now);
+      if (this.tweens.count === 0) this.app?.ticker.stop();
     });
+    // The playable glow used to dirty the whole scene every frame. Paint only when a card moves.
+    this.app.ticker.stop();
 
     this.initFinished = true;
     this.ready = true;
@@ -216,8 +222,22 @@ export class GameRenderer {
     }
     this.placeTable();
     this.repositionPieces();
+    this.fitResolution(width, height);
     this.app.renderer.resize(width, height);
     this.publishOverlay();
+    if (!this.app.ticker.started) this.app.render();
+  }
+
+  /** Keep the backing store small enough for Chrome on integrated graphics. */
+  private fitResolution(cssWidth: number, cssHeight: number): void {
+    if (!this.app) return;
+    const dpr = window.devicePixelRatio || 1;
+    const area = Math.max(1, cssWidth * cssHeight);
+    const resolution = Math.max(1, Math.min(dpr, 1.5, Math.sqrt(1_800_000 / area)));
+    const next = Math.round(resolution * 100) / 100;
+    if (Math.abs(this.app.renderer.resolution - next) > 0.02) {
+      this.app.renderer.resolution = next;
+    }
   }
 
   /** Full sync from a new GameState snapshot. */
@@ -255,6 +275,7 @@ export class GameRenderer {
     this.syncTableau(state, prev, animate);
     this.syncWaste(state, prev, animate);
     this.syncStock(state);
+    if (this.app && !this.app.ticker.started) this.app.render();
   }
 
   private async loadBackground(): Promise<void> {
@@ -340,16 +361,6 @@ export class GameRenderer {
     container.position.set(pos.x, pos.y);
     // Lower on the table paints last, so a card above cannot cover the rank.
     container.zIndex = Math.round(pos.y * 10);
-  }
-
-  private pulseHighlights(now: number): void {
-    const pulse = 0.62 + Math.sin(now / 260) * 0.28;
-    for (const entry of this.sprites.values()) {
-      const art = artOf(entry);
-      if (!art) continue;
-      const glow = art.children.find((child) => child.label === 'highlight');
-      if (glow) glow.alpha = pulse;
-    }
   }
 
   private isPlayableId(cardId: CardId): boolean {
